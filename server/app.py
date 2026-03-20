@@ -2,7 +2,7 @@ import os
 from flask import Flask,request, jsonify
 from flask_cors import CORS
 from pymongo import MongoClient
-from openai import OpenAI
+from groq import Groq
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -11,10 +11,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Groq client
-client = OpenAI(
-    api_key= os.environ.get("GROQ_API_KEY"),
-    base_url="https://api.groq.com/openai/v1"
-)
+client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 # MongoDB
 mongo_client = MongoClient(os.environ.get("MONGO_URL"))
