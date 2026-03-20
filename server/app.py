@@ -3,8 +3,8 @@ from flask import Flask,request, jsonify
 from flask_cors import CORS
 from pymongo import MongoClient
 from openai import OpenAI
-from dotenv import load_dotenv
 
+from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
@@ -43,7 +43,15 @@ QUESTIONS = [
     "איך הכי נוח לך ללמוד על טראומה?"
 ]
 
-@app.post("/chat/openai")
+
+def format_conversation(conversation):
+    return "\n".join([
+        f"משתמש: {c['answer']}\nמערכת: {c['question']}"
+        for c in conversation
+    ])
+
+
+@app.post("/chat")
 def chat():
     data = request.json
     user_id = data["user_id"]
@@ -52,6 +60,7 @@ def chat():
     if not user_id or not message:
         return jsonify({"error": "Missing user_id or message"}), 400
 
+    # TODO try 
     session = chat_collection.find_one({"user_id": user_id})
 
     # New conversation
@@ -59,7 +68,8 @@ def chat():
         chat_collection.insert_one({
             "user_id": user_id,
             "step": 0,
-            "answers": []
+            "conversation": [],
+            "last_question": QUESTIONS[0]
         })
 
         return jsonify({
@@ -67,26 +77,87 @@ def chat():
         })
     
     step = session["step"]
-    answers = session["answers"]
-    answers.append(message)
+    conversation = session["conversation"]
+    last_question = session["last_question"]
+
+    conversation.append({
+        "question": last_question,
+        "answer": message
+    })
     step += 1
 
-    chat_collection.update_one(
-        {"user_id": user_id},
-        {"$set": {"step": step, "answers": answers}}
-    )
+    
+    if step < len(QUESTIONS):
+        formatted_conv = format_conversation(conversation)
+        last_answer = conversation[-1]["answer"]
 
-    response = client.chat.completions.create(
+        dynamic_question_response = client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            temperature=0.8,
+            messages=[
+                {
+                    "role": "system", 
+                    "content": (
+                        "אתה מנהל שיחה טבעית ואנושית עם משתמש בנושא טראומה. "
+                        "המטרה שלך היא לשאול שאלות בהמשך ישיר למה שהמשתמש כתב, "
+                        "כאילו זו שיחה אמיתית ולא שאלון."
+
+                        "חוקים חשובים:"
+                        "- התייחס ספציפית לתשובה האחרונה של המשתמש"
+                        "- חבר את השאלה לנאמר"
+                        "- שאל שאלה אחת בלבד"
+                        "- כתוב בצורה זורמת, טבעית, ולא רשמית מדי"
+                        "- אל תחזור על הניסוח של השאלה המקורית"
+                        "- תרגיש חופשי לשנות ניסוח כדי שזה ירגיש כמו שיחה"
+                    )
+                },
+                {
+                    "role": "user", 
+                    "content": (
+                        f"שיחה עד כה:\n{formatted_conv}\n\n"
+                        f"תשובה אחרונה של המשתמש:\n{last_answer}\n\n"
+                        f"כיוון כללי לשאלה הבאה (לא חובה להיצמד): {QUESTIONS[step]}\n\n"
+                        "שאל שאלה המשך טבעית שמתייחסת למה שהמשתמש אמר."
+                    )
+                }
+            ]
+        )
+
+        next_question = dynamic_question_response.choices[0].message.content.strip()
+
+        # Save the current conversation
+        chat_collection.update_one(
+            {"user_id": user_id},
+            {"$set": {"step": step, "conversation": conversation, "last_question": next_question}}
+        )
+
+        return jsonify({"reply": next_question})
+
+
+    # Persona classification
+    formatted_conv = format_conversation(conversation)
+    persona_response = client.chat.completions.create(
         model="llama-3.1-8b-instant",
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": "I want deep research about trauma"}
+            {"role": "user", "content": f"שיחה מלאה: {formatted_conv}"}
         ]
     )
 
-    print(response.choices[0].message.content)
+    persona_result = persona_response.choices[0].message.content.strip()
+    
+    chat_collection.update_one(
+        {"user_id": user_id},
+        {
+            "$set": {
+                "step": step,
+                "conversation": conversation,
+                "persona": persona_result
+            }
+        }
+    )
 
-    return jsonify({"reply": response.choices[0].message.content})
+    return jsonify({"reply": persona_result})
 
 
 if __name__ == "__main__":
