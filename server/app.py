@@ -65,17 +65,26 @@ def chat():
 
     # New conversation
     if not session:
-        chat_collection.insert_one({
-            "user_id": user_id,
-            "step": 0,
-            "conversation": [],
-            "last_question": QUESTIONS[0]
-        })
+        try:
+            new_session = {
+                "user_id": user_id,
+                "step": 0,
+                "conversation": [],
+                "last_question": QUESTIONS[0]
+            }
 
-        return jsonify({
-            "reply": "אשאל אותך 5 שאלות \n" + QUESTIONS[0]
-        })
+            result = chat_collection.insert_one(new_session)
+            if not result.acknowledged or not result.inserted_id:
+                return jsonify({"error": "Failed to create new session in MongoDB"}), 500
+
+            return jsonify({
+                "reply": "אשאל אותך 5 שאלות \n" + QUESTIONS[0]
+            })
+        
+        except Exception as e:
+            return jsonify({"error": f"MongoDB exception: {str(e)}"}), 500
     
+
     step = session["step"]
     conversation = session["conversation"]
     last_question = session["last_question"]
@@ -91,48 +100,58 @@ def chat():
         formatted_conv = format_conversation(conversation)
         last_answer = conversation[-1]["answer"]
 
-        dynamic_question_response = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
-            temperature=0.8,
-            messages=[
-                {
-                    "role": "system", 
-                    "content": (
-                        "אתה מנהל שיחה טבעית ואנושית עם משתמש בנושא טראומה. "
-                        "המטרה שלך היא לשאול שאלות בהמשך ישיר למה שהמשתמש כתב, "
-                        "כאילו זו שיחה אמיתית ולא שאלון."
+        try:
+            dynamic_question_response = client.chat.completions.create(
+                model="llama-3.1-8b-instant",
+                temperature=0.8,
+                messages=[
+                    {
+                        "role": "system", 
+                        "content": (
+                            "אתה מנהל שיחה טבעית ואנושית עם משתמש בנושא טראומה. "
+                            "המטרה שלך היא לשאול שאלות בהמשך ישיר למה שהמשתמש כתב, "
+                            "כאילו זו שיחה אמיתית ולא שאלון."
 
-                        "חוקים חשובים:"
-                        "- התייחס ספציפית לתשובה האחרונה של המשתמש"
-                        "- חבר את השאלה לנאמר"
-                        "- שאל שאלה אחת בלבד"
-                        "- כתוב בצורה זורמת, טבעית, ולא רשמית מדי"
-                        "- אל תחזור על הניסוח של השאלה המקורית"
-                        "- תרגיש חופשי לשנות ניסוח כדי שזה ירגיש כמו שיחה"
-                    )
-                },
-                {
-                    "role": "user", 
-                    "content": (
-                        f"שיחה עד כה:\n{formatted_conv}\n\n"
-                        f"תשובה אחרונה של המשתמש:\n{last_answer}\n\n"
-                        f"כיוון כללי לשאלה הבאה (לא חובה להיצמד): {QUESTIONS[step]}\n\n"
-                        "שאל שאלה המשך טבעית שמתייחסת למה שהמשתמש אמר."
-                    )
-                }
-            ]
-        )
+                            "חוקים חשובים:"
+                            "- התייחס ספציפית לתשובה האחרונה של המשתמש"
+                            "- חבר את השאלה לנאמר"
+                            "- שאל שאלה אחת בלבד"
+                            "- כתוב בצורה זורמת, טבעית, ולא רשמית מדי"
+                            "- אל תחזור על הניסוח של השאלה המקורית"
+                            "- תרגיש חופשי לשנות ניסוח כדי שזה ירגיש כמו שיחה"
+                        )
+                    },
+                    {
+                        "role": "user", 
+                        "content": (
+                            f"שיחה עד כה:\n{formatted_conv}\n\n"
+                            f"תשובה אחרונה של המשתמש:\n{last_answer}\n\n"
+                            f"כיוון כללי לשאלה הבאה (לא חובה להיצמד): {QUESTIONS[step]}\n\n"
+                            "שאל שאלה המשך טבעית שמתייחסת למה שהמשתמש אמר."
+                        )
+                    }
+                ]
+            )
 
-        next_question = dynamic_question_response.choices[0].message.content.strip()
+            next_question = dynamic_question_response.choices[0].message.content.strip()
 
-        # Save the current conversation
-        chat_collection.update_one(
-            {"user_id": user_id},
-            {"$set": {"step": step, "conversation": conversation, "last_question": next_question}}
-        )
+            # Save the current conversation
+            try:
+                result = chat_collection.update_one(
+                    {"user_id": user_id},
+                    {"$set": {"step": step, "conversation": conversation, "last_question": next_question}}
+                )
 
-        return jsonify({"reply": next_question})
+                if result.matched_count == 0:
+                    return jsonify({"error": "Session not found for update"}), 404
+            
+            except Exception as e:
+                return jsonify({"error": f"MongoDB update failed: {str(e)}"}), 500
+            
+            return jsonify({"reply": next_question})
 
+        except Exception as e:
+            return jsonify({"error": f"AI model request failed {str(e)}"}), 500
 
     # Persona classification
     formatted_conv = format_conversation(conversation)
