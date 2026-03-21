@@ -16,24 +16,3 @@ app.register_blueprint(keep_alive, url_prefix="/health")
 
 if __name__ == "__main__":
     app.run(port=5500, debug=True)
-
-
-# @app.delete("/session/<user_id>")
-# def delete_session(user_id: str):
-#     """
-#     Delete a session so the user can retake the quiz.
-#     Useful during development and for a 'retake' button on the frontend.
-#     """
-#     try:
-#         result = chat_collection.delete_one({"user_id": user_id})
-#         if result.deleted_count == 0:
-#             return jsonify({"error": "Session not found"}), 404
-#         logger.info(f"Session deleted for user_id: {user_id}")
-#         return jsonify({"message": "Session deleted successfully"})
-#     except Exception as e:
-#         logger.error(f"MongoDB delete error: {e}")
-#         return jsonify({"error": f"MongoDB error: {str(e)}"}), 500
-
-
-# if __name__ == "__main__":
-#     app.run(port=5500, debug=True)
