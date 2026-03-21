@@ -1,7 +1,8 @@
 from flask import Flask
 from flask_cors import CORS
-from routes.chat_route import chat_bp, delete_session
+from routes.chat_route import chat_bp
 from routes.chat_score_route import chat_score
+from routes.delete_session import delete_session
 from routes.keep_alive import keep_alive
 from dotenv import load_dotenv
 load_dotenv()
