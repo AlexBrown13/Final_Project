@@ -1,7 +1,11 @@
 import os, json
 from flask import Blueprint,request, jsonify
 from services.mongo import get_chat_collection
-from services.groq import client_groq, generate_dynamic_question, score_user_conversation
+from services.groq import (
+    client_groq, 
+    generate_dynamic_question, 
+    score_user_conversation
+)
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from utils.logger import logger
@@ -19,15 +23,8 @@ load_dotenv()
 
 chat_bp = Blueprint("chat", __name__)
 
-# logging.basicConfig(
-#     level=logging.INFO,
-#     format="%(asctime)s [%(levelname)s] %(message)s"
-# )
-# logger = logging.getLogger(__name__)
-
 limiter = Limiter( #prevents endpoint spam
     key_func=get_remote_address,
-    app=chat_bp,
     default_limits=["100 per hour"]
 )
 
@@ -75,7 +72,7 @@ def parse_score_response(raw: str) -> dict:
 
 
 
-@chat_bp.post("/chat")
+@chat_bp.post("/")  # /chat
 @limiter.limit("30 per hour") #prevents chat endpoint spam
 def chat():
     """
@@ -240,3 +237,30 @@ def chat():
         "score": score_data["score"],
         "score_reason": score_data["reason"]
     })
+
+
+
+delete_session = Blueprint("del_session", __name__)
+
+@delete_session.delete("/")
+def del_session(user_id: str):
+    """
+    Delete a session so the user can retake the quiz.
+    Useful during development and for a 'retake' button on the frontend.
+    """
+
+    # Mongo client
+    try:
+        chat_collection = get_chat_collection()
+    except Exception as e:
+        return jsonify({"error": str(e)})
+    
+    try:
+        result = chat_collection.delete_one({"user_id": user_id})
+        if result.deleted_count == 0:
+            return jsonify({"error": "Session not found"}), 404
+        logger.info(f"Session deleted for user_id: {user_id}")
+        return jsonify({"message": "Session deleted successfully"})
+    except Exception as e:
+        logger.error(f"MongoDB delete error: {e}")
+        return jsonify({"error": f"MongoDB error: {str(e)}"}), 500
