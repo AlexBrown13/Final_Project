@@ -10,8 +10,8 @@ app = Flask(__name__)
 CORS(app)
 
 app.register_blueprint(chat_bp, url_prefix="/chat")
-app.register_blueprint(chat_score, url_prefix="/result/<user_id>")
-app.register_blueprint(delete_session, url_prefix="/session/<user_id>")
+app.register_blueprint(chat_score, url_prefix="/result")
+app.register_blueprint(delete_session, url_prefix="/session")
 app.register_blueprint(keep_alive, url_prefix="/health")
 
 if __name__ == "__main__":

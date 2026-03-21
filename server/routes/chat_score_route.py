@@ -4,8 +4,8 @@ from utils.logger import logger
 
 chat_score = Blueprint("get_result", __name__)
 
-@chat_score.get("/") 
-def get_result(user_id: str):
+@chat_score.get("/<user_id>") 
+def get_result(user_id):
     """
     Fetch the final score for a completed session.
     Lets the frontend recover the score after a page refresh without re-running the quiz.

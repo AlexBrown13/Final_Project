@@ -240,10 +240,10 @@ def chat():
 
 
 
-delete_session = Blueprint("del_session", __name__)
+delete_session = Blueprint("session", __name__)
 
-@delete_session.delete("")
-def del_session(user_id: str):
+@delete_session.delete("/<user_id>")
+def session(user_id):
     """
     Delete a session so the user can retake the quiz.
     Useful during development and for a 'retake' button on the frontend.
