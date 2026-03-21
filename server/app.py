@@ -1,21 +1,45 @@
 import os
 import json
+import logging
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from pymongo import MongoClient
 from groq import Groq
 from dotenv import load_dotenv
 
 load_dotenv()
 
+# ──────────────────────────────────────────────
+# APP SETUP
+# ──────────────────────────────────────────────
+
 app = Flask(__name__)
 CORS(app)
 
-# Groq client
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s"
+)
+logger = logging.getLogger(__name__)
+
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["100 per hour"]
+)
+
+# ──────────────────────────────────────────────
+# CLIENTS
+# ──────────────────────────────────────────────
+
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
-# MongoDB
-mongo_client = MongoClient(os.environ.get("MONGO_URL"))
+mongo_client = MongoClient(
+    os.environ.get("MONGO_URL"),
+    serverSelectionTimeoutMS=5000  # fail fast if MongoDB is unreachable
+)
 db = mongo_client[os.environ.get("DB_NAME")]
 chat_collection = db["conversation"]
 
@@ -85,7 +109,7 @@ Rules:
 - Write as if you are a knowledgeable friend having a real conversation
 """
 
-# Seed questions — used as loose directional guidance for the AI, never asked verbatim
+# Seed questions — directional guidance for the AI only, never shown verbatim to users
 SEED_QUESTIONS = [
     "What brought you here today? What do you want to know about trauma?",
     "How interested are you in data or research about trauma in Israel?",
@@ -129,7 +153,8 @@ def parse_score_response(raw: str) -> dict:
             "score": score,
             "reason": parsed.get("reason", "")
         }
-    except (json.JSONDecodeError, ValueError, TypeError):
+    except (json.JSONDecodeError, ValueError, TypeError) as e:
+        logger.warning(f"Failed to parse score response: {e}. Raw: {raw}")
         return {
             "score": 1,
             "reason": "Could not parse scoring response — defaulting to score 1"
@@ -140,7 +165,14 @@ def parse_score_response(raw: str) -> dict:
 # ROUTES
 # ──────────────────────────────────────────────
 
+@app.get("/health")
+def health():
+    """Health check endpoint — confirms the server is running."""
+    return jsonify({"status": "ok"})
+
+
 @app.post("/chat")
+@limiter.limit("30 per hour")
 def chat():
     """
     Main quiz endpoint. Handles the full flow:
@@ -159,6 +191,10 @@ def chat():
     if not user_id or not message:
         return jsonify({"error": "Missing user_id or message"}), 400
 
+    # Input length guard — prevents abuse and runaway token usage
+    if len(message) > 1000:
+        return jsonify({"error": "Message too long — max 1000 characters"}), 400
+
     session = chat_collection.find_one({"user_id": user_id})
 
     # ── New session: create and return first question ──
@@ -174,7 +210,9 @@ def chat():
             })
             if not result.acknowledged:
                 return jsonify({"error": "Failed to create session"}), 500
+            logger.info(f"New session created for user_id: {user_id}")
         except Exception as e:
+            logger.error(f"MongoDB insert error: {e}")
             return jsonify({"error": f"MongoDB error: {str(e)}"}), 500
 
         return jsonify({
@@ -232,8 +270,8 @@ def chat():
             )
             next_question = dynamic_response.choices[0].message.content.strip()
 
-        except Exception:
-            # Fallback to seed question — quiz never breaks even if AI call fails
+        except Exception as e:
+            logger.warning(f"Dynamic question AI call failed: {e} — falling back to seed question")
             next_question = SEED_QUESTIONS[step]
 
         try:
@@ -248,6 +286,7 @@ def chat():
             if update_result.matched_count == 0:
                 return jsonify({"error": "Session not found for update"}), 404
         except Exception as e:
+            logger.error(f"MongoDB update error: {e}")
             return jsonify({"error": f"MongoDB update failed: {str(e)}"}), 500
 
         return jsonify({
@@ -259,6 +298,7 @@ def chat():
 
     # ── All questions answered: score the user ──
     formatted_conv = format_conversation(conversation)
+    logger.info(f"Scoring user_id: {user_id}")
 
     try:
         score_response = client.chat.completions.create(
@@ -274,7 +314,7 @@ def chat():
         score_data = parse_score_response(raw_result)
 
     except Exception as e:
-        # Save session with fallback score — never lose the user's answers
+        logger.error(f"Scoring AI call failed: {e} — saving fallback score")
         score_data = {
             "score": 1,
             "reason": f"Scoring failed, defaulting to score 1. Error: {str(e)}"
@@ -291,7 +331,9 @@ def chat():
                 "completed": True
             }}
         )
+        logger.info(f"User {user_id} scored: {score_data['score']}")
     except Exception as e:
+        logger.error(f"Failed to save final score: {e}")
         return jsonify({"error": f"Failed to save final score: {str(e)}"}), 500
 
     return jsonify({
@@ -313,6 +355,7 @@ def get_result(user_id: str):
     try:
         session = chat_collection.find_one({"user_id": user_id})
     except Exception as e:
+        logger.error(f"MongoDB find error: {e}")
         return jsonify({"error": f"MongoDB error: {str(e)}"}), 500
 
     if not session:
@@ -339,8 +382,10 @@ def delete_session(user_id: str):
         result = chat_collection.delete_one({"user_id": user_id})
         if result.deleted_count == 0:
             return jsonify({"error": "Session not found"}), 404
+        logger.info(f"Session deleted for user_id: {user_id}")
         return jsonify({"message": "Session deleted successfully"})
     except Exception as e:
+        logger.error(f"MongoDB delete error: {e}")
         return jsonify({"error": f"MongoDB error: {str(e)}"}), 500
 
 
