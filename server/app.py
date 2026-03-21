@@ -24,7 +24,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-limiter = Limiter(
+limiter = Limiter( #prevents endpoint spam
     get_remote_address,
     app=app,
     default_limits=["100 per hour"]
@@ -172,7 +172,7 @@ def health():
 
 
 @app.post("/chat")
-@limiter.limit("30 per hour")
+@limiter.limit("30 per hour") #prevents chat endpoint spam
 def chat():
     """
     Main quiz endpoint. Handles the full flow:
