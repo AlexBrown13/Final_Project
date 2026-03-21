@@ -72,7 +72,7 @@ def parse_score_response(raw: str) -> dict:
 
 
 
-@chat_bp.post("/")  # /chat
+@chat_bp.post("")  # /chat
 @limiter.limit("30 per hour") #prevents chat endpoint spam
 def chat():
     """
@@ -242,7 +242,7 @@ def chat():
 
 delete_session = Blueprint("del_session", __name__)
 
-@delete_session.delete("/")
+@delete_session.delete("")
 def del_session(user_id: str):
     """
     Delete a session so the user can retake the quiz.
