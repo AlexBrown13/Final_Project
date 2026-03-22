@@ -13,6 +13,7 @@ def get_result(user_id):
     # Mongo client
     try:
         chat_collection = get_chat_collection()
+        print(chat_collection)
     except Exception as e:
         return jsonify({"error": str(e)})
     
