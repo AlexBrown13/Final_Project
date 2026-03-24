@@ -1,0 +1,46 @@
+.section {
+  border: 0.5px solid rgba(65, 100, 90, 0.35);
+  border-radius: 16px;
+  padding: 1.25rem 1.25rem 1.5rem;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.heading {
+  font-family: 'Heebo', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 1.05rem;
+  margin: 0 0 0.35rem;
+}
+
+.note {
+  font-family: 'Heebo', system-ui, sans-serif;
+  font-size: 0.88rem;
+  margin: 0 0 1rem;
+  line-height: 1.5;
+}
+
+.frameWrap {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 0.5px dashed rgba(65, 100, 90, 0.5);
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(248, 224, 135, 0.2),
+    rgba(248, 224, 135, 0.2) 8px,
+    rgba(255, 255, 255, 0.35) 8px,
+    rgba(255, 255, 255, 0.35) 16px
+  );
+}
+
+.iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: transparent;
+}

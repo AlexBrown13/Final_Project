@@ -1,0 +1,57 @@
+.figure {
+  margin: 0;
+  padding: 0;
+}
+
+.caption {
+  margin-bottom: 0.65rem;
+}
+
+.title {
+  display: block;
+  font-family: 'Heebo', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.chartType {
+  display: inline-block;
+  font-family: 'Heebo', system-ui, sans-serif;
+  font-size: 0.82rem;
+  font-weight: 500;
+  opacity: 0.9;
+  margin-bottom: 0.35rem;
+}
+
+.desc {
+  font-family: 'Heebo', system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  margin: 0.25rem 0 0;
+  opacity: 0.95;
+}
+
+.box {
+  border: 0.5px solid rgba(65, 100, 90, 0.45);
+  border-radius: 12px;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.65),
+    rgba(158, 196, 208, 0.25)
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.boxLabel {
+  font-family: 'Heebo', system-ui, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #41645a;
+  text-align: center;
+  max-width: 90%;
+}

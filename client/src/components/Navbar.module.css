@@ -1,0 +1,98 @@
+.nav {
+  background: #f8f9fa;
+  border-bottom: 0.5px solid rgba(65, 100, 90, 0.2);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.brand {
+  font-family: 'Heebo', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: #41645a;
+  text-decoration: none;
+  line-height: 1.25;
+}
+
+.links {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.langGroup {
+  display: inline-flex;
+  align-items: stretch;
+  border-radius: 999px;
+  border: 0.5px solid rgba(65, 100, 90, 0.28);
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.langBtn {
+  font-family: 'Heebo', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: #41645a;
+  background: transparent;
+  border: none;
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
+  line-height: 1.2;
+}
+
+.langBtn:hover {
+  background: rgba(126, 170, 133, 0.12);
+}
+
+.langBtnActive {
+  background: #e1ebe2;
+  color: #41645a;
+}
+
+.langBtn + .langBtn {
+  border-inline-start: 0.5px solid rgba(65, 100, 90, 0.22);
+}
+
+.link {
+  font-family: 'Heebo', system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: #41645a;
+  text-decoration: none;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+}
+
+.link:hover {
+  background: rgba(126, 170, 133, 0.15);
+}
+
+.donate {
+  font-family: 'Heebo', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #fff;
+  background: #7eaa85;
+  text-decoration: none;
+  border-radius: 999px;
+  padding: 0.45rem 1.1rem;
+  border: 0.5px solid rgba(65, 100, 90, 0.25);
+}
+
+.donate:hover {
+  filter: brightness(0.97);
+}

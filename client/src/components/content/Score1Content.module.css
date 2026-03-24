@@ -1,0 +1,69 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 2.25rem;
+}
+
+.section {
+  background: #f6e4dc;
+  border: 0.5px solid rgba(65, 100, 90, 0.28);
+  border-radius: 20px;
+  padding: 2.25rem 2rem;
+}
+
+.h2 {
+  font-family: 'Heebo', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 1.65rem;
+  line-height: 1.35;
+  color: #7eaa85;
+  margin: 0 0 0.35rem;
+}
+
+.h2En {
+  font-family: 'Heebo', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 1.2rem;
+  line-height: 1.35;
+  color: #7eaa85;
+  opacity: 0.92;
+  margin: 0 0 1.25rem;
+}
+
+.p {
+  font-family: 'Heebo', system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 1.12rem;
+  line-height: 1.85;
+  color: #41645a;
+  margin: 0 0 1.15rem;
+}
+
+.pSecondary {
+  font-size: 1.02rem;
+  opacity: 0.92;
+}
+
+.callout {
+  margin-top: 1.5rem;
+  padding: 1.1rem 1.2rem;
+  border-radius: 14px;
+  background: #f8e087;
+  border: 0.5px solid rgba(65, 100, 90, 0.22);
+}
+
+.calloutP {
+  font-family: 'Heebo', system-ui, sans-serif;
+  font-size: 1.02rem;
+  line-height: 1.75;
+  color: #41645a;
+  margin: 0;
+}
+
+.calloutP + .calloutP {
+  margin-top: 0.65rem;
+}
+
+.spacer {
+  height: 1.75rem;
+}

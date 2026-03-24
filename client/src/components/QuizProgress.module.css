@@ -1,0 +1,43 @@
+.wrap {
+  margin-bottom: 1rem;
+}
+
+.labels {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.35rem;
+}
+
+.label {
+  font-family: 'Heebo', system-ui, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #41645a;
+  opacity: 0.95;
+}
+
+.count {
+  font-family: 'Heebo', system-ui, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #41645a;
+  margin-inline-start: auto;
+}
+
+.track {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(65, 100, 90, 0.12);
+  overflow: hidden;
+  border: 0.5px solid rgba(65, 100, 90, 0.2);
+}
+
+.fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #7eaa85, #9ec4d0);
+  transition: width 0.35s ease;
+}
