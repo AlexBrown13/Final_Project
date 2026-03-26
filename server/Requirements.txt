@@ -4,4 +4,6 @@ flask-limiter
 pymongo
 groq
 python-dotenv
+flask-jwt-extended
+bcrypt
 #python3 -m pip install -r Requirements.txt
