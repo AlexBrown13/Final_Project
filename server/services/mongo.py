@@ -4,8 +4,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 mongo_url = os.environ["MONGO_URL"]
+db_name = os.environ.get("DB_NAME")
+
 if not mongo_url:
     raise ValueError("Missing MONGO_URL environment variable")
+if not db_name:
+    raise ValueError("Missing DB_NAME environment variable")
 
 mongo_client = MongoClient(
     mongo_url,
@@ -14,10 +18,6 @@ mongo_client = MongoClient(
     serverSelectionTimeoutMS=5000
 )
 
-def get_chat_collection():
-    db_name = os.environ.get("DB_NAME")
-    if not db_name:
-        raise ValueError("Missing DB_NAME environment variable")
-
-    db = mongo_client[db_name]
-    return db["conversation"]
+db = mongo_client[db_name]
+get_chat_collection = db["conversation"]
+users_collection = db["users"]
