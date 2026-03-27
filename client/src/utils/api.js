@@ -27,6 +27,17 @@ export async function fetchHealth() {
   return { ok: false, error: lastErr }
 }
 
+
+export async function registerUser(email, password) {
+  return postJson("/auth/register", { email, password });
+}
+
+
+export async function loginUser(email, password) {
+  return postJson("/auth/login", { email, password });
+}
+
+
 /**
  * POST /chat — returns { reply, step, total_steps, completed, score?, error? }
  */

@@ -1,6 +1,6 @@
 import os, json
 from flask import Blueprint,request, jsonify
-from services.mongo import get_chat_collection
+from services.mongo import chat_collection
 from services.groq import (
     client_groq, 
     generate_dynamic_question, 
@@ -101,12 +101,6 @@ def chat():
         client = client_groq()
     except Exception as e:
         return jsonify({"error": f"{str(e)}"}), 300
-
-    # Mongo client
-    try:
-        chat_collection = get_chat_collection()
-    except Exception as e:
-        return jsonify({"error": str(e)})
 
     # Load session
     try:

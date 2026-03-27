@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify
-from services.mongo import get_chat_collection
+from services.mongo import chat_collection
 from utils.logger import logger
 
 chat_score = Blueprint("get_result", __name__)
@@ -10,13 +10,7 @@ def get_result(user_id):
     Fetch the final score for a completed session.
     Lets the frontend recover the score after a page refresh without re-running the quiz.
     """
-    # Mongo client
-    try:
-        chat_collection = get_chat_collection()
-        print(chat_collection)
-    except Exception as e:
-        return jsonify({"error": str(e)})
-    
+
     try:
         session = chat_collection.find_one({"user_id": user_id})
     except Exception as e:

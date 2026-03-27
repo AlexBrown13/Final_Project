@@ -1,0 +1,90 @@
+.page {
+  min-height: 100vh;
+  background: #f8f9fa;
+}
+
+.main {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.card {
+  background: #fff;
+  border: 0.5px solid rgba(65, 100, 90, 0.25);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.title {
+  margin: 0 0 1rem;
+  font-size: 1.4rem;
+  color: #41645a;
+}
+
+.form {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #41645a;
+}
+
+.input {
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border-radius: 8px;
+  border: 0.5px solid rgba(65, 100, 90, 0.28);
+  background: #fff;
+}
+
+.button {
+  border: 0.5px solid rgba(65, 100, 90, 0.25);
+  border-radius: 999px;
+  background: #7eaa85;
+  color: #fff;
+  padding: 0.55rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.errorBox {
+  background: #f6e4dc;
+  border: 0.5px solid rgba(170, 80, 80, 0.35);
+  color: #7a3b3b;
+  border-radius: 8px;
+  padding: 0.65rem;
+}
+
+.errorList {
+  margin: 0;
+  padding-inline-start: 1rem;
+}
+
+.successBox {
+  background: #e1ebe2;
+  border: 0.5px solid rgba(65, 100, 90, 0.25);
+  color: #41645a;
+  border-radius: 8px;
+  padding: 0.65rem;
+}
+
+.row {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.9rem;
+  font-size: 0.92rem;
+}
+
+.link {
+  color: #41645a;
+  font-weight: 600;
+}

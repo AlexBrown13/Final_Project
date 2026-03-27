@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify
-from services.mongo import get_chat_collection
+from services.mongo import chat_collection
 from utils.logger import logger
 
 delete_session = Blueprint("delete_session", __name__)
@@ -10,12 +10,6 @@ def delete_session_route(user_id):
     Delete a session so the user can retake the quiz.
     Useful during development and for a 'retake' button on the frontend.
     """
-    
-    # Mongo client
-    try:
-        chat_collection = get_chat_collection()
-    except Exception as e:
-        return jsonify({"error": str(e)})
     
     try:
         result = chat_collection.delete_one({"user_id": user_id})

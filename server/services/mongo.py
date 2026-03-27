@@ -19,5 +19,5 @@ mongo_client = MongoClient(
 )
 
 db = mongo_client[db_name]
-get_chat_collection = db["conversation"]
+chat_collection = db["conversation"]
 users_collection = db["users"]

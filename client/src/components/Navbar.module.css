@@ -81,6 +81,22 @@
   background: rgba(126, 170, 133, 0.15);
 }
 
+.authLink {
+  font-family: 'Heebo', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #41645a;
+  text-decoration: none;
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+  border: 0.5px solid rgba(65, 100, 90, 0.35);
+  background: #fff;
+}
+
+.authLink:hover {
+  background: rgba(158, 196, 208, 0.25);
+}
+
 .donate {
   font-family: 'Heebo', system-ui, sans-serif;
   font-weight: 600;
