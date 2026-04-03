@@ -44,6 +44,20 @@ const STRINGS = {
     authNetworkError: "לא ניתן להתחבר לשרת. נסו שוב.",
     authTokenMissing: "ההתחברות הצליחה אך לא התקבל טוקן מהשרת.",
     authUnexpectedError: "שגיאה לא צפויה",
+    navMap: "מפה",
+    mapPageTitle: "מפת פניות לפי עיר ורבעון",
+    mapPlay: "ניגון",
+    mapPause: "השהיה",
+    mapLoading: "טוען נתונים…",
+    mapError: "לא ניתן לטעון את המפה",
+    mapDemoHint:
+      "מוצגים נתוני הדגמה — הפעילו את השרת ואת מסד הנתונים לנתונים חיים.",
+    mapTimeLabel: "תקופה",
+    mapCallsUnit: "פניות",
+    mapGenderFemale: "נקבה",
+    mapGenderMale: "זכר",
+    mapGenderAllHint: "ללא סינון מגדר (כל המגדרים)",
+    mapGenderFiltersAria: "סינון לפי מגדר",
   },
   en: {
     serverDownTitle: "The server is unavailable",
@@ -89,6 +103,20 @@ const STRINGS = {
     authTokenMissing:
       "Login succeeded but no token was returned by the server.",
     authUnexpectedError: "Unexpected error",
+    navMap: "Map",
+    mapPageTitle: "Calls by city over time",
+    mapPlay: "Play",
+    mapPause: "Pause",
+    mapLoading: "Loading data…",
+    mapError: "Could not load map data",
+    mapDemoHint:
+      "Showing sample data — run the backend and database for live counts.",
+    mapTimeLabel: "Period",
+    mapCallsUnit: "calls",
+    mapGenderFemale: "Female",
+    mapGenderMale: "Male",
+    mapGenderAllHint: "No gender filter (all)",
+    mapGenderFiltersAria: "Filter by gender",
   },
 };
 

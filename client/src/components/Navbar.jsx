@@ -57,6 +57,9 @@ export default function Navbar() {
           <Link to="/results" className={styles.link}>
             {s.navContent}
           </Link>
+          <Link to="/map" className={styles.link}>
+            {s.navMap}
+          </Link>
           {!loggedIn ? (
             <>
               <Link to="/auth/login" className={styles.authLink}>
