@@ -4,6 +4,7 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from dotenv import load_dotenv
 
+from routes.map_route import map_bp
 from routes.auth_route import auth_bp
 from routes.chat_route import chat_bp
 from routes.chat_score_route import chat_score
@@ -19,6 +20,7 @@ jwt = JWTManager(app)
 CORS(app)
 
 
+app.register_blueprint(map_bp, url_prefix="/api")
 app.register_blueprint(auth_bp, url_prefix="/auth")
 app.register_blueprint(chat_bp, url_prefix="/chat")
 app.register_blueprint(chat_score, url_prefix="/result")
