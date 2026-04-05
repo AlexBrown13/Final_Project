@@ -7,6 +7,11 @@ export function MapProvider({ children }) {
   const [timeline, setTimeline] = useState([]);
   const [displayPoints, setDisplayPoints] = useState({});
   const [gender, setGender] = useState("all");
+  const [startDateFilter, setStartDateFilter] = useState(null);
+  const [endDateFilter, setEndDateFilter] = useState(null);
+
+  const [aggregatedCache, setAggregatedCache] = useState({});
+
   return (
     <MapContext.Provider
       value={{
@@ -18,6 +23,13 @@ export function MapProvider({ children }) {
         setDisplayPoints,
         gender,
         setGender,
+        startDateFilter,
+        setStartDateFilter,
+        endDateFilter,
+        setEndDateFilter,
+
+        aggregatedCache,
+        setAggregatedCache,
       }}
     >
       {children}

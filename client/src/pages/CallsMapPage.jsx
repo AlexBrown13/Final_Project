@@ -1,32 +1,30 @@
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useCallback,
-
-} from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import Navbar from "../components/Navbar.jsx";
 import { getUiStrings } from "../config/uiStrings.js";
 import { useDirection } from "../context/useDirection.js";
-import { fetchCallsMapData, fetchCallsMapDates } from "../utils/api.js";
-import styles from "./CallsMapPage.module.css";
-import CallMapView from "../components/CallMapView.jsx";
 import { useMapContext } from "../context/MapContext";
+import InputsFilter from "../components/map/InputsFilter.jsx";
+// import CallMapView from "../components/CallMapView.jsx";
+import styles from "./CallsMapPage.module.css";
+import { fetchCallsMapAggregated, fetchCallsMapDates } from "../utils/api.js";
+import MapView from "../components/map/MapView.jsx";
 
 const ISRAEL_CENTER = [31.5, 34.85];
 const DEFAULT_ZOOM = 7;
 
-/** * HELPER: Normalize points from API
- */
+/** Normalize API points */
 function normalizePoints(data) {
   if (!data?.points) return [];
-  return data.points.map((p) => ({
-    city: p.city,
-    latitude: Number(p.latitude),
-    longitude: Number(p.longitude),
-    count: Number(p.count) || 0,
-  }));
+  return data.points
+    .map((p) => ({
+      city: p.city,
+      latitude: Number(p.latitude),
+      longitude: Number(p.longitude),
+      count: Number(p.count) || 0,
+      year: p.year,
+      month: p.month,
+    }))
+    .filter((p) => p.latitude && p.longitude);
 }
 
 export default function CallsMapPage() {
@@ -36,144 +34,140 @@ export default function CallsMapPage() {
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [playing, setPlaying] = useState(false);
-  const [dateRange, setDateRange] = useState({});
+  const [aggregatedData, setAggregatedData] = useState([]);
   const {
-    displayPoints,
-    setDisplayPoints,
     timeline,
     setTimeline,
     stepIndex,
     setStepIndex,
     gender,
-    setGender,
+    startDateFilter,
+    endDateFilter,
+    aggregatedCache,
+    setAggregatedCache,
   } = useMapContext();
-
-  const cacheRef = useRef(new Map());
-  const prevStepRef = useRef(0);
-  const prevGenderRef = useRef(gender);
 
   useEffect(() => setMounted(true), []);
 
-  /** 1. Fetch Min/Max dates and generate months for timeline */
+  /** 1. Generate timeline (month steps) */
   useEffect(() => {
-    const generateTimeline = async () => {
+    async function generateTimeline() {
       try {
         const { res, data } = await fetchCallsMapDates();
         if (!res.ok || !data.minDate || !data.maxDate) return;
 
         const start = new Date(data.minDate);
         const end = new Date(data.maxDate);
-        setDateRange({ start: data.minDate, end: data.maxDate });
 
-        const timeline = [];
-        // formatter (created once)
-        const formatter = new Intl.DateTimeFormat("en-US", {
-          month: "short",
-        });
-
-        // start from first day of first month
+        const timelineArr = [];
+        const formatter = new Intl.DateTimeFormat("en-US", { month: "short" });
         let current = new Date(start.getFullYear(), start.getMonth(), 1);
 
         while (current <= end) {
           const year = current.getFullYear();
           const month = current.getMonth() + 1;
-
           const from = `${year}-${String(month).padStart(2, "0")}-01`;
-
-          // last day of month
           const lastDay = new Date(year, month, 0).getDate();
           const to = `${year}-${String(month).padStart(2, "0")}-${String(
             lastDay
           ).padStart(2, "0")}`;
-
           const label = `${formatter.format(current)} ${year}`;
 
-          timeline.push({ from, to, label });
-
-          // move to next month
+          timelineArr.push({ from, to, label, year, month });
           current.setMonth(current.getMonth() + 1);
         }
 
-        setTimeline(timeline);
-        console.log("timeline ", timeline);
+        setTimeline(timelineArr);
+        console.log("timeline ", timeline[timeline.length - 1].to);
       } catch (err) {
         console.error(err);
       }
-    };
+    }
 
     generateTimeline();
-  }, []);
+  }, [setTimeline]);
 
-  /** 2. Fetch data logic with caching */
-  const loadData = useCallback(async (from, to, g) => {
-    const key = `${from}_${to}_${g}`;
-    const chched = cacheRef.current.get(key);
-    if (chched) return chched;
+  /** 2. Load aggregated data once */
+  const loadAllData = useCallback(
+    async (from, to, g) => {
+      const key = `${from}_${to}_${g}`;
 
-    try {
-      const { res, data } = await fetchCallsMapData(from, to, g);
-      if (!res.ok) return [];
-      const pts = normalizePoints(data);
-      cacheRef.current.set(key, pts);
-      return pts;
-    } catch (err) {
-      console.error("Fetch range error:", err);
-      return [];
-    }
-  }, []);
-
-  /** 3. Sync map data when step index or filters change */
-  useEffect(() => {
-    if (timeline.length === 0) return;
-
-    const syncMap = async () => {
-      const isGenderChange = prevGenderRef.current !== gender;
-      if (isGenderChange) {
-        let rebuilt = {};
-        const step = timeline[stepIndex]["to"];
-        rebuilt = await loadData(dateRange["start"], step, gender);
-        setDisplayPoints(rebuilt);
-      } else {
-        const step = timeline[stepIndex];
-        const newPoints = await loadData(step.from, step.to, gender);
-
-        // Merge results (Growth effect)
-        setDisplayPoints((prev) => {
-          const next = { ...prev };
-          newPoints.forEach((p) => {
-            if (!next[p.city]) {
-              next[p.city] = { ...p };
-            } else {
-              next[p.city].count += p.count;
-            }
-          });
-          return next;
-        });
+      if (aggregatedCache[key]) {
+        setAggregatedData(aggregatedCache[key]);
+        return;
       }
-      prevStepRef.current = stepIndex;
-      prevGenderRef.current = gender;
-    };
 
-    syncMap();
-  }, [stepIndex, timeline, gender, loadData]);
+      setLoading(true);
+      const res = await fetchCallsMapAggregated(from, to, g);
+      const points = normalizePoints(res);
 
-  /** 4. Autoplay logic */
+      setAggregatedCache((prev) => ({
+        ...prev,
+        [key]: points,
+      }));
+      setAggregatedData(points);
+      setLoading(false);
+    },
+    [aggregatedCache, setAggregatedCache]
+  );
+
+  /** 3. Sync map whenever timeline/filters/gender change */
+  // Fetch once per filter change
+  useEffect(() => {
+    if (!timeline.length) return;
+
+    const startStr = startDateFilter
+      ? startDateFilter.format("YYYY-MM-DD")
+      : timeline[0]?.from;
+
+    const endStr = endDateFilter
+      ? endDateFilter.format("YYYY-MM-DD")
+      : timeline[timeline.length - 1]?.to;
+
+    if (!startStr || !endStr) return;
+
+    loadAllData(startStr, endStr, gender);
+  }, [gender, startDateFilter, endDateFilter, timeline, loadAllData]);
+
+  // -------------------------------
+  // 4. CUMULATIVE LOGIC
+  // -------------------------------
+  const pointsArray = useMemo(() => {
+    if (!aggregatedData.length || !timeline.length) return [];
+
+    const result = {};
+
+    for (let i = 0; i <= stepIndex; i++) {
+      const step = timeline[i];
+
+      aggregatedData.forEach((p) => {
+        if (p.year === step.year && p.month === step.month) {
+          if (!result[p.city]) {
+            result[p.city] = { ...p };
+          } else {
+            result[p.city].count += p.count;
+          }
+        }
+      });
+    }
+
+    return Object.values(result);
+  }, [aggregatedData, stepIndex, timeline]);
+
+  /** 5. Autoplay timeline */
   useEffect(() => {
     if (!playing) return;
-    const id = setInterval(() => {
+
+    const intervalId = setInterval(() => {
       setStepIndex((i) => {
         if (i < timeline.length - 1) return i + 1;
         setPlaying(false);
         return i;
       });
     }, 1200);
-    return () => clearInterval(id);
-  }, [playing, timeline]);
 
-  const pointsArray = useMemo(
-    () => Object.values(displayPoints),
-    [displayPoints]
-  );
+    return () => clearInterval(intervalId);
+  }, [playing, timeline, setStepIndex]);
 
   if (!mounted) return null;
 
@@ -195,36 +189,32 @@ export default function CallsMapPage() {
             >
               {playing ? s.mapPause : s.mapPlay}
             </button>
-
-            <select
-              value={gender}
-              className={styles.genderSelect}
-              onChange={(e) => {
-                setGender(e.target.value);
-                //setStepIndex(0);
-                setDisplayPoints({});
-              }}
-            >
-              <option value="all">{s.mapGenderFiltersAria}</option>
-              <option value="female">{s.mapGenderFemale}</option>
-              <option value="male">{s.mapGenderMale}</option>
-            </select>
           </div>
 
           <input
             type="range"
-            disabled={true}
+            disabled={!timeline.length}
             className={styles.slider}
             min={0}
-            max={timeline.length > 0 ? timeline.length - 1 : 0}
+            max={timeline.length - 1}
             value={stepIndex}
             onChange={(e) => setStepIndex(Number(e.target.value))}
           />
+          <span>
+            {s.mapTimeLabel}:{" "}
+            <strong>{timeline[timeline.length - 1]?.label}</strong>
+          </span>
+        </div>
+
+        <div>
+          <InputsFilter />
         </div>
 
         <div className={styles.mapFrame}>
-          <CallMapView points={pointsArray} callsUnit={s.mapCallsUnit} />
+          <MapView points={pointsArray} callsUnit={s.mapCallsUnit} />
         </div>
+
+        {loading && <p>Loading...</p>}
       </main>
     </div>
   );
