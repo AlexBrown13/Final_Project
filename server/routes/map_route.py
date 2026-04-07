@@ -164,6 +164,7 @@ def get_calls_map_aggregated():
         start_date = request.args.get("from")
         end_date = request.args.get("to")
         gender = request.args.get("gender", "all")
+        group_age = request.args.get("ages")
     
         # Validation
         if not start_date or not end_date:
@@ -198,6 +199,25 @@ def get_calls_map_aggregated():
         if db_gender:
             match_stage["gender"] = db_gender
        
+
+       # Build age groups
+        age_ranges = {
+            1: (0, 12),
+            2: (13, 17),
+            3: (18, 24),
+            4: (25, 40),
+            5: (40, 120)
+        }
+
+        if group_age:
+            selected = [int(g) for g in group_age.split(',')]
+
+            age_condition = [
+                {"ageNum": {"$gte": age_ranges[k][0], "$lte": age_ranges[k][1]}}
+                for k in selected if k in age_ranges
+            ]
+            if age_condition:
+                match_stage.setdefault("$and", []).append({"$or": age_condition})
         
         # Aggregation pipeline 
         pipeline = [
@@ -223,6 +243,14 @@ def get_calls_map_aggregated():
                             "to": "double",
                             "onError": 0,
                             "onNull": 0
+                        }
+                    },
+                    "ageNum": {
+                        "$convert": {
+                            "input": "$age",
+                            "to": "int",
+                            "onError": None,
+                            "onNull": None
                         }
                     }
                 }

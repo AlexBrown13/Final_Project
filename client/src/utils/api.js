@@ -87,17 +87,27 @@ export async function fetchCallsMapDates() {
  * GET api/v1/calls-map-aggregated
  * Fetch aggregated calls between dates with optional gender filter
  */
-export async function fetchCallsMapAggregated(from, to, gender = "all") {
+export async function fetchCallsMapAggregated(
+  from,
+  to,
+  gender = "all",
+  ages = ""
+) {
+  const base = getApiBase();
+
   try {
-    const base = getApiBase();
-    const res = await fetch(
-      `${base}/api/v1/calls-map-aggregated?from=${from}&to=${to}&gender=${gender}`
-    );
+    const params = new URLSearchParams({
+      from,
+      to,
+      gender,
+      ages,
+    });
+
+    const res = await fetch(`${base}/api/v1/calls-map-aggregated?${params}`);
+
     if (!res.ok) return [];
-    const data = await res.json();
-    return data;
-  } catch (err) {
-    console.error("fetchCallsMapAggregated error:", err);
+    return await res.json();
+  } catch (e) {
     return { res: { ok: false }, data: null };
   }
 }

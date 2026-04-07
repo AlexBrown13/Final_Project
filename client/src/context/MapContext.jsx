@@ -11,6 +11,7 @@ export function MapProvider({ children }) {
   const [endDateFilter, setEndDateFilter] = useState(null);
 
   const [aggregatedCache, setAggregatedCache] = useState({});
+  const [ages, setAges] = useState([1, 2, 3, 4, 5]);
 
   return (
     <MapContext.Provider
@@ -30,6 +31,8 @@ export function MapProvider({ children }) {
 
         aggregatedCache,
         setAggregatedCache,
+        ages,
+        setAges,
       }}
     >
       {children}

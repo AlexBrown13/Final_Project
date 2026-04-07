@@ -1,5 +1,7 @@
 import React, { useContext, useState } from "react";
-// import dayjs from "dayjs";
+import dayjs from "dayjs";
+import { getUiStrings } from "../../config/uiStrings.js";
+import { useDirection } from "../../context/useDirection.js";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -9,11 +11,17 @@ import {
   Typography,
   ToggleButton,
   ToggleButtonGroup,
+  Checkbox,
+  Select,
+  MenuItem,
+  ListItemText,
 } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import { useMapContext } from "../../context/MapContext";
 
 export default function InputsFilter() {
+  const { locale } = useDirection();
+  const s = getUiStrings(locale);
   const {
     startDateFilter,
     setStartDateFilter,
@@ -22,14 +30,40 @@ export default function InputsFilter() {
     gender,
     setGender,
     setStepIndex,
+    ages,
+    setAges,
   } = useMapContext();
 
   const handleApply = () => {
     // Format dates for the console or API
     //const start = startDateFilter.format("YYYY-MM-DD");
     //const end = endDateFilter ? endDateFilter.format("YYYY-MM-DD") : "Today";
-
+    const agesParam = ages.join(","); // "1,3,5"
+    console.log("ages:", agesParam);
     setStepIndex(0); // reset timeline to start
+  };
+
+  const ageOptions = [
+    { label: "0-12", value: 1 },
+    { label: "13-17", value: 2 },
+    { label: "18-24", value: 3 },
+    { label: "25-39", value: 4 },
+    { label: "40-120", value: 5 },
+  ];
+
+  // handle checkbox change
+  const handleAgesChange = (event) => {
+    const value = event.target.value;
+
+    if (value.includes("all")) {
+      if (ages.length === ageOptions.length) {
+        setAges([]);
+      } else {
+        setAges(ageOptions.map((opt) => opt.value));
+      }
+    } else {
+      setAges(value);
+    }
   };
 
   return (
@@ -49,7 +83,7 @@ export default function InputsFilter() {
             variant="caption"
             sx={{ fontWeight: "bold", mb: 0.5, display: "block" }}
           >
-            התחלה
+            {s.mapDateStartsLabel}
           </Typography>
           <DatePicker
             value={startDateFilter}
@@ -64,7 +98,7 @@ export default function InputsFilter() {
             variant="caption"
             sx={{ fontWeight: "bold", mb: 0.5, display: "block" }}
           >
-            עד
+            {s.mapDateEndsLabel}
           </Typography>
           <DatePicker
             value={endDateFilter}
@@ -79,7 +113,7 @@ export default function InputsFilter() {
             variant="caption"
             sx={{ fontWeight: "bold", mb: 0.5, display: "block" }}
           >
-            מגדר
+            {s.mapGenderLabel}
           </Typography>
           <ToggleButtonGroup
             value={gender}
@@ -97,10 +131,67 @@ export default function InputsFilter() {
               },
             }}
           >
-            <ToggleButton value="all">הכל</ToggleButton>
-            <ToggleButton value="male">זכר</ToggleButton>
-            <ToggleButton value="female">נקבה</ToggleButton>
+            <ToggleButton value="all" sx={{ textTransform: "none" }}>
+              {s.mapGenderBoth}
+            </ToggleButton>
+            <ToggleButton value="male" sx={{ textTransform: "none" }}>
+              {s.mapGenderMale}
+            </ToggleButton>
+            <ToggleButton value="female" sx={{ textTransform: "none" }}>
+              {s.mapGenderFemale}
+            </ToggleButton>
           </ToggleButtonGroup>
+        </Box>
+
+        <Box sx={{ textTransform: "none" }}>
+          <Typography
+            variant="caption"
+            sx={{ fontWeight: "bold", mb: 0.5, display: "block" }}
+          >
+            {s.mapAgesLabel}
+          </Typography>
+
+          <Select
+            multiple
+            value={ages}
+            onChange={handleAgesChange}
+            renderValue={(selected) =>
+              selected.length === 0
+                ? "בחר גיל"
+                : selected
+                    .map(
+                      (val) => ageOptions.find((o) => o.value === val)?.label
+                    )
+                    .join(", ")
+            }
+            size="small"
+            sx={{ width: 200 }}
+            MenuProps={{
+              PaperProps: {
+                style: { maxHeight: 200 },
+              },
+            }}
+          >
+            {/* Select All */}
+            <MenuItem value="all">
+              <Checkbox
+                checked={ages.length === ageOptions.length}
+                indeterminate={
+                  ages.length > 0 && ages.length < ageOptions.length
+                }
+              />
+              {/* <ListItemText primary="כל הגילאים" /> */}
+              <ListItemText primary={s.mapAgesAllAges} />
+            </MenuItem>
+
+            {/* Options */}
+            {ageOptions.map((opt) => (
+              <MenuItem key={opt.value} value={opt.value}>
+                <Checkbox checked={ages.includes(opt.value)} />
+                <ListItemText primary={opt.label} />
+              </MenuItem>
+            ))}
+          </Select>
         </Box>
 
         <Button

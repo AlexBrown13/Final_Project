@@ -45,6 +45,7 @@ export default function CallsMapPage() {
     endDateFilter,
     aggregatedCache,
     setAggregatedCache,
+    ages,
   } = useMapContext();
 
   useEffect(() => setMounted(true), []);
@@ -78,7 +79,6 @@ export default function CallsMapPage() {
         }
 
         setTimeline(timelineArr);
-        console.log("timeline ", timeline[timeline.length - 1].to);
       } catch (err) {
         console.error(err);
       }
@@ -89,8 +89,8 @@ export default function CallsMapPage() {
 
   /** 2. Load aggregated data once */
   const loadAllData = useCallback(
-    async (from, to, g) => {
-      const key = `${from}_${to}_${g}`;
+    async (from, to, g, agesParam) => {
+      const key = `${from}_${to}_${g}_${agesParam}`;
 
       if (aggregatedCache[key]) {
         setAggregatedData(aggregatedCache[key]);
@@ -98,7 +98,7 @@ export default function CallsMapPage() {
       }
 
       setLoading(true);
-      const res = await fetchCallsMapAggregated(from, to, g);
+      const res = await fetchCallsMapAggregated(from, to, g, agesParam);
       const points = normalizePoints(res);
 
       setAggregatedCache((prev) => ({
@@ -126,8 +126,10 @@ export default function CallsMapPage() {
 
     if (!startStr || !endStr) return;
 
-    loadAllData(startStr, endStr, gender);
-  }, [gender, startDateFilter, endDateFilter, timeline, loadAllData]);
+    const agesParam = ages.join(",");
+
+    loadAllData(startStr, endStr, gender, agesParam);
+  }, [gender, startDateFilter, endDateFilter, timeline, ages, loadAllData]);
 
   // -------------------------------
   // 4. CUMULATIVE LOGIC
