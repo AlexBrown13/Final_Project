@@ -27,12 +27,44 @@ export async function fetchHealth() {
   return { ok: false, error: lastErr };
 }
 
+/**
+ * POST /auth/register
+ */
 export async function registerUser(email, password) {
-  return postJson("/auth/register", { email, password });
+  const base = getApiBase();
+
+  const res = await fetch(`${base}/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+
+  try {
+    const data = await res.json();
+    return { res, data };
+  } catch {
+    return { res: { ok: false }, data: null };
+  }
 }
 
+/**
+ * POST /auth/login
+ */
 export async function loginUser(email, password) {
-  return postJson("/auth/login", { email, password });
+  const base = getApiBase();
+
+  const res = await fetch(`${base}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+
+  try {
+    const data = await res.json();
+    return { res, data };
+  } catch {
+    return { res: { ok: false }, data: null };
+  }
 }
 
 /**
