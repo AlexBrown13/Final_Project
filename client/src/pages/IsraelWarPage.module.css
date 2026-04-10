@@ -1,0 +1,122 @@
+.page {
+  min-height: 100vh;
+  background: #f8f9fa;
+}
+
+.main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 3rem;
+}
+
+.breadcrumb {
+  font-family: 'Heebo', system-ui, sans-serif;
+  font-size: 0.82rem;
+  color: rgba(65, 100, 90, 0.55);
+  margin-bottom: 1.5rem;
+}
+
+.heroTitle {
+  font-family: 'Heebo', system-ui, sans-serif;
+  font-size: clamp(1.9rem, 4vw, 2.8rem);
+  font-weight: 700;
+  color: #41645a;
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+}
+
+.heroSubtitle {
+  font-family: 'Heebo', system-ui, sans-serif;
+  color: rgba(65, 100, 90, 0.68);
+  font-size: 1.05rem;
+  margin-bottom: 2rem;
+}
+
+.infoBanner {
+  background: #c8dde4;
+  border-radius: 0.85rem;
+  padding: 1.1rem 1.75rem;
+  margin-bottom: 2.5rem;
+  color: #41645a;
+  font-family: 'Heebo', system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.55;
+}
+
+.loading {
+  font-family: 'Heebo', system-ui, sans-serif;
+  color: rgba(65, 100, 90, 0.6);
+  text-align: center;
+  padding: 3rem 0;
+  font-size: 1rem;
+}
+
+.graphGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+@media (max-width: 700px) {
+  .graphGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.graphCard {
+  background: #fff;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  border-bottom: 3px solid #7eaa85;
+  box-shadow: 0 2px 10px rgba(65, 100, 90, 0.07);
+}
+
+.cardTitle {
+  font-family: 'Heebo', system-ui, sans-serif;
+  font-weight: 700;
+  color: #41645a;
+  font-size: 0.97rem;
+  margin-bottom: 0.2rem;
+  margin-top: 0;
+}
+
+.cardSource {
+  font-family: 'Heebo', system-ui, sans-serif;
+  font-size: 0.75rem;
+  color: rgba(65, 100, 90, 0.5);
+  margin-top: 0.6rem;
+  margin-bottom: 0;
+}
+
+.readMoreBtn {
+  display: inline-block;
+  margin-top: 0.75rem;
+  background: none;
+  border: 1.5px solid #7eaa85;
+  border-radius: 6px;
+  color: #41645a;
+  font-family: 'Heebo', system-ui, sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.3rem 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.readMoreBtn:hover {
+  background: #7eaa85;
+  color: #fff;
+}
+
+.readMoreText {
+  font-family: 'Heebo', system-ui, sans-serif;
+  font-size: 0.88rem;
+  color: rgba(65, 100, 90, 0.82);
+  line-height: 1.65;
+  margin-top: 0.65rem;
+  margin-bottom: 0;
+  border-right: 3px solid #7eaa85;
+  padding-right: 0.9rem;
+}

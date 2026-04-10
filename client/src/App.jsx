@@ -7,6 +7,8 @@ import ResultsPage from "./pages/ResultsPage.jsx";
 import Login from "./pages/Auth/Login.jsx";
 import Register from "./pages/Auth/Register.jsx";
 import CallsMapPage from "./pages/CallsMapPage.jsx";
+import IsraelWarPage from "./pages/IsraelWarPage.jsx";
+import AddictionsPage from "./pages/AddictionsPage.jsx";
 
 export default function App() {
   return (
@@ -16,6 +18,8 @@ export default function App() {
           <Routes>
             <Route path="/" element={<QuizPage />} />
             <Route path="/map" element={<CallsMapPage />} />
+            <Route path="/graphs/israel" element={<IsraelWarPage />} />
+            <Route path="/graphs/addictions" element={<AddictionsPage />} />
             <Route path="/results" element={<ResultsPage />} />
             <Route
               path="/auth/login"

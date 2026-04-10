@@ -60,6 +60,12 @@ export default function Navbar() {
           <Link to="/map" className={styles.link}>
             {s.navMap}
           </Link>
+          <Link to="/graphs/israel" className={styles.link}>
+            {s.navGraphIsrael}
+          </Link>
+          <Link to="/graphs/addictions" className={styles.link}>
+            {s.navGraphAddictions}
+          </Link>
           {!loggedIn ? (
             <>
               <Link to="/auth/login" className={styles.authLink}>
