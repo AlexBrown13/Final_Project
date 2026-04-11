@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { getUiStrings } from "../config/uiStrings.js";
 import { AUTH_TOKEN_KEY } from "../config/storageKeys.js";
@@ -17,6 +18,18 @@ export default function Navbar() {
   const { locale, setLocale } = useDirection();
   const s = getUiStrings(locale);
   const loggedIn = hasAuthToken();
+  const [graphsOpen, setGraphsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setGraphsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <header className={styles.nav}>
@@ -60,12 +73,26 @@ export default function Navbar() {
           <Link to="/map" className={styles.link}>
             {s.navMap}
           </Link>
-          <Link to="/graphs/israel" className={styles.link}>
-            {s.navGraphIsrael}
-          </Link>
-          <Link to="/graphs/addictions" className={styles.link}>
-            {s.navGraphAddictions}
-          </Link>
+          <div className={styles.dropdown} ref={dropdownRef}>
+            <button
+              type="button"
+              className={`${styles.link} ${styles.dropdownToggle}`}
+              onClick={() => setGraphsOpen(o => !o)}
+              aria-expanded={graphsOpen}
+            >
+              {s.navGraphs ?? "Graphs"} ▾
+            </button>
+            {graphsOpen && (
+              <div className={styles.dropdownMenu}>
+                <Link to="/graphs/addictions" className={styles.dropdownItem} onClick={() => setGraphsOpen(false)}>
+                  {s.navGraphAddictions}
+                </Link>
+                <Link to="/graphs/israel" className={styles.dropdownItem} onClick={() => setGraphsOpen(false)}>
+                  {s.navGraphIsrael}
+                </Link>
+              </div>
+            )}
+          </div>
           {!loggedIn ? (
             <>
               <Link to="/auth/login" className={styles.authLink}>
@@ -76,13 +103,6 @@ export default function Navbar() {
               </Link>
             </>
           ) : null}
-          <a
-            href="#"
-            className={styles.donate}
-            onClick={(e) => e.preventDefault()}
-          >
-            {s.navDonate}
-          </a>
         </nav>
       </div>
     </header>

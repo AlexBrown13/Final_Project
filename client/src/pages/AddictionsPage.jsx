@@ -56,18 +56,41 @@ function HeatmapChart({ chart, locale }) {
   const rowLabels = locale === 'he' ? chart.row_labels_he : chart.row_labels_en
   const colLabels = locale === 'he' ? chart.labels_he : chart.labels_en
   const matrix = chart.values
-  const W = 400, H = 280, pL = 120, pT = 46, pR = 10, pB = 10
+  const isRtl = locale === 'he'
+  // Labels always on the LEFT. For Hebrew, direction="rtl" + textAnchor="start" anchors the
+  // RIGHT edge of the RTL text at x, so text grows leftward and stays outside the grid.
+  const W = 460
+  const pL = isRtl ? 160 : 130
+  const pR = 10
+  const pT = isRtl ? 68 : 46
+  const pB = 10
+  const H = isRtl ? 300 : 280
   const cW = (W - pL - pR) / colLabels.length
   const cH = (H - pT - pB) / rowLabels.length
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H}>
-      {colLabels.map((l, j) => (
-        <text key={j} x={pL + j * cW + cW / 2} y={pT - 10}
-          textAnchor="middle" style={{ fontFamily: FONT, fontSize: '11px', fill: '#41645a', fontWeight: 600 }}>{l}</text>
-      ))}
+      {/* Column labels — split on space for Hebrew so they stack on 2 lines */}
+      {colLabels.map((l, j) => {
+        const cx = pL + j * cW + cW / 2
+        const words = l.split(' ')
+        return (
+          <text key={j} x={cx} y={pT - (words.length > 1 ? 24 : 10)}
+            textAnchor="middle" style={{ fontFamily: FONT, fontSize: '11px', fill: '#41645a', fontWeight: 600 }}>
+            {words.map((word, wi) => (
+              <tspan key={wi} x={cx} dy={wi === 0 ? 0 : '1.3em'}>{word}</tspan>
+            ))}
+          </text>
+        )
+      })}
+      {/* Row labels — always left side; Hebrew uses direction=rtl so right-edge anchors at x */}
       {rowLabels.map((l, i) => (
-        <text key={i} x={pL - 8} y={pT + i * cH + cH / 2}
-          textAnchor="end" dominantBaseline="middle" style={{ fontFamily: FONT, fontSize: '11px', fill: '#41645a', fontWeight: 600 }}>{l}</text>
+        <text key={i}
+          x={pL - 8}
+          y={pT + i * cH + cH / 2}
+          textAnchor={isRtl ? 'start' : 'end'}
+          direction={isRtl ? 'rtl' : undefined}
+          dominantBaseline="middle"
+          style={{ fontFamily: FONT, fontSize: '11px', fill: '#41645a', fontWeight: 600 }}>{l}</text>
       ))}
       {matrix.map((row, i) => row.map((v, j) => (
         <g key={`${i}-${j}`}>
@@ -162,22 +185,36 @@ function SimpleLineChart({ chart, locale }) {
 
 /* 12 — Horizontal bar: severity of each risk behavior, with frequency label */
 function SeverityBar({ chart, locale }) {
+  const isRtl = locale === 'he'
   const behaviors = chart.values
-  const sevLabel = locale === 'he' ? 'חומרה' : 'Severity (0–100)'
+  const sevLabel = isRtl ? 'חומרה' : 'Severity (0–100)'
   const data = behaviors
     .map(b => ({
-      name: locale === 'he' ? b.label_he : b.label_en,
+      name: isRtl ? b.label_he : b.label_en,
       severity: b.y,
       frequency: b.x,
       prevalence: b.z,
     }))
     .sort((a, b2) => b2.severity - a.severity)
+  const yAxisWidth = isRtl ? 140 : 95
+  const rightMargin = isRtl ? 110 : 80
+  // Custom tick: RTL Hebrew uses textAnchor="start"+direction="rtl" so the RIGHT
+  // edge of the text anchors at x (right edge of Y-axis area), text flows leftward.
+  const CustomTick = ({ x, y, payload }) => (
+    <text x={x} y={y}
+      textAnchor={isRtl ? 'start' : 'end'}
+      direction={isRtl ? 'rtl' : undefined}
+      dominantBaseline="middle"
+      style={{ fontFamily: FONT, fill: '#41645a', fontSize: 13 }}>
+      {payload.value}
+    </text>
+  )
   return (
     <ResponsiveContainer width="100%" height={280}>
-      <BarChart data={data} layout="vertical" margin={{ top: 16, right: 80, left: 100, bottom: 16 }}>
+      <BarChart data={data} layout="vertical" margin={{ top: 16, right: rightMargin, left: 0, bottom: 16 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(65,100,90,0.12)" horizontal={false} />
         <XAxis type="number" tick={TICK} domain={[0, 100]} tickFormatter={v => `${v}`} label={{ value: sevLabel, position: 'insideBottom', offset: -4, style: { fontFamily: FONT, fontSize: 12, fill: '#41645a' } }} />
-        <YAxis type="category" dataKey="name" tick={TICK} width={95} />
+        <YAxis type="category" dataKey="name" tick={<CustomTick />} width={yAxisWidth} />
         <Tooltip
           formatter={(v, name, props) => {
             const d = props.payload
@@ -188,10 +225,7 @@ function SeverityBar({ chart, locale }) {
         <Bar dataKey="severity" radius={[0, 6, 6, 0]} barSize={34}>
           {data.map((_, i) => <Cell key={i} fill={PAL[i % PAL.length]} />)}
           <LabelList dataKey="severity" position="right"
-            formatter={(v, entry) => {
-              const d = data.find(r => r.severity === v)
-              return `${v}  (${locale === 'he' ? 'תד' : 'fr'} ${d?.frequency}%)`
-            }}
+            formatter={v => `${v}`}
             style={{ fontFamily: FONT, fontSize: 12, fill: '#41645a', fontWeight: 600 }} />
         </Bar>
       </BarChart>
