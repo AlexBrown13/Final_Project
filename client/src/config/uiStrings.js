@@ -48,12 +48,24 @@ const STRINGS = {
     navGraphs: "גרפים",
     navGraphIsrael: "7 באוקטובר",
     navGraphAddictions: "התמכרויות",
+    navGraphHealth: "בריאות גופנית",
+    navGraphSleep: "שינה",
     graphIsraelTitle: "ישראל לפני ואחרי 7 באוקטובר",
     graphIsraelSubtitle: "השלכות כלכליות ונפשיות",
-    graphIsraelDesc: "מלחמת ה-7 באוקטובר הותירה צלקות עמוקות על מערכת בריאות הנפש, הכלכלה ושוק העבודה בישראל. דו\"ח מבקר המדינה 2025 מצביע על כשל מערכתי חריף: כ-38% מהאוכלוסייה דיווחו על תסמינים נפשיים בינוניים עד חמורים — אך פחות מ-1% קיבלו טיפול בפועל. צפויים לפתח PTSD כ-340,000 איש, ומספר המטופלים הכולל עשוי לגדול עד 680,000. הנזק הכלכלי נמדד במאות מיליארדי דולרים שנתיים, וכולל לא רק הוצאות רפואיות אלא אובדן ימי עבודה, ירידה בפריון וייקור עלות החיים.",
+    graphIsraelDesc:
+      'מלחמת ה-7 באוקטובר הותירה צלקות עמוקות על מערכת בריאות הנפש, הכלכלה ושוק העבודה בישראל. דו"ח מבקר המדינה 2025 מצביע על כשל מערכתי חריף: כ-38% מהאוכלוסייה דיווחו על תסמינים נפשיים בינוניים עד חמורים — אך פחות מ-1% קיבלו טיפול בפועל. צפויים לפתח PTSD כ-340,000 איש, ומספר המטופלים הכולל עשוי לגדול עד 680,000. הנזק הכלכלי נמדד במאות מיליארדי דולרים שנתיים, וכולל לא רק הוצאות רפואיות אלא אובדן ימי עבודה, ירידה בפריון וייקור עלות החיים.',
     graphAddictionsTitle: "התמכרויות — נתונים ומחקר",
     graphAddictionsSubtitle: "נתונים וממצאים מחקריים",
-    graphAddictionsDesc: "הקשר בין טראומה להתמכרות הוא מהממצאים המוצקים ביותר בספרות המחקרית. אנשים המתמודדים עם תסמינים פוסט-טראומטיים נוטים להשתמש בחומרים ממכרים כאמצעי לוויסות רגשי — תופעה המכונה Self-Medication Hypothesis. תסמינים כמו אימפולסיביות, מחשבות פולשניות וקושי בריכוז פוגעים בשיקול הדעת ומובילים להתנהגויות מסוכנות. הנזק אינו מצטמצם לפרט: ירידה בפריון, נהיגה תחת השפעה ועבריינות נוצרות כהשפעה חיצונית ישירה מאי-טיפול בטראומה.",
+    graphAddictionsDesc:
+      "הקשר בין טראומה להתמכרות הוא מהממצאים המוצקים ביותר בספרות המחקרית. אנשים המתמודדים עם תסמינים פוסט-טראומטיים נוטים להשתמש בחומרים ממכרים כאמצעי לוויסות רגשי — תופעה המכונה Self-Medication Hypothesis. תסמינים כמו אימפולסיביות, מחשבות פולשניות וקושי בריכוז פוגעים בשיקול הדעת ומובילים להתנהגויות מסוכנות. הנזק אינו מצטמצם לפרט: ירידה בפריון, נהיגה תחת השפעה ועבריינות נוצרות כהשפעה חיצונית ישירה מאי-טיפול בטראומה.",
+    graphHealthTitle: "בריאות גופנית — נתונים מישראל",
+    graphHealthSubtitle: "השפעות סומטיות ואורח חיים לאחר המלחמה",
+    graphHealthDesc:
+      'העמוד מרכז מדדים גופניים — מקרדיולוגיה ועד שבץ, עישון, סוכרת והשוואות אזוריות — כפי שדווחו במוסדות רפואיים ובסקרי בריאות הציבור. לחץ נפשי חריף ומתמשך אינו "רק" נפשי: הוא משתקף בדופק הלב, בכלי הדם ובהרגלי בריאות. כל כרטיס כולל מקור, גרף ופסקת הסבר שניתן לפתוח — כדי לחבר בין המספר לבין המשמעות הקלינית והחברתית.',
+    graphSleepTitle: "שינה, טראומה והתמכרות",
+    graphSleepSubtitle: "הפרעות שינה, השפעה על תפקוד ודפוסי התמודדות",
+    graphSleepDesc:
+      'השינה אינה רק "מנוחה" — היא ציר מרכזי בבריאות נפשית אחרי טראומה. בעמוד זה: שכיחות תסמיני שינה ב-PTSD, גורמים מרכזיים להפרעה, השפעה על מצב רוח ותפקוד, חלוקת שימוש בחומרים להירדמות, אפקט האלכוהול על מחזור השינה, ומגמת מעגל שלילי מטראומה ועד החמרה. הנתונים מוצגים בגרפי עמודות, עוגה ומגמה לאורך שלבי המעגל.',
     graphReadMore: "קרא עוד",
     graphReadLess: "סגור",
     graphLoading: "טוען נתונים…",
@@ -126,12 +138,25 @@ const STRINGS = {
     navGraphs: "Graphs",
     navGraphIsrael: "Israel & the War",
     navGraphAddictions: "Addictions",
+    navGraphHealth: "Physical health",
+    navGraphSleep: "Sleep",
     graphIsraelTitle: "Israel Before and After Oct. 7",
     graphIsraelSubtitle: "Economic & Mental Health Impact",
-    graphIsraelDesc: "The war of October 7 left deep scars on Israel's mental health system, economy, and labor market. The State Comptroller Report 2025 points to a serious systemic failure: approximately 38% of the population reported moderate to severe mental health symptoms — yet fewer than 1% received actual treatment. About 340,000 people are expected to develop PTSD, and the total number of patients may rise to 680,000. The economic damage runs into hundreds of billions annually, including not only medical expenditure but also lost workdays, declining productivity, and rising cost of living.",
+    graphIsraelDesc:
+      "The war of October 7 left deep scars on Israel's mental health system, economy, and labor market. The State Comptroller Report 2025 points to a serious systemic failure: approximately 38% of the population reported moderate to severe mental health symptoms — yet fewer than 1% received actual treatment. About 340,000 people are expected to develop PTSD, and the total number of patients may rise to 680,000. The economic damage runs into hundreds of billions annually, including not only medical expenditure but also lost workdays, declining productivity, and rising cost of living.",
     graphAddictionsTitle: "Addictions — Data & Research",
     graphAddictionsSubtitle: "Research Data & Findings",
-    graphAddictionsDesc: "The link between trauma and addiction is among the most robust findings in research literature. People coping with post-traumatic symptoms tend to use addictive substances as a means of emotional regulation — a phenomenon known as the Self-Medication Hypothesis. Symptoms such as impulsivity, intrusive thoughts, and difficulty concentrating impair judgment and lead to risky behaviors. The damage extends beyond the individual: reduced productivity, drunk driving, and criminal behavior arise as direct external consequences of untreated trauma.",
+    graphAddictionsDesc:
+      "The link between trauma and addiction is among the most robust findings in research literature. People coping with post-traumatic symptoms tend to use addictive substances as a means of emotional regulation — a phenomenon known as the Self-Medication Hypothesis. Symptoms such as impulsivity, intrusive thoughts, and difficulty concentrating impair judgment and lead to risky behaviors. The damage extends beyond the individual: reduced productivity, drunk driving, and criminal behavior arise as direct external consequences of untreated trauma.",
+    graphHealthTitle: "Physical Health — Data from Israel",
+    graphHealthSubtitle: "Somatic outcomes and lifestyle after the war",
+    graphHealthDesc:
+      'This page brings together somatic indicators — from cardiology and stroke to smoking, diabetes, and regional substance use — as reported by hospitals and public health surveys. Acute and chronic psychological stress is not only "mental": it shows up in the heart, blood vessels, and health behaviors. Each card lists a source, a chart, and an explanation you can expand to connect the numbers with clinical and social meaning.',
+    graphSleepTitle: "Sleep, Trauma, and Addiction",
+    graphSleepSubtitle:
+      "Sleep disruption, daily functioning, and coping patterns",
+    graphSleepDesc:
+      "Sleep is not just rest — it is a core axis of mental health after trauma. This page covers prevalence of sleep symptoms in PTSD, key drivers of disruption, impact on mood and functioning, how people split between alcohol, hypnotics, and sedatives, alcohol’s effect on sleep architecture, and a trend through stages of a negative cycle from trauma to worsening. Data are shown as bar charts, a donut-style pie, and an area trend.",
     graphReadMore: "Read more",
     graphReadLess: "Close",
     graphLoading: "Loading data…",

@@ -77,18 +77,40 @@ export default function Navbar() {
             <button
               type="button"
               className={`${styles.link} ${styles.dropdownToggle}`}
-              onClick={() => setGraphsOpen(o => !o)}
+              onClick={() => setGraphsOpen((o) => !o)}
               aria-expanded={graphsOpen}
             >
               {s.navGraphs ?? "Graphs"} ▾
             </button>
             {graphsOpen && (
               <div className={styles.dropdownMenu}>
-                <Link to="/graphs/addictions" className={styles.dropdownItem} onClick={() => setGraphsOpen(false)}>
+                <Link
+                  to="/graphs/addictions"
+                  className={styles.dropdownItem}
+                  onClick={() => setGraphsOpen(false)}
+                >
                   {s.navGraphAddictions}
                 </Link>
-                <Link to="/graphs/israel" className={styles.dropdownItem} onClick={() => setGraphsOpen(false)}>
+                <Link
+                  to="/graphs/israel"
+                  className={styles.dropdownItem}
+                  onClick={() => setGraphsOpen(false)}
+                >
                   {s.navGraphIsrael}
+                </Link>
+                <Link
+                  to="/graphs/health"
+                  className={styles.dropdownItem}
+                  onClick={() => setGraphsOpen(false)}
+                >
+                  {s.navGraphHealth}
+                </Link>
+                <Link
+                  to="/graphs/sleep"
+                  className={styles.dropdownItem}
+                  onClick={() => setGraphsOpen(false)}
+                >
+                  {s.navGraphSleep}
                 </Link>
               </div>
             )}

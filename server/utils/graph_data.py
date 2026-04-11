@@ -176,3 +176,190 @@ ADDICTIONS_DATA = [
         "explain_en": "Bubble size = higher prevalence. X-axis = frequency, Y-axis = severity. Drunk driving and risk-to-others are the largest, highest bubbles — both frequent and severe. Behavioral Externalities demonstrate that the damage extends beyond the individual and directly impacts the social environment."
     }
 ]
+
+
+ISRAEL_HEALTH_DATA = [
+    {
+        "id": "heart_attacks_increase",
+        "title_he": "עלייה בהתקפי לב קשים",
+        "title_en": "Increase in Severe Heart Attacks",
+        "source": "Shaare Zedek Medical Center, 2024",
+        "chart_type": "bar",
+        "labels_he": ["2022", "2023"],
+        "labels_en": ["2022", "2023"],
+        "values": [63, 94],
+        "extra": {"y_unit": "cases", "change_percent": 35},
+        "explain_he": "נרשמה עלייה של כ-35% במספר התקפי הלב הקשים לאחר אירועי 7 באוקטובר. הממצא מצביע על קשר ישיר בין לחץ נפשי חריף לבין תחלואה קרדיווסקולרית חריפה.",
+        "explain_en": "A ~35% increase in severe heart attacks was observed after October 7. This finding indicates a direct link between acute psychological stress and cardiovascular events."
+    },
+
+    {
+        "id": "broken_heart_syndrome",
+        "title_he": "תסמונת הלב השבור",
+        "title_en": "Broken Heart Syndrome (Takotsubo)",
+        "source": "Israeli Cardiology Conference, 2024",
+        "chart_type": "bar",
+        "labels_he": ["2022", "2023"],
+        "labels_en": ["2022", "2023"],
+        "values": [16, 30],
+        "extra": {"approx_change_percent": 100},
+        "explain_he": "נרשמה עלייה של כמעט פי שניים בתסמונת הלב השבור, מצב לבבי הנגרם ישירות כתוצאה ממתח נפשי קיצוני. הממצא מחזק את ההשפעה הישירה של טראומה על תפקוד הלב.",
+        "explain_en": "Cases of stress-induced cardiomyopathy nearly doubled, reinforcing the direct physiological impact of extreme psychological stress on cardiac function."
+    },
+
+    {
+        "id": "stroke_increase",
+        "title_he": "עלייה בשבץ מוחי דימומי",
+        "title_en": "Increase in Hemorrhagic Stroke",
+        "source": "Rambam Health Care Campus, 2024",
+        "chart_type": "bar",
+        "labels_he": ["2022", "2023"],
+        "labels_en": ["2022", "2023"],
+        "values": [40, 56],
+        "extra": {"change_percent": 17},
+        "explain_he": "נרשמה עלייה של כ-17% במקרי שבץ מוחי דימומי בחודש הראשון לאחר המלחמה. הנתונים מצביעים על השפעת לחץ קיצוני גם על מערכת כלי הדם במוח.",
+        "explain_en": "A ~17% increase in hemorrhagic stroke cases was observed, suggesting that extreme stress also impacts cerebrovascular health."
+    },
+
+    {
+        "id": "smoking_initiation",
+        "title_he": "התחלת עישון בעקבות המלחמה",
+        "title_en": "Smoking Initiation After War",
+        "source": "Public Health Survey, 2025",
+        "chart_type": "bar",
+        "labels_he": ["מפונים", "אוכלוסייה כללית"],
+        "labels_en": ["Evacuees", "General Population"],
+        "values": [4.5, 2.5],
+        "extra": {"y_unit": "%"},
+        "explain_he": "שיעור המתחילים לעשן בקרב מפונים כמעט כפול מהאוכלוסייה הכללית, מה שמעיד על שימוש בעישון כמנגנון התמודדות עם לחץ וטראומה.",
+        "explain_en": "Smoking initiation among evacuees is nearly double that of the general population, indicating stress-related coping behavior."
+    },
+
+    {
+        "id": "substance_use_regions",
+        "title_he": "שימוש בחומרים ממכרים לפי אזור",
+        "title_en": "Substance Use by Region",
+        "source": "Public Health Data, 2024",
+        "chart_type": "bar",
+        "labels_he": ["דרום", "צפון"],
+        "labels_en": ["South", "North"],
+        "values": [26, 28],
+        "extra": {"y_unit": "%"},
+        "explain_he": "נרשמה עלייה משמעותית בשימוש בחומרים ממכרים באזורי הלחימה, כאשר הצפון מציג שיעור גבוה יותר. הדבר משקף השפעה אזורית של טראומה מתמשכת.",
+        "explain_en": "Substance use increased significantly in conflict regions, with higher rates in the north, reflecting prolonged exposure to stress."
+    },
+
+    {
+        "id": "diabetes_change",
+        "title_he": "שינוי בשיעור סוכרת סוג 2",
+        "title_en": "Change in Type 2 Diabetes Rate",
+        "source": "Ministry of Health Report, 2024",
+        "chart_type": "line",
+        "labels_he": ["2022", "2023"],
+        "labels_en": ["2022", "2023"],
+        "values": [10.3, 10.5],
+        "extra": {"y_unit": "%", "change_percent": 0.2},
+        "explain_he": "נרשמה עלייה מתונה בשיעור הסוכרת לאחר המלחמה. למרות שהשינוי קטן, הוא משמעותי לאור יציבות קודמת ומעיד על השפעת שינויים באורח החיים ולחץ מתמשך.",
+        "explain_en": "A slight increase in diabetes prevalence was observed. While small, it is significant given prior stability and reflects lifestyle disruption and chronic stress."
+    },
+
+    {
+        "id": "overall_health_impact",
+        "title_he": "השוואת שינוי בתחלואה",
+        "title_en": "Comparison of Health Impact",
+        "source": "Compiled from multiple studies (2024)",
+        "chart_type": "bar",
+        "labels_he": ["התקפי לב", "שבץ מוחי", "תסמונת הלב השבור"],
+        "labels_en": ["Heart Attacks", "Stroke", "Broken Heart Syndrome"],
+        "values": [35, 20, 100],
+        "extra": {"y_unit": "% change"},
+        "explain_he": "הגרף מציג את עוצמת השינוי היחסי בין סוגי תחלואה שונים. תסמונת הלב השבור מציגה את העלייה החדה ביותר, מה שמדגיש את הרגישות הגבוהה של הלב ללחץ נפשי חריף.",
+        "explain_en": "This chart compares relative increases across conditions. Broken heart syndrome shows the sharpest rise, highlighting the heart’s sensitivity to acute stress."
+    }
+]
+
+ISRAEL_SLEEP_DATA = [
+    {
+        "id": "sleep_disorders_prevalence",
+        "title_he": "שכיחות הפרעות שינה ב-PTSD",
+        "title_en": "Prevalence of Sleep Disorders in PTSD",
+        "source": "National Center for PTSD",
+        "chart_type": "bar",
+        "labels_he": ["נדודי שינה", "סיוטי לילה", "עוררות יתר", "שינה מקוטעת"],
+        "labels_en": ["Insomnia", "Nightmares", "Hyperarousal", "Fragmented Sleep"],
+        "values": [85, 75, 70, 65],
+        "extra": {"y_unit": "%"},
+        "explain_he": "כמעט כל אדם עם PTSD חווה הפרעות שינה, כאשר נדודי שינה וסיוטים הם התסמינים השכיחים ביותר.",
+        "explain_en": "Nearly all individuals with PTSD experience sleep disturbances, with insomnia and nightmares being the most common symptoms."
+    },
+
+    {
+        "id": "sleep_disorder_causes",
+        "title_he": "גורמים להפרעות שינה",
+        "title_en": "Causes of Sleep Disorders",
+        "source": "Germain, 2013",
+        "chart_type": "bar",
+        "labels_he": ["מחשבות טורדניות", "עוררות פיזיולוגית", "סיוטים טראומטיים"],
+        "labels_en": ["Intrusive Thoughts", "Physiological Arousal", "Trauma Nightmares"],
+        "values": [90, 80, 90],
+        "extra": {"y_unit": "impact score"},
+        "explain_he": "הגורמים המרכזיים להפרעות שינה כוללים מחשבות טורדניות, עוררות יתר וסיוטים הקשורים לטראומה.",
+        "explain_en": "Key causes of sleep disruption include intrusive thoughts, hyperarousal, and trauma-related nightmares."
+    },
+
+    {
+        "id": "daily_function_impact",
+        "title_he": "השפעת חוסר שינה על התפקוד",
+        "title_en": "Impact of Sleep Deprivation on Daily Function",
+        "source": "Mahfoud et al., 2009",
+        "chart_type": "bar",
+        "labels_he": ["עייפות", "עצבנות", "חרדה", "פגיעה בתפקוד"],
+        "labels_en": ["Fatigue", "Irritability", "Anxiety", "Functional Impairment"],
+        "values": [80, 70, 90, 85],
+        "extra": {"y_unit": "severity"},
+        "explain_he": "מחסור בשינה מחמיר חרדה, עייפות ופוגע בתפקוד היומיומי, מה שיוצר מעגל שלילי.",
+        "explain_en": "Sleep deprivation worsens anxiety, fatigue, and daily functioning, creating a negative cycle."
+    },
+
+    {
+        "id": "substance_use_for_sleep",
+        "title_he": "שימוש בחומרים לצורך שינה",
+        "title_en": "Substance Use for Sleep",
+        "source": "Brower, 2001",
+        "chart_type": "pie",
+        "labels_he": ["אלכוהול", "תרופות שינה", "תרופות הרגעה"],
+        "labels_en": ["Alcohol", "Sleeping Pills", "Sedatives"],
+        "values": [50, 30, 20],
+        "extra": {"y_unit": "%"},
+        "explain_he": "רבים מהסובלים מהפרעות שינה פונים לחומרים פסיכו-אקטיביים, כאשר אלכוהול הוא הנפוץ ביותר.",
+        "explain_en": "Many individuals with sleep issues turn to psychoactive substances, with alcohol being the most common."
+    },
+
+    {
+        "id": "alcohol_sleep_effect",
+        "title_he": "השפעת אלכוהול על שינה",
+        "title_en": "Alcohol Effect on Sleep",
+        "source": "Brower, 2001",
+        "chart_type": "bar",
+        "labels_he": ["הירדמות מהירה", "פגיעה בשינה עמוקה", "יקיצות בלילה"],
+        "labels_en": ["Faster Sleep Onset", "Reduced Deep Sleep", "Night Awakenings"],
+        "values": [70, 85, 80],
+        "extra": {"y_unit": "impact"},
+        "explain_he": "אלכוהול עשוי לעזור להירדם מהר אך פוגע משמעותית באיכות השינה וגורם ליקיצות.",
+        "explain_en": "Alcohol may help fall asleep faster but significantly harms sleep quality and increases awakenings."
+    },
+
+    {
+        "id": "sleep_to_addiction_cycle",
+        "title_he": "מעגל שינה והתמכרות",
+        "title_en": "Sleep–Addiction Cycle",
+        "source": "Compiled from studies",
+        "chart_type": "line",
+        "labels_he": ["טראומה", "הפרעות שינה", "עייפות וחרדה", "שימוש בחומרים", "החמרה"],
+        "labels_en": ["Trauma", "Sleep Disorders", "Fatigue & Anxiety", "Substance Use", "Worsening"],
+        "values": [100, 90, 85, 70, 95],
+        "extra": {"y_unit": "cycle intensity"},
+        "explain_he": "הגרף מציג את המעגל השלילי שבו טראומה מובילה להפרעות שינה, שימוש בחומרים והחמרה חוזרת.",
+        "explain_en": "This chart illustrates the negative cycle where trauma leads to sleep issues, substance use, and further deterioration."
+    }
+]

@@ -13,3 +13,16 @@ def israel():
 def addictions():
     from utils.graph_data import ADDICTIONS_DATA
     return jsonify(ADDICTIONS_DATA)
+
+
+@graphs_bp.route('/health')
+def health():
+    from utils.graph_data import ISRAEL_HEALTH_DATA
+    return jsonify(ISRAEL_HEALTH_DATA)
+
+
+@graphs_bp.route('/sleep')
+def sleep():
+    from utils.graph_data import ISRAEL_SLEEP_DATA
+    return jsonify(ISRAEL_SLEEP_DATA)
+
