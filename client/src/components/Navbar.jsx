@@ -112,6 +112,20 @@ export default function Navbar() {
                 >
                   {s.navGraphSleep}
                 </Link>
+                <Link
+                  to="/graphs/traffic"
+                  className={styles.dropdownItem}
+                  onClick={() => setGraphsOpen(false)}
+                >
+                  {s.navGraphTraffic}
+                </Link>
+                <Link
+                  to="/graphs/domestic-violence"
+                  className={styles.dropdownItem}
+                  onClick={() => setGraphsOpen(false)}
+                >
+                  {s.navGraphDomestic}
+                </Link>
               </div>
             )}
           </div>
