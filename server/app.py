@@ -10,6 +10,7 @@ from routes.chat_route import chat_bp
 from routes.chat_score_route import chat_score
 from routes.delete_session import delete_session
 from routes.keep_alive import keep_alive
+from routes.graphs_route import graphs_bp
 
 load_dotenv()
 
@@ -26,6 +27,7 @@ app.register_blueprint(chat_bp, url_prefix="/chat")
 app.register_blueprint(chat_score, url_prefix="/result")
 app.register_blueprint(delete_session, url_prefix="/session")
 app.register_blueprint(keep_alive, url_prefix="/health")
+app.register_blueprint(graphs_bp, url_prefix="/graphs")
 
 if __name__ == "__main__":
     app.run(port=5500, debug=True)

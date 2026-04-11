@@ -1,9 +1,9 @@
 flask
 flask-cors
 flask-limiter
+flask-jwt-extended
 pymongo
 groq
 python-dotenv
-flask-jwt-extended
 bcrypt
 #python3 -m pip install -r Requirements.txt

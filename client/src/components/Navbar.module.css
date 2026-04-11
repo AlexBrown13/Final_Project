@@ -112,3 +112,41 @@
 .donate:hover {
   filter: brightness(0.97);
 }
+
+.dropdown {
+  position: relative;
+}
+
+.dropdownToggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: #fff;
+  border: 0.5px solid rgba(65, 100, 90, 0.2);
+  border-radius: 0.6rem;
+  box-shadow: 0 4px 16px rgba(65, 100, 90, 0.1);
+  min-width: 160px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dropdownItem {
+  font-family: 'Heebo', system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #41645a;
+  text-decoration: none;
+  padding: 0.55rem 1rem;
+}
+
+.dropdownItem:hover {
+  background: rgba(126, 170, 133, 0.15);
+}
