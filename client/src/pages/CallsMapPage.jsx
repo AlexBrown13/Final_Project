@@ -4,13 +4,12 @@ import { getUiStrings } from "../config/uiStrings.js";
 import { useDirection } from "../context/useDirection.js";
 import { useMapContext } from "../context/MapContext";
 import InputsFilter from "../components/map/InputsFilter.jsx";
-// import CallMapView from "../components/CallMapView.jsx";
+import FilterListIcon from "@mui/icons-material/FilterList";
 import styles from "./CallsMapPage.module.css";
 import { fetchCallsMapAggregated, fetchCallsMapDates } from "../utils/api.js";
 import MapView from "../components/map/MapView.jsx";
 
-const ISRAEL_CENTER = [31.5, 34.85];
-const DEFAULT_ZOOM = 7;
+const MAP_FILTERS_TITLE_ID = "map-filters-drawer-title";
 
 /** Normalize API points */
 function normalizePoints(data) {
@@ -28,13 +27,16 @@ function normalizePoints(data) {
 }
 
 export default function CallsMapPage() {
-  const { locale } = useDirection();
+  const { locale, dir } = useDirection();
   const s = getUiStrings(locale);
 
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [aggregatedData, setAggregatedData] = useState([]);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const closeBtnRef = useRef(null);
+
   const {
     timeline,
     setTimeline,
@@ -49,6 +51,22 @@ export default function CallsMapPage() {
   } = useMapContext();
 
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    if (!filtersOpen) return;
+    const t = window.setTimeout(() => closeBtnRef.current?.focus(), 50);
+    const onKey = (e) => {
+      if (e.key === "Escape") setFiltersOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.clearTimeout(t);
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [filtersOpen]);
 
   /** 1. Generate timeline (month steps) */
   useEffect(() => {
@@ -112,7 +130,6 @@ export default function CallsMapPage() {
   );
 
   /** 3. Sync map whenever timeline/filters/gender change */
-  // Fetch once per filter change
   useEffect(() => {
     if (!timeline.length) return;
 
@@ -131,9 +148,6 @@ export default function CallsMapPage() {
     loadAllData(startStr, endStr, gender, agesParam);
   }, [gender, startDateFilter, endDateFilter, timeline, ages, loadAllData]);
 
-  // -------------------------------
-  // 4. CUMULATIVE LOGIC
-  // -------------------------------
   const pointsArray = useMemo(() => {
     if (!aggregatedData.length || !timeline.length) return [];
 
@@ -176,47 +190,102 @@ export default function CallsMapPage() {
   return (
     <div className={styles.page}>
       <Navbar />
-      <main className={styles.main}>
-        <h1>{s.mapPageTitle}</h1>
+      <main className={styles.mainFull} lang={locale} dir={dir}>
+        <header className={styles.pageHead}>
+          <h1 className={styles.pageTitle}>{s.mapPageTitle}</h1>
+        </header>
 
-        <div className={styles.controls}>
-          <div className={styles.topRow}>
-            <span>
-              {s.mapTimeLabel}:{" "}
-              <strong>{timeline[stepIndex]?.label || "..."}</strong>
-            </span>
-            <button
-              onClick={() => setPlaying(!playing)}
-              className={styles.playBtn}
-            >
-              {playing ? s.mapPause : s.mapPlay}
-            </button>
+        <div className={styles.timelineDock}>
+          <div className={styles.timelineInner}>
+            <div className={styles.timelineRow}>
+              <span>
+                {s.mapTimeLabel}:{" "}
+                <strong>{timeline[stepIndex]?.label || "…"}</strong>
+              </span>
+              <button
+                type="button"
+                onClick={() => setPlaying(!playing)}
+                className={styles.playBtn}
+              >
+                {playing ? s.mapPause : s.mapPlay}
+              </button>
+            </div>
+            <div className={styles.sliderRow}>
+              <input
+                type="range"
+                disabled={!timeline.length}
+                className={styles.slider}
+                min={0}
+                max={Math.max(0, timeline.length - 1)}
+                value={stepIndex}
+                onChange={(e) => setStepIndex(Number(e.target.value))}
+                aria-label={s.mapTimeLabel}
+              />
+            </div>
+            <div className={styles.timelineEndHint}>
+              {s.mapTimeLabel} →{" "}
+              <strong>{timeline[timeline.length - 1]?.label}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.mapStage}>
+          <div className={styles.mapFrame}>
+            <MapView points={pointsArray} callsUnit={s.mapCallsUnit} />
           </div>
 
-          <input
-            type="range"
-            disabled={!timeline.length}
-            className={styles.slider}
-            min={0}
-            max={timeline.length - 1}
-            value={stepIndex}
-            onChange={(e) => setStepIndex(Number(e.target.value))}
-          />
-          <span>
-            {s.mapTimeLabel}:{" "}
-            <strong>{timeline[timeline.length - 1]?.label}</strong>
-          </span>
-        </div>
+          <button
+            type="button"
+            className={styles.fabFilters}
+            onClick={() => setFiltersOpen(true)}
+            aria-label={s.mapOpenFiltersAria}
+            aria-expanded={filtersOpen}
+            aria-haspopup="dialog"
+          >
+            <FilterListIcon sx={{ fontSize: 26 }} aria-hidden />
+          </button>
 
-        <div>
-          <InputsFilter />
-        </div>
+          {filtersOpen ? (
+            <>
+              <div
+                className={styles.drawerBackdrop}
+                onClick={() => setFiltersOpen(false)}
+                role="presentation"
+              />
+              <aside
+                className={`${styles.drawer} ${styles.drawerOpen}`}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby={MAP_FILTERS_TITLE_ID}
+              >
+                <div className={styles.drawerHeader}>
+                  <h2
+                    id={MAP_FILTERS_TITLE_ID}
+                    className={styles.drawerHeaderTitle}
+                  >
+                    {s.mapFiltersTitle}
+                  </h2>
+                  <button
+                    ref={closeBtnRef}
+                    type="button"
+                    className={styles.drawerClose}
+                    onClick={() => setFiltersOpen(false)}
+                    aria-label={s.mapCloseFiltersAria}
+                  >
+                    ×
+                  </button>
+                </div>
+                <div className={styles.drawerBody}>
+                  <InputsFilter variant="drawer" />
+                </div>
+              </aside>
+            </>
+          ) : null}
 
-        <div className={styles.mapFrame}>
-          <MapView points={pointsArray} callsUnit={s.mapCallsUnit} />
+          {loading ? (
+            <div className={styles.mapLoading}>{s.mapLoading}</div>
+          ) : null}
         </div>
-
-        {loading && <p>Loading...</p>}
       </main>
     </div>
   );

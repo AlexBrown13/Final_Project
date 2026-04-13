@@ -1,59 +1,95 @@
 .page {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   background: #f8f9fa;
 }
 
-.main {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 1rem 1rem 2rem;
+.mainFull {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
 }
 
-.header {
-  margin-bottom: 1rem;
+.pageHead {
+  flex-shrink: 0;
+  padding: 0.65rem 1.25rem;
+  background: #f8f9fa;
 }
 
-.title {
+.pageTitle {
   font-family: "Heebo", system-ui, sans-serif;
   font-weight: 600;
-  font-size: 1.35rem;
+  font-size: 1.15rem;
   color: #41645a;
-  margin: 0 0 0.35rem;
+  margin: 0;
 }
 
-.hint {
+/* Timeline strip — between title and map */
+.timelineDock {
+  flex-shrink: 0;
+  width: 100%;
+  padding: 0.5rem 1.25rem 0.75rem;
+  border-bottom: 0.5px solid rgba(65, 100, 90, 0.12);
+  background: #f8f9fa;
+}
+
+.timelineInner {
+  margin: 0;
+  padding: 0.65rem 1rem;
+  border-radius: 10px;
+  border: 0.5px solid rgba(65, 100, 90, 0.15);
+  box-shadow: 0 1px 10px rgba(65, 100, 90, 0.06);
   font-family: "Heebo", system-ui, sans-serif;
-  font-size: 0.88rem;
   color: #41645a;
-  opacity: 0.9;
-  margin: 0 0 0.75rem;
-  padding: 0.5rem 0.65rem;
-  background: #f8e087;
-  border-radius: 8px;
-  border: 0.5px solid rgba(65, 100, 90, 0.2);
+  font-size: 0.88rem;
 }
 
-.controls {
+/* Full-bleed map region */
+.mapStage {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  min-height: 280px;
+}
+
+.mapFrame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  background: #e1ebe2;
+}
+
+.timelineRow {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem 1rem;
-  margin-bottom: 0.75rem;
-  font-family: "Heebo", system-ui, sans-serif;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.45rem;
 }
 
-.timeLabel {
-  font-weight: 600;
-  font-size: 0.95rem;
-  color: #41645a;
-  min-width: 5.5rem;
+.timelineRow:last-child {
+  margin-bottom: 0;
+}
+
+.timelineEndHint {
+  font-size: 0.8rem;
+  opacity: 0.85;
+  width: 100%;
 }
 
 .playBtn {
   font-family: "Heebo", system-ui, sans-serif;
   font-weight: 600;
-  font-size: 0.9rem;
-  padding: 0.45rem 1.1rem;
+  font-size: 0.85rem;
+  padding: 0.4rem 1rem;
   border-radius: 999px;
   border: 0.5px solid rgba(65, 100, 90, 0.28);
   background: #7eaa85;
@@ -65,58 +101,163 @@
   filter: brightness(0.97);
 }
 
-.sliderWrap {
-  flex: 1;
-  min-width: 200px;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
 .slider {
   flex: 1;
+  min-width: 120px;
   accent-color: #41645a;
 }
 
-.genderFilters {
+.sliderRow {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem 1rem;
-  font-size: 0.9rem;
-  color: #41645a;
-}
-
-.genderFilters label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  cursor: pointer;
-}
-
-.genderHint {
-  font-size: 0.82rem;
-  opacity: 0.85;
-  max-width: 14rem;
-  line-height: 1.3;
-}
-
-.mapShell {
-  border-radius: 12px;
-  overflow: hidden;
-  border: 0.5px solid rgba(65, 100, 90, 0.25);
-  background: #e1ebe2;
-}
-
-.mapFrame {
-  height: min(72vh, 560px);
+  gap: 0.65rem;
   width: 100%;
 }
 
-.loading,
-.error {
+/* Filters FAB — on map, logical start */
+.fabFilters {
+  position: absolute;
+  bottom: 1.1rem;
+  inset-inline-start: 1.1rem;
+  z-index: 1150;
+  width: 3.35rem;
+  height: 3.35rem;
+  border-radius: 50%;
+  border: none;
+  background: #41645a;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 18px rgba(65, 100, 90, 0.4);
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.fabFilters:hover {
+  filter: brightness(1.07);
+  transform: scale(1.05);
+}
+
+.fabFilters:focus-visible {
+  outline: 2px solid #7eaa85;
+  outline-offset: 3px;
+}
+
+/* Drawer overlay */
+.drawerBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2990;
+  background: rgba(25, 40, 35, 0.48);
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  inset-inline-start: 0;
+  width: min(420px, 100%);
+  max-width: 100vw;
+  z-index: 3000;
+  background: #fafbfa;
+  box-shadow: 6px 0 40px rgba(0, 0, 0, 0.14);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Closed: off-canvas. Must not combine with [dir=rtl] in a way that beats .drawerOpen (see below). */
+.drawer:not(.drawerOpen) {
+  transform: translateX(-105%);
+}
+
+[dir="rtl"] .drawer:not(.drawerOpen) {
+  transform: translateX(105%);
+  box-shadow: -6px 0 40px rgba(0, 0, 0, 0.14);
+}
+
+[dir="rtl"] .drawer {
+  box-shadow: -6px 0 40px rgba(0, 0, 0, 0.14);
+}
+
+.drawer.drawerOpen {
+  transform: translateX(0);
+}
+
+.drawerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1rem 0.85rem;
+  border-bottom: 0.5px solid rgba(65, 100, 90, 0.18);
+  flex-shrink: 0;
+  background: #fff;
+}
+
+.drawerHeaderTitle {
+  margin: 0;
   font-family: "Heebo", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.05rem;
   color: #41645a;
-  padding: 2rem;
-  text-align: center;
+}
+
+.drawerClose {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: none;
+  border-radius: 10px;
+  background: rgba(65, 100, 90, 0.08);
+  color: #41645a;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: system-ui, sans-serif;
+}
+
+.drawerClose:hover {
+  background: rgba(65, 100, 90, 0.14);
+}
+
+.drawerBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.15rem 1.25rem 2rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mapLoading {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1120;
+  font-family: "Heebo", system-ui, sans-serif;
+  font-size: 0.88rem;
+  color: #41645a;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  box-shadow: 0 2px 12px rgba(65, 100, 90, 0.12);
+  pointer-events: none;
+}
+
+@media (max-width: 520px) {
+  .timelineDock {
+    padding: 0.45rem 0.75rem 0.65rem;
+  }
+
+  .timelineInner {
+    padding: 0.55rem 0.75rem;
+  }
 }

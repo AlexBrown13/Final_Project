@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React from "react";
 import dayjs from "dayjs";
 import { getUiStrings } from "../../config/uiStrings.js";
 import { useDirection } from "../../context/useDirection.js";
@@ -19,7 +19,8 @@ import {
 import FilterListIcon from "@mui/icons-material/FilterList";
 import { useMapContext } from "../../context/MapContext";
 
-export default function InputsFilter() {
+export default function InputsFilter({ variant = "inline" }) {
+  const isDrawer = variant === "drawer";
   const { locale } = useDirection();
   const s = getUiStrings(locale);
   const {
@@ -51,9 +52,9 @@ export default function InputsFilter() {
     { label: "40-120", value: 5 },
   ];
 
-  // handle checkbox change
   const handleAgesChange = (event) => {
     const value = event.target.value;
+    if (!Array.isArray(value)) return;
 
     if (value.includes("all")) {
       if (ages.length === ageOptions.length) {
@@ -61,9 +62,14 @@ export default function InputsFilter() {
       } else {
         setAges(ageOptions.map((opt) => opt.value));
       }
-    } else {
-      setAges(value);
+      return;
     }
+
+    const nums = value
+      .filter((v) => v !== "all")
+      .map((v) => (typeof v === "number" ? v : Number(v)))
+      .filter((v) => !Number.isNaN(v));
+    setAges(nums);
   };
 
   return (
@@ -71,10 +77,12 @@ export default function InputsFilter() {
       <Box
         sx={{
           display: "flex",
-          flexWrap: "wrap",
-          alignItems: "flex-end",
+          flexDirection: isDrawer ? "column" : "row",
+          flexWrap: isDrawer ? "nowrap" : "wrap",
+          alignItems: isDrawer ? "stretch" : "flex-end",
           gap: 3,
-          p: 2,
+          p: isDrawer ? 0 : 2,
+          width: "100%",
         }}
       >
         {/* Start Date */}
@@ -88,7 +96,12 @@ export default function InputsFilter() {
           <DatePicker
             value={startDateFilter}
             onChange={(val) => setStartDateFilter(val)}
-            slotProps={{ textField: { size: "small", sx: { width: 170 } } }}
+            slotProps={{
+              textField: {
+                size: "small",
+                sx: { width: isDrawer ? "100%" : 170 },
+              },
+            }}
           />
         </Box>
 
@@ -103,7 +116,12 @@ export default function InputsFilter() {
           <DatePicker
             value={endDateFilter}
             onChange={(val) => setEndDateFilter(val)}
-            slotProps={{ textField: { size: "small", sx: { width: 170 } } }}
+            slotProps={{
+              textField: {
+                size: "small",
+                sx: { width: isDrawer ? "100%" : 170 },
+              },
+            }}
           />
         </Box>
 
@@ -118,6 +136,7 @@ export default function InputsFilter() {
           <ToggleButtonGroup
             value={gender}
             exclusive
+            fullWidth={isDrawer}
             onChange={(e, val) => val && setGender(val)}
             sx={{
               height: 40,
@@ -157,18 +176,23 @@ export default function InputsFilter() {
             onChange={handleAgesChange}
             renderValue={(selected) =>
               selected.length === 0
-                ? "בחר גיל"
+                ? s.mapAgesPlaceholder
                 : selected
                     .map(
                       (val) => ageOptions.find((o) => o.value === val)?.label
                     )
+                    .filter(Boolean)
                     .join(", ")
             }
             size="small"
-            sx={{ width: 200 }}
+            sx={{ width: isDrawer ? "100%" : 200 }}
             MenuProps={{
-              PaperProps: {
-                style: { maxHeight: 200 },
+              disableScrollLock: true,
+              sx: { zIndex: 4000 },
+              slotProps: {
+                paper: {
+                  style: { maxHeight: 200 },
+                },
               },
             }}
           >
@@ -198,9 +222,10 @@ export default function InputsFilter() {
           variant="contained"
           startIcon={<FilterListIcon />}
           onClick={handleApply}
-          sx={{ height: 40, borderRadius: "20px" }}
+          fullWidth={isDrawer}
+          sx={{ height: 40, borderRadius: "20px", textTransform: "none" }}
         >
-          סנן תוצאות
+          {s.mapApplyFilters}
         </Button>
       </Box>
     </LocalizationProvider>

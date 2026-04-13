@@ -101,6 +101,10 @@ const STRINGS = {
     mapAgesAllAges: "כל הגילאים",
     mapDateStartsLabel: "התחלה",
     mapDateEndsLabel: "סיום",
+    mapFiltersTitle: "סינון ותצוגה",
+    mapOpenFiltersAria: "פתיחת מסננים",
+    mapCloseFiltersAria: "סגירת מסננים",
+    mapApplyFilters: "החל סינון",
   },
   en: {
     serverDownTitle: "The server is unavailable",
@@ -178,8 +182,7 @@ const STRINGS = {
     graphTrafficDesc:
       "This page gathers road-fatality signals across recent years, highlighting annual trendlines, year-over-year change, and the share of young drivers among casualties. Each card includes the source, chart, and a short interpretation to connect the number to the broader safety picture.",
     graphDomesticTitle: "Domestic Violence — Impacts and Barriers",
-    graphDomesticSubtitle:
-      "Help-seeking, PTSD linkage, and patterns of harm",
+    graphDomesticSubtitle: "Help-seeking, PTSD linkage, and patterns of harm",
     graphDomesticDesc:
       "These graphs summarize shifts in help-seeking, the relationship between PTSD and violent behavior, types of harm, reporting barriers, and impacts on children. The visuals are tuned for quick reading while keeping the research context visible.",
     graphReadMore: "Read more",
@@ -205,6 +208,10 @@ const STRINGS = {
     mapAgesAllAges: "All ages",
     mapDateStartsLabel: "Starts",
     mapDateEndsLabel: "Ends",
+    mapFiltersTitle: "Filters & display",
+    mapOpenFiltersAria: "Open filters",
+    mapCloseFiltersAria: "Close filters",
+    mapApplyFilters: "Apply filters",
   },
 };
 
