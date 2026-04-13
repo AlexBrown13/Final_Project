@@ -35,6 +35,7 @@ export default function ResultsPage() {
   const location = useLocation()
   const navigate = useNavigate()
   const { dir, locale } = useDirection()
+  const rtl = dir === 'rtl'
 
   const routeScore =
     location.state?.score != null ? normalizeScore(location.state.score) : null
@@ -198,7 +199,7 @@ export default function ResultsPage() {
               className={styles.primaryBtn}
               onClick={() => navigate('/')}
             >
-              לשאלון / Go to quiz
+              {rtl ? 'לשאלון' : 'Go to quiz'}
             </button>
           </div>
         </main>
@@ -222,14 +223,14 @@ export default function ResultsPage() {
               className={styles.primaryBtn}
               onClick={() => window.location.reload()}
             >
-              רענון / Refresh
+              {rtl ? 'רענון' : 'Refresh'}
             </button>
             <button
               type="button"
               className={styles.secondaryBtn}
               onClick={() => navigate('/')}
             >
-              לשאלון / Quiz
+              {rtl ? 'לשאלון' : 'Quiz'}
             </button>
           </div>
         </main>
@@ -268,7 +269,9 @@ export default function ResultsPage() {
               disabled={retakeBusy}
               onClick={onRetake}
             >
-              {retakeBusy ? 'מאפסים…' : 'מחדשים שאלון / Retake quiz'}
+              {retakeBusy
+                ? (rtl ? 'מאפס…' : 'Resetting…')
+                : (rtl ? 'עשה את השאלון מחדש' : 'Retake quiz')}
             </button>
           </div>
         </header>

@@ -5,8 +5,8 @@
 }
 
 .compact {
-  background: #9ec4d0;
-  border: 0.5px solid rgba(65, 100, 90, 0.32);
+  background: #f0f6f8;
+  border: 0.5px solid rgba(65, 100, 90, 0.22);
   border-radius: 12px;
   padding: 1rem 0.95rem;
 }
