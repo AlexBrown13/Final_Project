@@ -52,6 +52,8 @@ const STRINGS = {
     navGraphAddictions: "התמכרויות",
     navGraphHealth: "בריאות גופנית",
     navGraphSleep: "שינה",
+    navGraphTraffic: "תאונות דרכים",
+    navGraphDomestic: "אלימות במשפחה",
     graphIsraelTitle: "ישראל לפני ואחרי 7 באוקטובר",
     graphIsraelSubtitle: "השלכות כלכליות ונפשיות",
     graphIsraelDesc:
@@ -68,6 +70,14 @@ const STRINGS = {
     graphSleepSubtitle: "הפרעות שינה, השפעה על תפקוד ודפוסי התמודדות",
     graphSleepDesc:
       'השינה אינה רק "מנוחה" — היא ציר מרכזי בבריאות נפשית אחרי טראומה. בעמוד זה: שכיחות תסמיני שינה ב-PTSD, גורמים מרכזיים להפרעה, השפעה על מצב רוח ותפקוד, חלוקת שימוש בחומרים להירדמות, אפקט האלכוהול על מחזור השינה, ומגמת מעגל שלילי מטראומה ועד החמרה. הנתונים מוצגים בגרפי עמודות, עוגה ומגמה לאורך שלבי המעגל.',
+    graphTrafficTitle: "תאונות דרכים — מגמות ועומס ציבורי",
+    graphTrafficSubtitle: "נתונים שנתיים, שינויים ופרופיל סיכון",
+    graphTrafficDesc:
+      "העמוד מרכז נתוני הרוגים בתאונות דרכים בישראל לאורך השנים, כולל מגמה שנתית, שינוי באחוזים ונתח קורבנות צעירים. כל כרטיס מציג מקור, גרף ופרשנות קצרה.",
+    graphDomesticTitle: "אלימות במשפחה — השפעות וחסמים",
+    graphDomesticSubtitle: "קול לפניות עזרה, פגיעות ושרשרת פשיעה",
+    graphDomesticDesc:
+      "העמוד מציג נתונים כמו עלייה בפניות למוקדי סיוע, קשר בין PTSD לאלימות במשפחה, סוגי פגיעה, חסמי דיווח והשפעות על ילדים. הגרפים מעוצבים לקריאה מהירה לצד הקשר מחקרי.",
     graphReadMore: "קרא עוד",
     graphReadLess: "סגור",
     graphLoading: "טוען נתונים…",
@@ -144,6 +154,8 @@ const STRINGS = {
     navGraphAddictions: "Addictions",
     navGraphHealth: "Physical health",
     navGraphSleep: "Sleep",
+    navGraphTraffic: "Traffic accidents",
+    navGraphDomestic: "Domestic violence",
     graphIsraelTitle: "Israel Before and After Oct. 7",
     graphIsraelSubtitle: "Economic & Mental Health Impact",
     graphIsraelDesc:
@@ -161,6 +173,15 @@ const STRINGS = {
       "Sleep disruption, daily functioning, and coping patterns",
     graphSleepDesc:
       "Sleep is not just rest — it is a core axis of mental health after trauma. This page covers prevalence of sleep symptoms in PTSD, key drivers of disruption, impact on mood and functioning, how people split between alcohol, hypnotics, and sedatives, alcohol’s effect on sleep architecture, and a trend through stages of a negative cycle from trauma to worsening. Data are shown as bar charts, a donut-style pie, and an area trend.",
+    graphTrafficTitle: "Traffic Accidents — Trends and Public Burden",
+    graphTrafficSubtitle: "Annual shifts, percent change, and risk profiles",
+    graphTrafficDesc:
+      "This page gathers road-fatality signals across recent years, highlighting annual trendlines, year-over-year change, and the share of young drivers among casualties. Each card includes the source, chart, and a short interpretation to connect the number to the broader safety picture.",
+    graphDomesticTitle: "Domestic Violence — Impacts and Barriers",
+    graphDomesticSubtitle:
+      "Help-seeking, PTSD linkage, and patterns of harm",
+    graphDomesticDesc:
+      "These graphs summarize shifts in help-seeking, the relationship between PTSD and violent behavior, types of harm, reporting barriers, and impacts on children. The visuals are tuned for quick reading while keeping the research context visible.",
     graphReadMore: "Read more",
     graphReadLess: "Close",
     graphLoading: "Loading data…",

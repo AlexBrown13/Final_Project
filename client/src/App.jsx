@@ -11,6 +11,8 @@ import IsraelWarPage from "./pages/IsraelWarPage.jsx";
 import AddictionsPage from "./pages/AddictionsPage.jsx";
 import HealthPage from "./pages/HealthPage.jsx";
 import SleepPage from "./pages/SleepPage.jsx";
+import TrafficAccidentsPage from "./pages/TrafficAccidentsPage.jsx";
+import DomesticViolencePage from "./pages/DomesticViolencePage.jsx";
 
 export default function App() {
   return (
@@ -24,6 +26,11 @@ export default function App() {
             <Route path="/graphs/addictions" element={<AddictionsPage />} />
             <Route path="/graphs/health" element={<HealthPage />} />
             <Route path="/graphs/sleep" element={<SleepPage />} />
+            <Route path="/graphs/traffic" element={<TrafficAccidentsPage />} />
+            <Route
+              path="/graphs/domestic-violence"
+              element={<DomesticViolencePage />}
+            />
             <Route path="/results" element={<ResultsPage />} />
             <Route
               path="/auth/login"

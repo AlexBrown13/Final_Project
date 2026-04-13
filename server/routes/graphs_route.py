@@ -26,3 +26,15 @@ def sleep():
     from utils.graph_data import ISRAEL_SLEEP_DATA
     return jsonify(ISRAEL_SLEEP_DATA)
 
+
+@graphs_bp.route('/traffic')
+def traffic():
+    from utils.graph_data import TRAFFIC_ACCIDENT_DATA
+    return jsonify(TRAFFIC_ACCIDENT_DATA)
+
+
+@graphs_bp.route('/domestic-violence')
+def domestic_violence():
+    from utils.graph_data import DOMESTIC_VIOLENCE_DATA
+    return jsonify(DOMESTIC_VIOLENCE_DATA)
+

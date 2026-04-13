@@ -363,3 +363,152 @@ ISRAEL_SLEEP_DATA = [
         "explain_en": "This chart illustrates the negative cycle where trauma leads to sleep issues, substance use, and further deterioration."
     }
 ]
+
+TRAFFIC_ACCIDENT_DATA = [
+    {
+        "id": "road_accident_trend",
+        "title_he": "מגמת הרוגים בתאונות דרכים בישראל (2021–2024)",
+        "title_en": "Road Accident Fatalities Trend in Israel (2021–2024)",
+        "source": "הלשכה המרכזית לסטטיסטיקה; אור ירוק, 2024",
+        "chart_type": "line",
+        "labels_he": ["2021", "2022", "2023", "2024"],
+        "labels_en": ["2021", "2022", "2023", "2024"],
+        "values": [364, 351, 361, 439],
+        "extra": {"y_unit": "number of fatalities"},
+        "explain_he": "הגרף מציג את מספר ההרוגים בתאונות דרכים בישראל בין השנים 2021–2024. לאחר ירידה קלה ב-2022, נרשמה עלייה משמעותית בשנת 2024 עם 439 הרוגים – העלייה החדה ביותר בשנים האחרונות.",
+        "explain_en": "This graph shows the number of road accident fatalities in Israel between 2021–2024. After a slight decrease in 2022, there is a sharp increase in 2024, reaching 439 deaths—the most significant rise in recent years."
+    },
+    {
+        "id": "road_accident_change",
+        "title_he": "שינוי שנתי במספר ההרוגים בתאונות דרכים",
+        "title_en": "Year-over-Year Change in Road Accident Fatalities",
+        "source": "מבוסס על נתוני הדו\"ח",
+        "chart_type": "bar",
+        "labels_he": ["2022", "2023", "2024"],
+        "labels_en": ["2022", "2023", "2024"],
+        "values": [-3.6, 2.8, 21.6],
+        "extra": {"y_unit": "percent change"},
+        "explain_he": "הגרף מציג את אחוז השינוי במספר ההרוגים בכל שנה ביחס לשנה הקודמת. בשנת 2024 נרשמה עלייה חדה במיוחד של כ-21.6%, המעידה על החמרה משמעותית בבטיחות בדרכים.",
+        "explain_en": "This chart presents the yearly percentage change in road fatalities. In 2024, there is a sharp increase of about 21.6%, indicating a significant deterioration in road safety."
+    },
+    {
+        "id": "young_driver_fatalities",
+        "title_he": "הרוגים בקרב נהגים צעירים (2021–2024)",
+        "title_en": "Young Driver Fatalities (2021–2024)",
+        "source": "אור ירוק; הלמ\"ס",
+        "chart_type": "bar",
+        "labels_he": ["2021", "2022", "2023", "2024 (עד יולי)"],
+        "labels_en": ["2021", "2022", "2023", "2024 (partial)"],
+        "values": [57, 49, 42, 46],
+        "extra": {"y_unit": "number of fatalities"},
+        "explain_he": "הגרף מציג את מספר הנהגים הצעירים שנהרגו בתאונות דרכים. למרות ירידה בשנים 2022–2023, הנתונים של 2024 מצביעים על עלייה מחודשת ומדאיגה.",
+        "explain_en": "This chart shows fatalities among young drivers. After a decline in 2022–2023, 2024 data already indicates a worrying increase."
+    },
+    {
+        "id": "road_total_fatalities",
+        "title_he": "סך ההרוגים בתאונות דרכים (2021–2024)",
+        "title_en": "Total Road Accident Fatalities (2021–2024)",
+        "source": "הלמ\"ס; אור ירוק",
+        "chart_type": "bar",
+        "labels_he": ["סה\"כ"],
+        "labels_en": ["Total"],
+        "values": [1515],
+        "extra": {"y_unit": "fatalities"},
+        "explain_he": "בין השנים 2021–2024 נהרגו כ-1,515 בני אדם בתאונות דרכים בישראל. הנתון מדגיש את ההיקף המצטבר של התופעה.",
+        "explain_en": "Between 2021–2024, approximately 1,515 people were killed in road accidents in Israel, highlighting the cumulative scale of the issue."
+    },
+    {
+        "id": "road_distribution",
+        "title_he": "התפלגות הרוגים לפי שנה",
+        "title_en": "Distribution of Fatalities by Year",
+        "source": "מבוסס על נתוני הדו\"ח",
+        "chart_type": "pie",
+        "labels_he": ["2021", "2022", "2023", "2024"],
+        "labels_en": ["2021", "2022", "2023", "2024"],
+        "values": [364, 351, 361, 439],
+        "extra": {"total": 1515},
+        "explain_he": "הגרף מציג את חלקה של כל שנה מתוך סך ההרוגים. שנת 2024 מהווה את הנתח הגדול ביותר.",
+        "explain_en": "This chart shows each year's share of total fatalities. 2024 accounts for the largest portion."
+    },
+    {
+        "id": "young_driver_share",
+        "title_he": "חלקם של נהגים צעירים מכלל ההרוגים",
+        "title_en": "Share of Young Drivers Among Fatalities",
+        "source": "אור ירוק; הלמ\"ס",
+        "chart_type": "bar",
+        "labels_he": ["2021", "2022", "2023"],
+        "labels_en": ["2021", "2022", "2023"],
+        "values": [15.7, 14.0, 11.6],
+        "extra": {"y_unit": "percent"},
+        "explain_he": "נהגים צעירים מהווים שיעור גבוה יחסית מההרוגים, במיוחד בשנת 2021. למרות ירידה מסוימת, מדובר בקבוצת סיכון משמעותית.",
+        "explain_en": "Young drivers represent a disproportionately high share of fatalities, especially in 2021. Despite some decline, they remain a high-risk group."
+    }
+]
+
+DOMESTIC_VIOLENCE_DATA = [
+    {
+        "id": "domestic_violence_calls_trend",
+        "title_he": "עלייה בפניות למוקדי סיוע (אלימות במשפחה)",
+        "title_en": "Increase in Domestic Violence Help-Seeking",
+        "source": "משרד הרווחה (מוקד 118), 2024",
+        "chart_type": "line",
+        "labels_he": ["לפני המלחמה", "תחילת המלחמה", "2024"],
+        "labels_en": ["Pre-war", "War onset", "2024"],
+        "values": [100, 135, 160],
+        "extra": {"y_unit": "index (base=100)"},
+        "explain_he": "נרשמה עלייה משמעותית בפניות לעזרה בעקבות מצבי לחץ לאומיים, המעידים על החרפת האלימות במשפחה.",
+        "explain_en": "There is a significant increase in help-seeking following national stress events, indicating worsening domestic violence."
+    },
+    {
+        "id": "ptsd_domestic_violence_link",
+        "title_he": "קשר בין PTSD לאלימות במשפחה",
+        "title_en": "Link Between PTSD and Domestic Violence",
+        "source": "סקירת מחקרים",
+        "chart_type": "bar",
+        "labels_he": ["עם PTSD", "ללא PTSD"],
+        "labels_en": ["With PTSD", "Without PTSD"],
+        "values": [65, 35],
+        "extra": {"y_unit": "relative risk index"},
+        "explain_he": "מחקרים מצביעים על סיכון גבוה יותר להתנהגות אלימה בקרב אנשים עם PTSD.",
+        "explain_en": "Research shows higher risk of violent behavior among individuals with PTSD."
+    },
+    {
+        "id": "violence_impact_types",
+        "title_he": "סוגי הפגיעה באלימות במשפחה",
+        "title_en": "Types of Impact in Domestic Violence",
+        "source": "ספרות מחקרית",
+        "chart_type": "pie",
+        "labels_he": ["פיזי", "נפשי", "כלכלי"],
+        "labels_en": ["Physical", "Psychological", "Economic"],
+        "values": [30, 50, 20],
+        "extra": {},
+        "explain_he": "הפגיעה הנפשית היא הנפוצה ביותר, אך קיימים גם היבטים פיזיים וכלכליים משמעותיים.",
+        "explain_en": "Psychological harm is the most prevalent, though physical and economic impacts are also significant."
+    },
+    {
+        "id": "reporting_barriers",
+        "title_he": "חסמים לפנייה לעזרה",
+        "title_en": "Barriers to Seeking Help",
+        "source": "סקירת מחקרים",
+        "chart_type": "bar",
+        "labels_he": ["פחד", "תלות כלכלית", "בושה"],
+        "labels_en": ["Fear", "Economic dependence", "Shame"],
+        "values": [45, 30, 25],
+        "extra": {"y_unit": "percent"},
+        "explain_he": "פחד מהפוגע הוא החסם המרכזי לפנייה לעזרה.",
+        "explain_en": "Fear of the abuser is the primary barrier to seeking help."
+    },
+    {
+        "id": "children_exposure_impact",
+        "title_he": "השפעת חשיפה לאלימות על ילדים",
+        "title_en": "Impact of Exposure to Domestic Violence on Children",
+        "source": "סקירת מחקרים",
+        "chart_type": "bar",
+        "labels_he": ["PTSD", "בעיות התנהגות", "קשיים לימודיים"],
+        "labels_en": ["PTSD", "Behavioral issues", "Learning difficulties"],
+        "values": [40, 35, 25],
+        "extra": {"y_unit": "percent"},
+        "explain_he": "חשיפה לאלימות משפחתית משפיעה משמעותית על התפתחות ילדים.",
+        "explain_en": "Exposure to domestic violence significantly affects child development."
+    }
+]
