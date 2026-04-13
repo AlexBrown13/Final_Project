@@ -1,9 +1,10 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt
 from pymongo.errors import PyMongoError
 import bcrypt
 import re
 from services.mongo import users_collection
+from jwt_blocklist import revoke_jti
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -109,3 +110,13 @@ def login():
     access_token = create_access_token(identity=email)
     
     return jsonify({"message": "Login success", "token": access_token}), 200
+
+
+# Logout route
+@auth_bp.route('/logout', methods=['POST'])
+@jwt_required()
+def logout():
+    """Invalidate the current access token (blocklist) so it cannot be reused."""
+    token_claims = get_jwt()
+    revoke_jti(token_claims.get("jti"))
+    return jsonify({"message": "Logged out"}), 200

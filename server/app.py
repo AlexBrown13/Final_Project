@@ -11,6 +11,7 @@ from routes.chat_score_route import chat_score
 from routes.delete_session import delete_session
 from routes.keep_alive import keep_alive
 from routes.graphs_route import graphs_bp
+from jwt_blocklist import is_jti_revoked
 
 load_dotenv()
 
@@ -18,6 +19,12 @@ app = Flask(__name__)
 app.config["JWT_SECRET_KEY"] = os.environ.get('JWT_SECRET_KEY')
 
 jwt = JWTManager(app)
+
+@jwt.token_in_blocklist_loader
+def check_if_token_revoked(_jwt_header, jwt_payload):
+    return is_jti_revoked(jwt_payload.get("jti"))
+
+
 CORS(app)
 
 

@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getUiStrings } from "../config/uiStrings.js";
 import { AUTH_TOKEN_KEY } from "../config/storageKeys.js";
 import { useDirection } from "../context/useDirection.js";
+import { logoutUser } from "../utils/api.js";
 import styles from "./Navbar.module.css";
 
 function hasAuthToken() {
@@ -15,9 +16,11 @@ function hasAuthToken() {
 }
 
 export default function Navbar() {
+  const navigate = useNavigate();
   const { locale, setLocale } = useDirection();
   const s = getUiStrings(locale);
-  const loggedIn = hasAuthToken();
+  const [loggedIn, setLoggedIn] = useState(() => hasAuthToken());
+  const [loggingOut, setLoggingOut] = useState(false);
   const [graphsOpen, setGraphsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -30,6 +33,33 @@ export default function Navbar() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    function onStorage(e) {
+      if (e.key === AUTH_TOKEN_KEY) setLoggedIn(Boolean(e.newValue));
+    }
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  async function handleLogout() {
+    setLoggingOut(true);
+    try {
+      await logoutUser();
+    } catch {
+      /* network failure — still clear local session */
+    } finally {
+      try {
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+      } catch {
+        /* ignore */
+      }
+      setLoggedIn(false);
+      setLoggingOut(false);
+      setGraphsOpen(false);
+      navigate("/", { replace: true });
+    }
+  }
 
   return (
     <header className={styles.nav}>
@@ -124,7 +154,17 @@ export default function Navbar() {
                 {s.navSignUp}
               </Link>
             </>
-          ) : null}
+          ) : (
+            <button
+              type="button"
+              className={`${styles.authLink}`}
+              onClick={handleLogout}
+              disabled={loggingOut}
+              aria-busy={loggingOut}
+            >
+              {loggingOut ? s.authLoggingOut : s.navLogout}
+            </button>
+          )}
         </nav>
       </div>
     </header>

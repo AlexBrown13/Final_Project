@@ -67,6 +67,33 @@ export async function loginUser(email, password) {
   }
 }
 
+
+/**
+ * POST /auth/logout — revokes current JWT on the server; send Authorization Bearer.
+ */
+export async function logoutUser(token) {
+  const base = getApiBase();
+  const authToken =
+    typeof token === "string" && token.trim()
+      ? token.trim()
+      : typeof localStorage !== "undefined"
+        ? localStorage.getItem(AUTH_TOKEN_KEY)
+        : null;
+
+  if (!authToken) {
+    return { res: { ok: false, status: 400 }, data: { error: "No token" } };
+  }
+
+  const res = await fetch(`${base}/auth/logout`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${authToken}` },
+  });
+
+  const data = await parseJsonSafe(res);
+  return { res, data };
+}
+
+
 /**
  * POST /chat — returns { reply, step, total_steps, completed, score?, error? }
  */
