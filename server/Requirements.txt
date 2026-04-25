@@ -6,4 +6,6 @@ pymongo
 groq
 python-dotenv
 bcrypt
+pytrends
+pandas
 #python3 -m pip install -r Requirements.txt
