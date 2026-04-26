@@ -1,15 +1,15 @@
 from pytrends.request import TrendReq
-from services.mongo import trends_collection_test
+from mongo import trends_collection
 from pymongo import UpdateOne
 
-def run_trends_job():
+def main():
     pytrends = TrendReq(hl='en-US', tz=180)
 
     trauma_index_keywords = [
-        'הלם קרב',
-        'מילואים',
-        'אזעקות',
-        'לחץ נפשי',
+        'לחץ',
+        'טראומה',
+        'חרדה',
+        'חשש',
     ]
 
     try:
@@ -27,26 +27,23 @@ def run_trends_job():
 
 
         df_new_name = df_temp.rename(columns={
-            'אזעקות': 'redAlert',
-            'מילואים': 'military_reserve',
-            'הלם קרב': 'shellshock',
-            'לחץ נפשי': 'mentalStress'
+            'לחץ': 'Stress',
+            'טראומה': 'Trauma',
+            'חרדה': 'Panic_Disorder',
+            'חשש': 'Fear'
         })
 
     except Exception as e:
         print(f"Error in Google trends {e}")
+        exit()
 
 
     try:
         records = df_new_name.to_dict(orient="records")
 
-        # make sure data format is consistent
-        for row in records:
-            row["date"] = str(row["date"])
-
         # check if collection is empty
-        if trends_collection_test.count_documents({}) == 0:
-            response = trends_collection_test.insert_many(records)
+        if trends_collection.count_documents({}) == 0:
+            response = trends_collection.insert_many(records)
 
             if response.acknowledged:
                 print("Initial data inserted successfully")
@@ -65,12 +62,13 @@ def run_trends_job():
                 )
 
             if operations:
-                trends_collection_test.bulk_write(operations)
+                trends_collection.bulk_write(operations)
                 print("Existing data updated successfully")
        
     except Exception as e:
         print("Error saving data to MongoDB")
+        exit()
 
 
 if __name__ == "__main__":
-    run_trends_job()
+    main()
