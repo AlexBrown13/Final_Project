@@ -19,6 +19,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install packages
+        cd server
         run: pip install -r requirements.txt
 
       - name: Run script
@@ -26,4 +27,5 @@ jobs:
           MONGO_URL: ${{ secrets.MONGO_URL }}
           DB_NAME: ${{ secrets.DB_NAME }}
         run: |
-          python server/services/google_trends.py
+          cd server
+          python services/google_trends.py
