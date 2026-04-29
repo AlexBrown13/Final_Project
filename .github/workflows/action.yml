@@ -21,7 +21,7 @@ jobs:
 
       - name: Install packages
         run: |
-          python3 -m pip install -r server/services/googleTrends/requirements.txt
+          python3 -m pip install -r server/services/googleTrends/Requirements.txt
 
       - name: Run script
         env:
