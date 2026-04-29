@@ -28,4 +28,5 @@ jobs:
           MONGO_URL: ${{ secrets.MONGO_URL }}
           DB_NAME: ${{ secrets.DB_NAME }}
         run: |
-          python3 server/services/googleTrends/google_trends.py
+          cd server
+          python3 -m services.googleTrends.google_trends
