@@ -21,13 +21,11 @@ jobs:
 
       - name: Install packages
         run: |
-          cd server
-          pip install -r requirements.txt
+          python3 -m pip install -r server/services/googleTrends/requirements.txt
 
       - name: Run script
         env:
           MONGO_URL: ${{ secrets.MONGO_URL }}
           DB_NAME: ${{ secrets.DB_NAME }}
         run: |
-          cd server
-          python services/google_trends.py
+          python3 server/services/googleTrends/google_trends.py
