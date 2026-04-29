@@ -4,8 +4,13 @@ import pandas as pd
 import logging
 import logging.handlers
 
+import os
+from pymongo import MongoClient
+from dotenv import load_dotenv
+load_dotenv()
+
 from pytrends.request import TrendReq
-from services.mongo import trends_collection
+#from mongo import trends_collection
 from pymongo import UpdateOne
 from pytrends.exceptions import TooManyRequestsError
 
@@ -16,7 +21,7 @@ LOG_FILE = "status.log"
 
 file_handler = logging.handlers.RotatingFileHandler(
     LOG_FILE,
-    maxBytes=1024 * 1024,  # 1MB
+    maxBytes=1024 * 1024, 
     backupCount=3,
     encoding="utf8",
 )
@@ -29,6 +34,19 @@ file_handler.setFormatter(formatter)
 
 if not logger.handlers:
     logger.addHandler(file_handler)
+
+
+# Temp connect to database
+mongo_url = os.environ["MONGO_URL"]
+db_name = os.environ.get("DB_NAME")
+mongo_client = MongoClient(
+    mongo_url,
+    maxPoolSize=50, 
+    minPoolSize=5,
+    serverSelectionTimeoutMS=5000
+)
+db = mongo_client[db_name]
+trends_collection = db["trends"]
 
 
 def main():
