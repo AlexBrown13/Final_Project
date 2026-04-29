@@ -1,3 +1,6 @@
 2026-04-29 18:13:33,512 - google_trends - INFO - Trnds job started
 2026-04-29 18:13:33,750 - google_trends - INFO - Processing group: Trauma_Index
 2026-04-29 18:13:34,264 - google_trends - ERROR - Trauma_Index: Google returned 429 (rate limited)
+2026-04-29 19:46:17,565 - google_trends - INFO - Trnds job started
+2026-04-29 19:46:17,677 - google_trends - INFO - Processing group: Trauma_Index
+2026-04-29 19:46:18,098 - google_trends - ERROR - Trauma_Index: Google returned 429 (rate limited)
