@@ -5,7 +5,7 @@ import logging
 import logging.handlers
 
 from pytrends.request import TrendReq
-from mongo import trends_collection
+from services.mongo import trends_collection
 from pymongo import UpdateOne
 from pytrends.exceptions import TooManyRequestsError
 
