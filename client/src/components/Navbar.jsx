@@ -103,6 +103,9 @@ export default function Navbar() {
           <Link to="/map" className={styles.link}>
             {s.navMap}
           </Link>
+          <Link to="/trends" className={styles.link}>
+            Trends
+          </Link>
           <div className={styles.dropdown} ref={dropdownRef}>
             <button
               type="button"
@@ -142,23 +145,10 @@ export default function Navbar() {
                 >
                   {s.navGraphSleep}
                 </Link>
-                <Link
-                  to="/graphs/traffic"
-                  className={styles.dropdownItem}
-                  onClick={() => setGraphsOpen(false)}
-                >
-                  {s.navGraphTraffic}
-                </Link>
-                <Link
-                  to="/graphs/domestic-violence"
-                  className={styles.dropdownItem}
-                  onClick={() => setGraphsOpen(false)}
-                >
-                  {s.navGraphDomestic}
-                </Link>
               </div>
             )}
           </div>
+
           {!loggedIn ? (
             <>
               <Link to="/auth/login" className={styles.authLink}>
