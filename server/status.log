@@ -12,3 +12,7 @@
 2026-04-29 23:02:08,173 - google_trends - INFO - Processing group: Trauma_Index
 2026-04-29 23:02:09,007 - google_trends - INFO - fetched data successfully 
 2026-04-29 23:02:14,366 - google_trends - ERROR - Error saving data to MongoDB
+2026-04-30 03:50:12,823 - google_trends - INFO - Trnds job started
+2026-04-30 03:50:12,949 - google_trends - INFO - Processing group: Trauma_Index
+2026-04-30 03:50:13,271 - google_trends - INFO - fetched data successfully 
+2026-04-30 03:50:18,335 - google_trends - ERROR - Error saving data to MongoDB
