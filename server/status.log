@@ -37,3 +37,10 @@
 2026-04-30 09:21:22,995 - google_trends - INFO - Trnds job started
 2026-04-30 09:21:23,135 - google_trends - INFO - Processing group: Trauma_Index
 2026-04-30 09:21:23,431 - google_trends - ERROR - Trauma_Index: Google returned 429 (rate limited)
+2026-04-30 11:44:34,092 - google_trends - INFO - mongo_url: mongodb://localhost:27017/
+2026-04-30 11:44:34,093 - google_trends - INFO - db_name: NATAL
+2026-04-30 11:44:34,093 - google_trends - INFO - trends_collection: Collection(Database(MongoClient(host=['localhost:27017'], document_class=dict, tz_aware=False, connect=True, maxpoolsize=50, minpoolsize=5, serverselectiontimeoutms=5000), 'NATAL'), 'trends')
+2026-04-30 11:44:34,093 - google_trends - INFO - Trnds job started
+2026-04-30 11:44:34,224 - google_trends - INFO - Processing group: Trauma_Index
+2026-04-30 11:44:34,718 - google_trends - INFO - fetched data successfully 
+2026-04-30 11:44:40,102 - google_trends - ERROR - Error saving data to MongoDB
