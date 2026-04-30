@@ -48,6 +48,10 @@ mongo_client = MongoClient(
 db = mongo_client[db_name]
 trends_collection = db["trends"]
 
+logger.info(f"mongo_url: {mongo_url}")
+logger.info(f"db_name: {db_name}")
+logger.info(f"trends_collection: {trends_collection}")
+
 
 def main():
     logger.info("Trnds job started")
@@ -113,10 +117,6 @@ def main():
 
 def update_database(df_new):
     try:
-        logger.info(f"mongo_url: {mongo_url}")
-        logger.info(f"db_name: {db_name}")
-        logger.info(f"trends_collection: {trends_collection}")
-
         records = df_new.to_dict(orient="records")
 
         # check if collection is empty
