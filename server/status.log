@@ -16,3 +16,6 @@
 2026-04-30 03:50:12,949 - google_trends - INFO - Processing group: Trauma_Index
 2026-04-30 03:50:13,271 - google_trends - INFO - fetched data successfully 
 2026-04-30 03:50:18,335 - google_trends - ERROR - Error saving data to MongoDB
+2026-04-30 06:07:29,042 - google_trends - INFO - Trnds job started
+2026-04-30 06:07:29,242 - google_trends - INFO - Processing group: Trauma_Index
+2026-04-30 06:07:29,559 - google_trends - ERROR - Trauma_Index: Google returned 429 (rate limited)
