@@ -1,72 +1,21 @@
 import time
 import datetime
 import pandas as pd
-import logging
-import logging.handlers
-
-import os
-from pymongo import MongoClient
-from dotenv import load_dotenv
-load_dotenv()
-
 from pytrends.request import TrendReq
-#from mongo import trends_collection
 from pymongo import UpdateOne
 from pytrends.exceptions import TooManyRequestsError
 
-logger = logging.getLogger("google_trends")
-logger.setLevel(logging.INFO)
-
-LOG_FILE = "status.log"
-
-file_handler = logging.handlers.RotatingFileHandler(
-    LOG_FILE,
-    maxBytes=1024 * 1024, 
-    backupCount=3,
-    encoding="utf8",
-)
-
-formatter = logging.Formatter(
-    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-
-file_handler.setFormatter(formatter)
-
-if not logger.handlers:
-    logger.addHandler(file_handler)
-
-
-# Temp connect to database
-mongo_url = os.environ["MONGO_URL"]
-db_name = os.environ.get("DB_NAME")
-mongo_client = MongoClient(
-    mongo_url,
-    maxPoolSize=50, 
-    minPoolSize=5,
-    serverSelectionTimeoutMS=5000
-)
-db = mongo_client[db_name]
-trends_collection = db["trends"]
-
-logger.info(f"mongo_url: {mongo_url}")
-logger.info(f"db_name: {db_name}")
-logger.info(f"trends_collection: {trends_collection}")
+from utils.logger import logger
+from mongo import trends_collection
 
 
 def main():
     logger.info("Trnds job started")
 
-    # index_keywords_HE = ['טראומה', 'לחץ נפשי', 'חשש', 'חרדה',]
-    # index_keywords_EN = ['Trauma', 'Stress','Fear','Panic_Disorder']
-
-    # groups = {
-    #     "Trauma_Index": ["טראומה",], # ["טראומה" ,"פוסט טראומה", "PTSD"]
-    #     "Anxiety_Index": ["חרדה",],  # ["חרדה", "לחץ נפשי", "דאגה"]
-    #     "Fear_Index": ["חשש",]       # ["חשש", "פחד", "אזעקות"] 
-    # }
-
     groups = {
-        "Trauma_Index": ["טראומה", "PTSD"],
+        "Trauma_Index": ["טראומה",], # ["טראומה" ,"פוסט טראומה", "PTSD"]
+        "Anxiety_Index": ["חרדה",],  # ["חרדה", "לחץ נפשי", "דאגה"]
+        "Fear_Index": ["חשש",]       # ["חשש", "פחד", "אזעקות"] 
     }
 
     try:
