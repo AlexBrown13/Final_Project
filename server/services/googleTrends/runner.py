@@ -9,7 +9,8 @@ REPO_URL = "https://github.com/AlexBrown13/Final_Project.git"
 PROJECT_PATH = Path.home() / "Projects" / "google-trends"
 
 # Git branch
-BRANCH = "main"
+# TODO main
+BRANCH = "job" 
 
 # Main script
 SCRIPT_NAME = "google_trends.py"
@@ -62,14 +63,14 @@ def clone_or_pull():
 # =========================
 
 def install_requirements():
-    requirements_file = PROJECT_PATH / "requirements.txt"
+    requirements_file = PROJECT_PATH / "server" / "Requirements.txt"
 
     if requirements_file.exists():
         print("\nInstalling requirements...")
 
         run_command(
             "pip install -r requirements.txt",
-            cwd=PROJECT_PATH
+            cwd=PROJECT_PATH / "server" 
         )
 
     else:
@@ -85,7 +86,7 @@ def run_main_script():
 
     run_command(
         f"python {SCRIPT_NAME}",
-        cwd=PROJECT_PATH
+        cwd=PROJECT_PATH / "server" / "services" / "googleTrends"
     )
 
 # =========================
