@@ -88,7 +88,7 @@ def run_main_script():
 
     run_command(
         f"python3 {SCRIPT_NAME}",
-        cwd=PROJECT_PATH / "server" / "services" / "googleTrends"
+        cwd=PROJECT_PATH / "server" / "services"
     )
 
 # =========================
