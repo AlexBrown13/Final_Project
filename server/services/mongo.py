@@ -1,7 +1,7 @@
 import os
 from pymongo import MongoClient
-from dotenv import load_dotenv
-load_dotenv(dotenv_path='../.env')
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(dotenv_path=find_dotenv())
 
 mongo_url = os.environ.get("MONGO_URL") #MONGO_ATLAS_URL
 db_name = os.environ.get("DB_NAME") #DB_ATLAS_NAME
