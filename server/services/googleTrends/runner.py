@@ -12,7 +12,7 @@ PROJECT_PATH = Path.home() / "Projects" / "google-trends"
 
 # Git branch
 # TODO main
-BRANCH = "job" 
+BRANCH = "main" 
 
 # Main script
 SCRIPT_NAME = "google_trends.py"
