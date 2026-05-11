@@ -105,7 +105,7 @@ def main():
         install_requirements()
         run_main_script()
 
-        print("\nJob completed successfully")
+        print("\nJob completed")
 
     except Exception as e:
         print(f"\nError: {e}")

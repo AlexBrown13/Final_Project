@@ -10,7 +10,6 @@ from mongo import trends_collection
 
 
 def main():
-    print("\n**test google trends**\n")
     #logger.info("Trnds job started")
 
     groups = {
