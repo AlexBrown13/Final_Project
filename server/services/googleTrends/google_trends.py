@@ -5,13 +5,13 @@ from pytrends.request import TrendReq
 from pymongo import UpdateOne
 from pytrends.exceptions import TooManyRequestsError
 
-from utils.logger import logger
+#from utils.logger import logger
 from mongo import trends_collection
 
 
 def main():
     print("\n**test google trends**\n")
-    logger.info("Trnds job started")
+    #logger.info("Trnds job started")
 
     groups = {
         "Trauma_Index": ["טראומה",], # ["טראומה" ,"פוסט טראומה", "PTSD"]
@@ -24,7 +24,7 @@ def main():
         final_df = pd.DataFrame()
         
         for index, (group_name, kw_list) in enumerate(groups.items()):
-            logger.info(f"Processing group: {group_name}")
+            #logger.info(f"Processing group: {group_name}")
             print(f"Fetching {group_name}...")
 
             pytrends.build_payload(
@@ -53,16 +53,17 @@ def main():
             if index < len(groups)-1:
                 time.sleep(60)
 
-        logger.info("fetched data successfully ")
+        #logger.info("fetched data successfully ")
         return final_df
         
     except TooManyRequestsError as e:
-        logger.error(f"{group_name}: Google returned 429 (rate limited)")
+        #logger.error(f"{group_name}: Google returned 429 (rate limited)")
         print(f"Error in Google trends: {e}")
         exit()
 
     except Exception as e:
-        logger.exception(f"Unexpected error in {group_name}: {e}")
+        print("Unexpected error")
+        #logger.exception(f"Unexpected error in {group_name}: {e}")
 
 
 def update_database(df_new):
@@ -76,10 +77,10 @@ def update_database(df_new):
             response = trends_collection.insert_many(records)
 
             if response.acknowledged:
-                logger.info("Initial data inserted into database successfully")
+                #logger.info("Initial data inserted into database successfully")
                 print("Initial data inserted successfully")
             else:
-                logger.error("Failed to insert initial data into database")
+                #logger.error("Failed to insert initial data into database")
                 print("Failed to insert initial data")
 
         else:
@@ -95,11 +96,11 @@ def update_database(df_new):
 
             if operations:
                 trends_collection.bulk_write(operations)
-                logger.info("Existing data updated successfully in the database")
+                #logger.info("Existing data updated successfully in the database")
                 print("Existing data updated successfully")
        
     except Exception as e:
-        logger.error("Error saving data to MongoDB")
+        #logger.error("Error saving data to MongoDB")
         print(f"Error saving data to MongoDB {e}")
         exit()
 

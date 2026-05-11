@@ -1,5 +1,7 @@
+import sys
 import subprocess
 from pathlib import Path
+
 
 # GitHub repository URL
 REPO_URL = "https://github.com/AlexBrown13/Final_Project.git"
@@ -21,7 +23,7 @@ SCRIPT_NAME = "google_trends.py"
 
 def run_command(command, cwd=None):
     print(f"\nRunning: {command}")
-
+    
     result = subprocess.run(
         command,
         cwd=cwd,
@@ -85,7 +87,7 @@ def run_main_script():
     print("\nRunning Google Trends job...")
 
     run_command(
-        f"python {SCRIPT_NAME}",
+        f"python3 {SCRIPT_NAME}",
         cwd=PROJECT_PATH / "server" / "services" / "googleTrends"
     )
 
