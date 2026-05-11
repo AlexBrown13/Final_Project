@@ -6,7 +6,7 @@ from pymongo import UpdateOne
 from pytrends.exceptions import TooManyRequestsError
 
 #from utils.logger import logger
-from mongo import trends_collection
+from services.mongo import trends_collection
 
 
 def main():
