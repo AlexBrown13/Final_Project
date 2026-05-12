@@ -64,7 +64,7 @@ def clone_or_pull():
 # =========================
 
 def install_requirements():
-    requirements_file = PROJECT_PATH / "server" / "Requirements.txt"
+    requirements_file = PROJECT_PATH / "server" / "requirements.txt"
 
     if requirements_file.exists():
         print("\nInstalling requirements...")
