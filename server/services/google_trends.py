@@ -1,5 +1,4 @@
 import time
-import datetime
 import pandas as pd
 from pytrends.request import TrendReq
 from pymongo import UpdateOne
