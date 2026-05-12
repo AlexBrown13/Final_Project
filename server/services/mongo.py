@@ -3,8 +3,8 @@ from pymongo import MongoClient
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(dotenv_path=find_dotenv())
 
-mongo_url = os.environ.get("MONGO_URL") #MONGO_ATLAS_URL
-db_name = os.environ.get("DB_NAME") #DB_ATLAS_NAME
+mongo_url = os.environ.get("MONGO_ATLAS_URL") 
+db_name = os.environ.get("DB_ATLAS_NAME") 
 
 if not mongo_url:
     raise ValueError("Missing MONGO_URL environment variable")
