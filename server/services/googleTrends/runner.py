@@ -1,4 +1,3 @@
-import sys
 import subprocess
 from pathlib import Path
 
@@ -8,7 +7,7 @@ REPO_URL = "https://github.com/AlexBrown13/Final_Project.git"
 
 # Where project will be stored on Windows
 # PROJECT_PATH = Path(r"D:\Projects\google-trends")
-PROJECT_PATH = Path.home() / "Projects" / "google-trends"
+PROJECT_PATH = Path.home() / "Projects" / "NATAL"
 
 # Git branch
 # TODO main
