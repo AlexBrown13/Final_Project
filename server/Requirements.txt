@@ -8,4 +8,6 @@ python-dotenv
 bcrypt
 pytrends
 pandas
+semanticscholar
+pyalex
 #python3 -m pip install -r Requirements.txt

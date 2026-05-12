@@ -12,6 +12,7 @@ from routes.delete_session import delete_session
 from routes.keep_alive import keep_alive
 from routes.graphs_route import graphs_bp
 from routes.trends_route import trends_bp
+from routes.articles_route import articles_bp
 from jwt_blocklist import is_jti_revoked
 
 load_dotenv()
@@ -37,6 +38,7 @@ app.register_blueprint(delete_session, url_prefix="/session")
 app.register_blueprint(keep_alive, url_prefix="/health")
 app.register_blueprint(graphs_bp, url_prefix="/graphs")
 app.register_blueprint(trends_bp, url_prefix="/api")
+app.register_blueprint(articles_bp, url_prefix="/api")
 
 if __name__ == "__main__":
     app.run(port=5500, debug=True)
