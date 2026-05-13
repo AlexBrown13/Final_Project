@@ -97,6 +97,14 @@
   background: rgba(158, 196, 208, 0.25);
 }
 
+.logoutBackhroundColor {
+  background: #f8e087
+}
+
+.logoutBackhroundColor:hover {
+  background: #f0d570
+}
+
 .donate {
   font-family: 'Heebo', system-ui, sans-serif;
   font-weight: 600;

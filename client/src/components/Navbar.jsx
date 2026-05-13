@@ -105,10 +105,10 @@ export default function Navbar() {
             {s.navMap}
           </Link>
           <Link to="/trends" className={styles.link}>
-            Trends
+            {s.navTrends}
           </Link>
           <Link to="/articles" className={styles.link}>
-            Articles
+            {s.navArticle}
           </Link>
           <div className={styles.dropdown} ref={dropdownRef}>
             <button
@@ -165,7 +165,7 @@ export default function Navbar() {
           ) : (
             <button
               type="button"
-              className={`${styles.authLink}`}
+              className={`${styles.authLink} ${styles.logoutBackhroundColor}`}
               onClick={handleLogout}
               disabled={loggingOut}
               aria-busy={loggingOut}
