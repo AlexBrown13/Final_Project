@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getUiStrings } from "../config/uiStrings.js";
-import { AUTH_TOKEN_KEY } from "../config/storageKeys.js";
+import { AUTH_TOKEN_KEY, USER_ID_KEY } from "../config/storageKeys.js";
 import { useDirection } from "../context/useDirection.js";
 import { logoutUser } from "../utils/api.js";
 import styles from "./Navbar.module.css";
@@ -51,6 +51,7 @@ export default function Navbar() {
     } finally {
       try {
         localStorage.removeItem(AUTH_TOKEN_KEY);
+        localStorage.removeItem(USER_ID_KEY);
       } catch {
         /* ignore */
       }

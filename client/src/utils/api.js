@@ -108,25 +108,24 @@ export async function postChat(userId, message) {
   return { res, data };
 }
 
-// export async function getResult(userId) {
-//   const base = getApiBase();
-//   const res = await fetch(`${base}/result/${encodeURIComponent(userId)}`);
-//   const data = await parseJsonSafe(res);
-//   return { res, data };
-// }
-export async function getResult() {
+export async function getResult(userId) {
   const base = getApiBase();
-  const token = localStorage.getItem(AUTH_TOKEN_KEY);
-
-  const res = await fetch(`${base}/result`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
+  const res = await fetch(`${base}/result/${encodeURIComponent(userId)}`);
   const data = await parseJsonSafe(res);
   return { res, data };
 }
+// export async function getResult() {
+//   const base = getApiBase();
+//   const token = localStorage.getItem(AUTH_TOKEN_KEY);
+
+//   const res = await fetch(`${base}/result`, {
+//     headers: {
+//       Authorization: `Bearer ${token}`,
+//     },
+//   });
+//   const data = await parseJsonSafe(res);
+//   return { res, data };
+// }
 
 
 /**
