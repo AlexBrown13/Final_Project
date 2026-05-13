@@ -3,9 +3,24 @@ from pyalex import Works
 
 from services.mongo import articles_collection
 
+
+def reconstruct_abstract(abstract_index):
+    if not abstract_index:
+        return None
+
+    word_positions = []
+
+    for word, positions in abstract_index.items():
+        for pos in positions:
+            word_positions.append((pos, word))
+
+    word_positions.sort()
+    return " ".join(word for _, word in word_positions)
+
+
 def main(user_id):
     try:
-        works = Works().search("PTSD").filter(
+        works = Works().search("Impact of obesity on the severity of trauma").filter(
             type='article'
         ).get(per_page=1)
 
@@ -13,13 +28,21 @@ def main(user_id):
         operations = []
 
         for i, work in enumerate(works, start=1):
+            abstract = reconstruct_abstract(work.get("abstract_inverted_index"))
+            
             doc = {
                 "openalex_id": work["id"],
                 "title": work.get("title", "No title"),
-                "year": work.get("publication_year", "N/A"),
-                "journal": work.get("host_venue", {}).get("display_name", "N/A"),
-                "doi": work.get("doi", "N/A"),
-                "pdf_url": work.get("primary_location", {}).get("pdf_url", "N/A")
+                "year": work.get("publication_year", None),
+                "journal": work.get("host_venue", {}).get("display_name", None),
+                "url": work.get("doi", None),
+                "pdf_url": work.get("primary_location", {}).get("pdf_url", None),
+                "abstract": abstract,
+                "authors": [
+                    a.get("author", {}).get("display_name")
+                    for a in work.get("authorships", [])[:2]
+                ]
+
             }
 
             response_works.append(doc)

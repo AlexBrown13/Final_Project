@@ -6,6 +6,39 @@ from services.openalex_articles import main
 
 articles_bp = Blueprint("openalex_articles", __name__)
 
+@articles_bp.route('/articles', methods=['GET'])
+@jwt_required()
+def get_articles():
+    try:
+        user_id_str = get_jwt_identity()
+        user_id = ObjectId(user_id_str)
+
+        articles_cursor = articles_collection.find(
+            {"user_id": user_id},
+            {
+                "_id": 1,
+                "openalex_id": 1,
+                "title": 1,
+                "year": 1,
+                "journal": 1,
+                "url": 1,
+                "pdf_url": 1,
+                "abstract": 1,
+                "authors": 1,
+            }
+        ).sort("year", -1)
+
+        articles = []
+        for article in articles_cursor:
+            article["_id"] = str(article["_id"])
+            articles.append(article)
+
+        return jsonify({"articles": articles}), 200
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
 @articles_bp.route('/articles', methods=['POST'])
 @jwt_required()
 def articles():
