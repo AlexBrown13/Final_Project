@@ -1,9 +1,6 @@
 import os
 from groq import Groq
-from dotenv import load_dotenv
 from utils.logger import logger
-
-load_dotenv()
 
 # ──────────────────────────────────────────────
 # GROQ CLIENT
@@ -85,4 +82,26 @@ def score_user_conversation(client, formatted_conv: str, system_prompt: str):
 
     except Exception as e:
         logger.error(f"Scoring call failed: {e}")
+        return None
+
+
+def extract_persona_profile(client, formatted_conv: str, system_prompt: str):
+    """
+    Sends the final conversation to Groq and asks for a persona and interest profile.
+    Returns the raw JSON string or None on failure.
+    """
+    try:
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            temperature=0.2,
+            max_tokens=250,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"Full conversation:\n{formatted_conv}"}
+            ]
+        )
+        return response.choices[0].message.content.strip()
+
+    except Exception as e:
+        logger.error(f"Persona extraction failed: {e}")
         return None

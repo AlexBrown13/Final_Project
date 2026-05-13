@@ -128,6 +128,11 @@ const STRINGS = {
     articlesErrorFetchPrefix: "טעינת המאמרים נכשלה",
     articlesErrorFetch: "לא ניתן לטעון מאמרים.",
     articlesErrorSync: "לא ניתן להפעיל סנכרון מאמרים.",
+    articlesPersonaTitle: "תוכן מותאם אישית",
+    articlesPersonaRecommended: "המאמרים מוצגים על פי הפרופיל שלך:",
+    articlesPersonaTags: "תגיות עניין",
+    articlesPersonaPreferred: "העדפת תוכן",
+    articlesPersonaQuery: "חיפוש מומלץ",
   },
   en: {
     serverDownTitle: "The server is unavailable",

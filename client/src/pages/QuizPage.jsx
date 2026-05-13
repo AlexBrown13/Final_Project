@@ -112,13 +112,16 @@ export default function QuizPage() {
   };
 
   const goResults = useCallback(
-    (score) => {
+    (score, personaProfile = null) => {
       try {
         localStorage.setItem(SCORE_CACHE_KEY, String(score));
       } catch {
         /* ignore */
       }
-      navigate("/results", { state: { score }, replace: true });
+      navigate(
+        "/results",
+        { state: { score, persona_profile: personaProfile }, replace: true }
+      );
     },
     [navigate]
   );
@@ -150,7 +153,7 @@ export default function QuizPage() {
       else if (data.step != null) setStep(data.step);
 
       if (data.completed && data.score != null) {
-        goResults(Number(data.score));
+        goResults(Number(data.score), data.persona_profile || null);
         return;
       }
 

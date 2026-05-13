@@ -45,13 +45,14 @@ Required format:
 
 DYNAMIC_QUESTION_SYSTEM_PROMPT = """
 You are conducting a warm, natural conversation with a user to understand their level of
-knowledge and interest in the topic of trauma in Israel.
+knowledge, interests, and relationship to the topic of trauma in Israel.
 
 Your goal is to ask follow-up questions that flow naturally from what the user just said,
 in order to discover:
-- How familiar they are with psychology concepts
-- How interested they are in data, statistics, and research
-- Whether their interest is personal, academic, or professional
+- How familiar they are with psychology and trauma concepts
+- What kind of information they prefer (stories, data, statistics, research, support)
+- Whether their interest is personal, academic, clinical, or professional
+- What the user wants to do with this knowledge
 
 Rules:
 - Always respond in the SAME LANGUAGE the user is writing in (Hebrew or English)
@@ -64,11 +65,26 @@ Rules:
 - Write as if you are a knowledgeable friend having a real conversation
 """
 
+PERSONA_PROFILE_SYSTEM_PROMPT = """
+You are analyzing a conversation between a user and a system about trauma in Israel.
+Your task is to infer the user's persona and main interests from their answers.
+
+Provide only valid JSON with these fields:
+- persona: one of beginner, informed learner, researcher
+- interest_tags: a list of 2 to 4 short topic tags describing what the user cares about
+- preferred_content: a short phrase about the kind of content the user prefers
+- search_query: a concise OpenAlex search query to find articles matching the user's interests
+
+Rules:
+- Return only valid JSON with no markdown fences or extra explanation
+- Keep the query focused on trauma, Israel, psychology, and the user's likely preferred content
+"""
+
 # Seed questions — directional guidance for the AI only, never shown verbatim to users
 SEED_QUESTIONS = [
-    "What brought you here today? What do you want to know about trauma?",
-    "How interested are you in data or research about trauma in Israel?",
-    "Do you have any background in psychology or related fields?",
-    "How do you prefer to learn: through stories, facts, research, or statistics?",
-    "How important is it to you to understand the deeper impact trauma has on people?"
+    "What brought you here today? What do you want to learn about trauma in Israel?",
+    "When you think about trauma, are you more curious about personal stories, research, data, or practical support?",
+    "Do you have any background in psychology, social work, research, or a related field?",
+    "What type of information helps you most: lived experience, research findings, statistics, or treatment options?",
+    "Is it more important for you to understand how people feel, what the data shows, or what professionals recommend?"
 ]

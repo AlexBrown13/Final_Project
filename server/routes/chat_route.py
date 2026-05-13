@@ -1,10 +1,12 @@
-import os, json
+import json
+from concurrent.futures import ThreadPoolExecutor
 from flask import Blueprint,request, jsonify
 from services.mongo import chat_collection
 from services.groq import (
     client_groq, 
     generate_dynamic_question, 
-    score_user_conversation
+    score_user_conversation,
+    extract_persona_profile
 )
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -12,10 +14,9 @@ from utils.logger import logger
 from utils.chat_prompts import (
     SCORING_SYSTEM_PROMPT,
     DYNAMIC_QUESTION_SYSTEM_PROMPT,
+    PERSONA_PROFILE_SYSTEM_PROMPT,
     SEED_QUESTIONS
 )
-from dotenv import load_dotenv
-load_dotenv()
 
 # ──────────────────────────────────────────────
 # APP SETUP
@@ -41,6 +42,17 @@ def format_conversation(conversation: list) -> str:
     ])
 
 
+def clean_ai_json(raw: str) -> str:
+    """Normalize AI output into plain JSON text by stripping markdown fences."""
+    return (
+        raw.strip()
+        .removeprefix("```json")
+        .removeprefix("```")
+        .removesuffix("```")
+        .strip()
+    )
+
+
 def parse_score_response(raw: str) -> dict:
     """
     Safely parse the JSON scoring response from the AI.
@@ -48,14 +60,7 @@ def parse_score_response(raw: str) -> dict:
     and falls back to score 1 if anything goes wrong.
     """
     try:
-        cleaned = (
-            raw.strip()
-            .removeprefix("```json")
-            .removeprefix("```")
-            .removesuffix("```")
-            .strip()
-        )
-        parsed = json.loads(cleaned)
+        parsed = json.loads(clean_ai_json(raw))
         score = int(parsed.get("score", 1))
         if score not in (1, 2, 3):
             score = 1
@@ -70,6 +75,33 @@ def parse_score_response(raw: str) -> dict:
             "reason": "Could not parse scoring response — defaulting to score 1"
         }
 
+
+def parse_persona_profile(raw: str) -> dict:
+    """
+    Safely parse persona JSON from the AI and normalize basic fields.
+    """
+    try:
+        parsed = json.loads(clean_ai_json(raw))
+        interest_tags = parsed.get("interest_tags", [])
+        if isinstance(interest_tags, str):
+            interest_tags = [interest_tags]
+        if not isinstance(interest_tags, list):
+            interest_tags = []
+
+        return {
+            "persona": parsed.get("persona", "beginner"),
+            "interest_tags": interest_tags,
+            "preferred_content": parsed.get("preferred_content", ""),
+            "search_query": parsed.get("search_query", "")
+        }
+    except (json.JSONDecodeError, ValueError, TypeError) as e:
+        logger.warning(f"Failed to parse persona response: {e}. Raw: {raw}")
+        return {
+            "persona": "beginner",
+            "interest_tags": [],
+            "preferred_content": "",
+            "search_query": ""
+        }
 
 
 @chat_bp.post("")  # /chat
@@ -117,6 +149,7 @@ def chat():
                 "conversation": [],
                 "last_question": SEED_QUESTIONS[0],
                 "score": None,
+                "persona_profile": {},
                 "completed": False
             })
             if not result.acknowledged:
@@ -191,12 +224,22 @@ def chat():
     formatted_conv = format_conversation(conversation)
     logger.info(f"Scoring user_id: {user_id}")
 
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        score_future = executor.submit(
+            score_user_conversation,
+            client=client,
+            formatted_conv=formatted_conv,
+            system_prompt=SCORING_SYSTEM_PROMPT
+        )
+        persona_future = executor.submit(
+            extract_persona_profile,
+            client=client,
+            formatted_conv=formatted_conv,
+            system_prompt=PERSONA_PROFILE_SYSTEM_PROMPT
+        )
 
-    raw_score = score_user_conversation(
-        client=client,
-        formatted_conv=formatted_conv,
-        system_prompt=SCORING_SYSTEM_PROMPT
-    )
+        raw_score = score_future.result()
+        raw_persona = persona_future.result()
 
     if raw_score:
         score_data = parse_score_response(raw_score)
@@ -206,7 +249,8 @@ def chat():
             "reason": "Scoring failed — fallback to default score 1"
         }
 
-   
+    persona_profile = parse_persona_profile(raw_persona or "")
+
     try:
         chat_collection.update_one(
             {"user_id": user_id},
@@ -215,6 +259,7 @@ def chat():
                 "conversation": conversation,
                 "score": score_data["score"],
                 "score_reason": score_data["reason"],
+                "persona_profile": persona_profile,
                 "completed": True
             }}
         )
@@ -229,5 +274,6 @@ def chat():
         "step": step,
         "total_steps": len(SEED_QUESTIONS),
         "score": score_data["score"],
-        "score_reason": score_data["reason"]
+        "score_reason": score_data["reason"],
+        "persona_profile": persona_profile
     })

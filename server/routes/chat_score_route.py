@@ -27,5 +27,6 @@ def get_result(user_id):
         "user_id": user_id,
         "score": session["score"],
         "score_reason": session.get("score_reason", ""),
+        "persona_profile": session.get("persona_profile", {}),
         "completed": True
     })

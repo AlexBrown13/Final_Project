@@ -39,9 +39,11 @@ export default function ResultsPage() {
 
   const routeScore =
     location.state?.score != null ? normalizeScore(location.state.score) : null
+  const routePersona = location.state?.persona_profile ?? null
 
   const [health, setHealth] = useState(null)
   const [fetchedScore, setFetchedScore] = useState(null)
+  const [personaProfile, setPersonaProfile] = useState(null)
   const [loadError, setLoadError] = useState(null)
   const [retakeBusy, setRetakeBusy] = useState(false)
 
@@ -73,7 +75,10 @@ export default function ResultsPage() {
     } catch {
       /* ignore */
     }
-  }, [routeScore])
+    if (routePersona) {
+      setPersonaProfile(routePersona)
+    }
+  }, [routeScore, routePersona])
 
   useEffect(() => {
     if (routeScore != null) {
@@ -101,6 +106,7 @@ export default function ResultsPage() {
         const s = normalizeScore(data.score)
         setLoadError(null)
         setFetchedScore(s)
+        setPersonaProfile(data.persona_profile ?? null)
         try {
           localStorage.setItem(SCORE_CACHE_KEY, String(s))
         } catch {
@@ -275,6 +281,34 @@ export default function ResultsPage() {
             </button>
           </div>
         </header>
+
+        {personaProfile ? (
+          <section className={styles.personaCard}>
+            <h2 className={styles.personaTitle}>Profile summary</h2>
+            <p className={styles.personaText}>
+              {personaProfile.persona ? (
+                <>Persona: <strong>{personaProfile.persona}</strong>.</>
+              ) : null}
+              {personaProfile.preferred_content ? (
+                <>
+                  {' '}
+                  Preferred content: <strong>{personaProfile.preferred_content}</strong>.
+                </>
+              ) : null}
+            </p>
+            {Array.isArray(personaProfile.interest_tags) &&
+            personaProfile.interest_tags.length ? (
+              <p className={styles.personaText}>
+                Interest tags: <strong>{personaProfile.interest_tags.join(", ")}</strong>
+              </p>
+            ) : null}
+            {personaProfile.search_query ? (
+              <p className={styles.personaText}>
+                Recommended search: <strong>{personaProfile.search_query}</strong>
+              </p>
+            ) : null}
+          </section>
+        ) : null}
 
         <Content dir={dir} />
       </main>

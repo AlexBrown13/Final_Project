@@ -1,7 +1,6 @@
 import os
 from pymongo import MongoClient
-from dotenv import load_dotenv, find_dotenv
-load_dotenv(dotenv_path=find_dotenv())
+from utils.logger import logger
 
 mongo_url = os.environ.get("MONGO_ATLAS_URL") 
 db_name = os.environ.get("DB_ATLAS_NAME") 
@@ -20,6 +19,13 @@ mongo_client = MongoClient(
 
 db = mongo_client[db_name]
 chat_collection = db["conversation"]
+
+try:
+    chat_collection.create_index("user_id", unique=True)
+    chat_collection.create_index("completed")
+except Exception as e:
+    logger.warning(f"Failed to create chat collection indexes: {e}")
+
 users_collection = db["users"]
 calls_collection = db['calls']
 trends_collection = db["trends"]

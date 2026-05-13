@@ -18,11 +18,14 @@ def reconstruct_abstract(abstract_index):
     return " ".join(word for _, word in word_positions)
 
 
-def main(user_id):
+def main(user_id, query=None):
+    if not query or not str(query).strip():
+        query = "trauma in Israel mental health support research"
+
     try:
-        works = Works().search("Impact of obesity on the severity of trauma").filter(
+        works = Works().search(query).filter(
             type='article'
-        ).get(per_page=1)
+        ).get(per_page=5)
 
         response_works = []
         operations = []
@@ -41,8 +44,8 @@ def main(user_id):
                 "authors": [
                     a.get("author", {}).get("display_name")
                     for a in work.get("authorships", [])[:2]
-                ]
-
+                ],
+                "persona_query": query
             }
 
             response_works.append(doc)

@@ -105,6 +105,27 @@
   gap: 16px;
 }
 
+.persona-card {
+  background: #eef4ff;
+  border: 1px solid #cfe0ff;
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+
+.persona-card-title {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e3a8a;
+}
+
+.persona-card-text {
+  margin: 0.25rem 0;
+  color: #1f2937;
+  font-size: 0.95rem;
+}
+
 .article-card {
   background: #fff;
   border: 1px solid #e6e8ef;

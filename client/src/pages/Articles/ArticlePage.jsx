@@ -7,6 +7,7 @@ import "./ArticlePage.css";
 
 export default function ArticlePage() {
   const [articles, setArticles] = useState([]);
+  const [personaProfile, setPersonaProfile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
@@ -88,6 +89,7 @@ export default function ArticlePage() {
         : [];
 
       setArticles(normalizedArticles);
+      setPersonaProfile(data.persona_profile ?? null);
     } catch (err) {
       setError(err.message || ui.articlesErrorFetch);
     } finally {
@@ -153,6 +155,37 @@ export default function ArticlePage() {
             </button>
           </div>
         </div>
+
+        {personaProfile ? (
+          <div className="persona-card">
+            <p className="persona-card-title">{s.articlesPersonaTitle}</p>
+            <p className="persona-card-text">{s.articlesPersonaRecommended}</p>
+            {personaProfile.persona ? (
+              <p className="persona-card-text">
+                <strong>{personaProfile.persona}</strong>
+              </p>
+            ) : null}
+            {personaProfile.preferred_content ? (
+              <p className="persona-card-text">
+                <strong>{s.articlesPersonaPreferred}:</strong>{' '}
+                {personaProfile.preferred_content}
+              </p>
+            ) : null}
+            {Array.isArray(personaProfile.interest_tags) &&
+            personaProfile.interest_tags.length ? (
+              <p className="persona-card-text">
+                <strong>{s.articlesPersonaTags}:</strong>{' '}
+                {personaProfile.interest_tags.join(', ')}
+              </p>
+            ) : null}
+            {personaProfile.search_query ? (
+              <p className="persona-card-text">
+                <strong>{s.articlesPersonaQuery}:</strong>{' '}
+                {personaProfile.search_query}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
 
         {status && <p className="feedback-banner feedback-success">{status}</p>}
 

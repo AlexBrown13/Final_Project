@@ -33,7 +33,10 @@ def get_articles():
             article["_id"] = str(article["_id"])
             articles.append(article)
 
-        return jsonify({"articles": articles}), 200
+        session = chat_collection.find_one({"user_id": user_id}, {"persona_profile": 1})
+        persona_profile = session.get("persona_profile", {}) if session else {}
+
+        return jsonify({"articles": articles, "persona_profile": persona_profile}), 200
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({"error": str(e)}), 500
@@ -48,8 +51,13 @@ def articles():
 
         if not user_id:
             return jsonify({"error": "user_id is required"}), 400
-        
-        main(user_id) 
+
+        session = chat_collection.find_one({"user_id": user_id}, {"persona_profile": 1})
+        persona_query = None
+        if session and session.get("persona_profile"):
+            persona_query = session["persona_profile"].get("search_query")
+
+        main(user_id, query=persona_query)
         return jsonify({"status": "successful"}), 200
         
     except Exception as e:

@@ -66,6 +66,28 @@
   gap: 0.65rem;
 }
 
+.personaCard {
+  background: #ffffff;
+  border: 1px solid #d1e7dd;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 1.5rem;
+}
+
+.personaTitle {
+  margin: 0 0 0.75rem;
+  font-family: 'Heebo', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  color: #134e4a;
+}
+
+.personaText {
+  margin: 0.45rem 0;
+  color: #134e4a;
+  line-height: 1.6;
+}
+
 .retake {
   font-family: 'Heebo', system-ui, sans-serif;
   font-weight: 600;
