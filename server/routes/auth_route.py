@@ -78,12 +78,15 @@ def register():
             "email": email,
             "password": hashed
         })
+        
         if not response.acknowledged:
             return jsonify({"error": "Failed to create new user"}), 500
+        return jsonify({"message": "User created"}), 201
+    
     except Exception as e:
         return jsonify({"error": "Error inserting new user into MongoDB"}), 500
 
-    return jsonify({"message": "User created"}), 201
+    
 
 
 # Login route
@@ -107,8 +110,12 @@ def login():
     if not user or not bcrypt.checkpw(password.encode('utf-8'), user["password"]):
         return jsonify({"error": "Invalid credentials"}), 401
     
-    access_token = create_access_token(identity=email)
-    
+    #access_token = create_access_token(identity=email)
+    access_token = create_access_token(
+        identity=str(user["_id"]),
+        additional_claims={"email": email}
+    )
+
     return jsonify({"message": "Login success", "token": access_token}), 200
 
 

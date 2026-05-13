@@ -106,6 +106,9 @@ export default function Navbar() {
           <Link to="/trends" className={styles.link}>
             Trends
           </Link>
+          <Link to="/articles" className={styles.link}>
+            Articles
+          </Link>
           <div className={styles.dropdown} ref={dropdownRef}>
             <button
               type="button"

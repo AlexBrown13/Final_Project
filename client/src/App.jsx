@@ -14,6 +14,8 @@ import SleepPage from "./pages/SleepPage.jsx";
 import TrafficAccidentsPage from "./pages/TrafficAccidentsPage.jsx";
 import DomesticViolencePage from "./pages/DomesticViolencePage.jsx";
 import ExploreSearchPage from "./pages/Trends/ExploreSearchPage.jsx";
+import ArticlePage from "./pages/Articles/ArticlePage.jsx";
+
 
 export default function App() {
   return (
@@ -29,6 +31,7 @@ export default function App() {
             <Route path="/graphs/sleep" element={<SleepPage />} />
             <Route path="/graphs/traffic" element={<TrafficAccidentsPage />} />
             <Route path="/trends" element={<ExploreSearchPage />} />
+            <Route path="/articles" element={<ArticlePage />} />
             <Route
               path="/graphs/domestic-violence"
               element={<DomesticViolencePage />}

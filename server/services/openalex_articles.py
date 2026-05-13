@@ -1,8 +1,9 @@
-from mongo import articles_collection
 from pymongo import UpdateOne
 from pyalex import Works
 
-def main():
+from services.mongo import articles_collection
+
+def main(user_id):
     try:
         works = Works().search("PTSD").filter(
             type='article'
@@ -25,8 +26,11 @@ def main():
 
             operations.append(
                 UpdateOne(
-                    {"openalex_id": work["id"]},   # filter
-                    {"$set": doc},                 # update
+                    {
+                        "openalex_id": work["id"],
+                        "user_id": user_id
+                     },
+                    {"$set": doc},                 
                     upsert=True    
                 )
             )
