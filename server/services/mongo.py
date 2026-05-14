@@ -30,3 +30,11 @@ users_collection = db["users"]
 calls_collection = db['calls']
 trends_collection = db["trends"]
 articles_collection = db["articles"]
+token_blocklist_collection = db["token_blocklist"]
+
+try:
+    # Auto-expire revoked JTIs after 1 day
+    token_blocklist_collection.create_index("revoked_at", expireAfterSeconds=86400)
+    token_blocklist_collection.create_index("jti", unique=True)
+except Exception as e:
+    logger.warning(f"Failed to create token_blocklist indexes: {e}")

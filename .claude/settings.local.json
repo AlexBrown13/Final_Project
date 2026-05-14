@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep -l \"useEffect\")",
+      "Bash(python -c \"from extensions import limiter; print\\('extensions ok'\\)\")",
+      "Bash(python -c \"from app import app; print\\('app ok'\\)\")",
+      "Bash(python -c ' *)"
+    ]
+  }
+}

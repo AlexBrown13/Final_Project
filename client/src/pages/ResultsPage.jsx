@@ -10,9 +10,11 @@ import {
   QUIZ_MESSAGES_KEY,
   QUIZ_META_KEY,
   SCORE_CACHE_KEY,
+  AUTH_TOKEN_KEY,
 } from '../config/storageKeys.js'
 import { useDirection } from '../context/useDirection.js'
 import { fetchHealth, getResult, deleteSession } from '../utils/api.js'
+import { getApiBase } from '../config/api.js'
 import styles from './ResultsPage.module.css'
 
 function normalizeScore(n) {
@@ -40,6 +42,8 @@ export default function ResultsPage() {
   const routeScore =
     location.state?.score != null ? normalizeScore(location.state.score) : null
   const routePersona = location.state?.persona_profile ?? null
+  // true only when navigating from a freshly completed quiz — not from login redirect
+  const routeFromQuiz = location.state?.fromQuiz === true
 
   const [health, setHealth] = useState(null)
   const [fetchedScore, setFetchedScore] = useState(null)
@@ -67,6 +71,33 @@ export default function ResultsPage() {
       setHealth(ok)
     })()
   }
+
+  // Fetch articles from OpenAlex only when the quiz was JUST completed.
+  // On login the user already has articles in the DB — no need to re-query OpenAlex.
+  useEffect(() => {
+    if (!routeFromQuiz || !score) return
+
+    const token = localStorage.getItem(AUTH_TOKEN_KEY)
+    if (!token) return
+
+    const quizUserId = localStorage.getItem(USER_ID_KEY)
+
+    ;(async () => {
+      try {
+        const base = getApiBase()
+        await fetch(`${base}/api/articles`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ quiz_user_id: quizUserId }),
+        })
+      } catch (err) {
+        console.warn('Auto-fetch articles failed:', err)
+      }
+    })()
+  }, [routeFromQuiz, score])
 
   useEffect(() => {
     if (routeScore == null) return
@@ -154,7 +185,8 @@ export default function ResultsPage() {
     setRetakeBusy(true)
     try {
       const userId = localStorage.getItem(USER_ID_KEY)
-      if (userId) await deleteSession(userId)
+      const token = localStorage.getItem(AUTH_TOKEN_KEY)
+      if (userId) await deleteSession(userId, token)
     } catch {
       /* ignore */
     }

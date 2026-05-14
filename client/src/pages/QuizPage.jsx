@@ -5,6 +5,7 @@ import BackendDown from "../components/BackendDown.jsx";
 import QuizProgress from "../components/QuizProgress.jsx";
 import { getUiStrings } from "../config/uiStrings.js";
 import {
+  AUTH_TOKEN_KEY,
   USER_ID_KEY,
   QUIZ_MESSAGES_KEY,
   QUIZ_META_KEY,
@@ -118,10 +119,10 @@ export default function QuizPage() {
       } catch {
         /* ignore */
       }
-      navigate(
-        "/results",
-        { state: { score, persona_profile: personaProfile }, replace: true }
-      );
+      navigate("/results", {
+        state: { score, persona_profile: personaProfile, fromQuiz: true },
+        replace: true,
+      });
     },
     [navigate]
   );
@@ -199,7 +200,8 @@ export default function QuizPage() {
 
         if (res.status === 400 && data?.completed === false) {
           if (!Array.isArray(savedMsgs) || savedMsgs.length === 0) {
-            await deleteSession(userId); // delete session
+            const quizToken = localStorage.getItem(AUTH_TOKEN_KEY);
+            await deleteSession(userId, quizToken);
           } else {
             setMessages(savedMsgs);
             if (meta && typeof meta.step === "number") {
@@ -221,7 +223,7 @@ export default function QuizPage() {
 
         setBootLoading(true);
         try {
-          const chatRes = await postChat(userId, INIT_MESSAGE);
+          const chatRes = await postChat(userId, INIT_MESSAGE, [], locale);
           await handleChatResponse(chatRes.data, chatRes.res);
         } finally {
           setBootLoading(false);
@@ -254,7 +256,9 @@ export default function QuizPage() {
     setInput("");
     setLoading(true);
 
-    const { res, data } = await postChat(userId, text);
+    // Pass the full message history so the server can reconstruct conversation
+    // context without writing it to the DB on every step
+    const { res, data } = await postChat(userId, text, nextMsgs, locale);
     setLoading(false);
     await handleChatResponse(data, res);
   };
@@ -266,7 +270,7 @@ export default function QuizPage() {
     if (!messages.length) {
       setBootLoading(true);
       const userId = getOrCreateUserId();
-      const { res, data } = await postChat(userId, INIT_MESSAGE);
+      const { res, data } = await postChat(userId, INIT_MESSAGE, [], locale);
       setBootLoading(false);
       await handleChatResponse(data, res);
     }

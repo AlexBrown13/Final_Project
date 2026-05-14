@@ -22,7 +22,7 @@ def generate_dynamic_question(
     step: int,
     formatted_conv: str,
     message: str,
-    seed_question: str,
+    seed_question: list,
     system_prompt: str
 ) -> str | None:
     """
@@ -31,9 +31,9 @@ def generate_dynamic_question(
     """
     try:
         response = client.chat.completions.create(
-            model="llama-3.1-8b-instant",  # fast model for conversational questions
-            temperature=0.75,
-            max_tokens=200,
+            model="llama-3.3-70b-versatile",
+            temperature=0.7,
+            max_tokens=300,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {
@@ -72,7 +72,7 @@ def score_user_conversation(client, formatted_conv: str, system_prompt: str):
         response = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             temperature=0.2,
-            max_tokens=200,
+            max_tokens=300,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": f"Full conversation:\n{formatted_conv}"}
@@ -94,7 +94,7 @@ def extract_persona_profile(client, formatted_conv: str, system_prompt: str):
         response = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             temperature=0.2,
-            max_tokens=250,
+            max_tokens=450,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": f"Full conversation:\n{formatted_conv}"}
