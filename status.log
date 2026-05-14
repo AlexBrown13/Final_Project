@@ -1,4 +1,22 @@
-2026-05-14 15:29:37,516 [INFO] Trnds job started
-2026-05-14 15:29:38,126 [INFO] Processing group: Trauma_Index
-2026-05-14 15:29:39,658 [INFO] fetched data successfully 
 2026-05-14 15:29:42,508 [INFO] Existing data updated successfully in the database
+2026-05-14 19:25:07,071 [INFO] MongoDB Atlas: connection established successfully.
+2026-05-14 19:25:07,377 [INFO] Processing group: Trauma_Index
+2026-05-14 19:25:07,378 [ERROR] Unexpected error in Trauma_Index: Retry.__init__() got an unexpected keyword argument 'method_whitelist'
+2026-05-14 20:00:38,200 [INFO] MongoDB Atlas: connection established successfully.
+2026-05-14 20:00:38,935 [INFO] Processing group: Trauma_Index
+2026-05-14 20:00:40,028 [ERROR] Trauma_Index: Google returned 429 (rate limited)
+2026-05-14 20:10:27,165 [INFO] MongoDB Atlas: connection established successfully.
+2026-05-14 20:10:27,801 [INFO] Processing group: Trauma_Index
+2026-05-14 20:10:28,851 [ERROR] Trauma_Index: Google returned 429 (rate limited)
+2026-05-14 20:14:56,864 [INFO] MongoDB Atlas: connection established successfully.
+2026-05-14 20:14:57,404 [INFO] Processing group: Trauma_Index
+2026-05-14 20:14:58,391 [INFO] fetched data successfully 
+2026-05-14 20:14:58,834 [INFO] Existing data updated successfully in the database
+2026-05-14 20:14:58,835 [INFO] Trends job completed successfully.
+2026-05-14 20:17:37,581 [INFO] MongoDB Atlas: connection established successfully.
+2026-05-14 20:17:38,209 [INFO] Processing group: Trauma_Index
+2026-05-14 20:17:39,508 [ERROR] Google Trends rate limit hit (429/503). Attempting retry #1
+2026-05-14 20:17:50,569 [ERROR] Google Trends rate limit hit (429/503). Attempting retry #2
+2026-05-14 20:18:01,759 [INFO] Fetched data from Google trends successfully
+2026-05-14 20:18:02,208 [INFO] Existing data updated successfully in the database
+2026-05-14 20:18:02,208 [INFO] Trends job completed successfully.
