@@ -12,10 +12,12 @@ from pathlib import Path
 import pandas as pd
 from pytrends.request import TrendReq
 from pymongo import UpdateOne
-from pytrends.exceptions import TooManyRequestsError
+from pytrends.exceptions import TooManyRequestsError, ResponseError
 
 from utils.logger import logger
 from mongo import trends_collection
+
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 # Constant parameters
 GROUPS = {
@@ -30,10 +32,9 @@ GROUPS = {
 #===================
 
 def main():
-
     try:
         df_trend = fetch_google_trends()
-        logger.info("fetched data successfully ")
+        logger.info("Fetched data from Google trends successfully")
 
         update_database(df_trend)
         logger.info("Trends job completed successfully.")
@@ -42,11 +43,34 @@ def main():
         logger.error("Job failure in main automation script")
 
 
-#============================================================
+# Define retry system for Google's ResponseError like 429
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=2, min=10, max=60),
+    retry=retry_if_exception_type(ResponseError),
+    reraise=True,
+    before_sleep=lambda retry_state: logger.error(
+        f"Google Trends rate limit hit (429/503). Attempting retry #{retry_state.attempt_number}"
+    )
+)
+def execute_payload_fetch(pytrends, kw_list):
+    ''' Calls the pytrends API to retrive search trends using GROUPS parameter '''
+    pytrends.build_payload(
+        kw_list=kw_list,
+        cat=0,
+        timeframe='today 1-m', # now 7-d | today 1-m | today 12-m | today 5-y
+        geo='IL',
+        gprop=''
+    )
+
+    df_chunk = pytrends.interest_over_time().reset_index()
+    return df_chunk
+
+
+#=======================================================================
 # Fetch Data From Google Trends
-# calls the pytrends API to retrive search trends using GROUPS parameter
 # Output: DataFrame containing the date and the index fields
-#============================================================
+#=======================================================================
 
 def fetch_google_trends():
     try:
@@ -58,15 +82,7 @@ def fetch_google_trends():
             logger.info(f"Processing group: {group_name}")
             print(f"Fetching {group_name}...")
 
-            pytrends.build_payload(
-                kw_list=kw_list,
-                cat=0,
-                timeframe='today 1-m', # now 7-d | today 1-m | today 12-m | today 5-y
-                geo='IL',
-                gprop=''
-            )
-            
-            df_trends = pytrends.interest_over_time().reset_index()
+            df_trends = execute_payload_fetch(pytrends, kw_list)
 
             if 'isPartial' in df_trends.columns:
                 df_trends.drop(columns=['isPartial'], inplace=True)
@@ -80,10 +96,6 @@ def fetch_google_trends():
 
             df[group_name] = df_trends[group_name]
 
-            # avoid 429 error
-            if index < len(GROUPS)-1:
-                time.sleep(30)
-
         # avoid the function does not return a None DataFram
         if df is None:
             logger.error("Data fetched failed, returned a None value.")
@@ -96,7 +108,7 @@ def fetch_google_trends():
         sys.exit(2)
 
     except Exception as e:
-        logger.exception(f"Unexpected error in {group_name}: {e}")
+        logger.exception(f"Unexpected error in {group_name}")
         sys.exit(2)
     
 
