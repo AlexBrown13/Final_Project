@@ -1,4 +1,5 @@
 import { getApiBase } from "../config/api.js";
+import { AUTH_TOKEN_KEY } from "../config/storageKeys.js";
 
 async function parseJsonSafe(res) {
   const text = await res.text();
@@ -96,13 +97,15 @@ export async function logoutUser(token) {
 
 /**
  * POST /chat — returns { reply, step, total_steps, completed, score?, error? }
+ * messages: full UI message array [{role, text}] so the server can reconstruct
+ * conversation context without storing it in the DB mid-quiz.
  */
-export async function postChat(userId, message) {
+export async function postChat(userId, message, messages = [], locale = "en") {
   const base = getApiBase();
   const res = await fetch(`${base}/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ user_id: userId, message }),
+    body: JSON.stringify({ user_id: userId, message, messages, locale }),
   });
   const data = await parseJsonSafe(res);
   return { res, data };
@@ -114,27 +117,17 @@ export async function getResult(userId) {
   const data = await parseJsonSafe(res);
   return { res, data };
 }
-// export async function getResult() {
-//   const base = getApiBase();
-//   const token = localStorage.getItem(AUTH_TOKEN_KEY);
-
-//   const res = await fetch(`${base}/result`, {
-//     headers: {
-//       Authorization: `Bearer ${token}`,
-//     },
-//   });
-//   const data = await parseJsonSafe(res);
-//   return { res, data };
-// }
-
 
 /**
- * DELETE session
+ * DELETE session — requires auth token so the server can also delete articles by ObjectId
  */
-export async function deleteSession(userId) {
+export async function deleteSession(userId, token) {
   const base = getApiBase();
+  const authToken = token || localStorage.getItem(AUTH_TOKEN_KEY);
+  const headers = authToken ? { Authorization: `Bearer ${authToken}` } : {};
   const res = await fetch(`${base}/session/${encodeURIComponent(userId)}`, {
     method: "DELETE",
+    headers,
   });
   const data = await parseJsonSafe(res);
   return { res, data };

@@ -10,9 +10,11 @@ import {
   QUIZ_MESSAGES_KEY,
   QUIZ_META_KEY,
   SCORE_CACHE_KEY,
+  AUTH_TOKEN_KEY,
 } from '../config/storageKeys.js'
 import { useDirection } from '../context/useDirection.js'
 import { fetchHealth, getResult, deleteSession } from '../utils/api.js'
+import { getApiBase } from '../config/api.js'
 import styles from './ResultsPage.module.css'
 
 function normalizeScore(n) {
@@ -39,9 +41,13 @@ export default function ResultsPage() {
 
   const routeScore =
     location.state?.score != null ? normalizeScore(location.state.score) : null
+  const routePersona = location.state?.persona_profile ?? null
+  // true only when navigating from a freshly completed quiz — not from login redirect
+  const routeFromQuiz = location.state?.fromQuiz === true
 
   const [health, setHealth] = useState(null)
   const [fetchedScore, setFetchedScore] = useState(null)
+  const [personaProfile, setPersonaProfile] = useState(null)
   const [loadError, setLoadError] = useState(null)
   const [retakeBusy, setRetakeBusy] = useState(false)
 
@@ -66,6 +72,33 @@ export default function ResultsPage() {
     })()
   }
 
+  // Fetch articles from OpenAlex only when the quiz was JUST completed.
+  // On login the user already has articles in the DB — no need to re-query OpenAlex.
+  useEffect(() => {
+    if (!routeFromQuiz || !score) return
+
+    const token = localStorage.getItem(AUTH_TOKEN_KEY)
+    if (!token) return
+
+    const quizUserId = localStorage.getItem(USER_ID_KEY)
+
+    ;(async () => {
+      try {
+        const base = getApiBase()
+        await fetch(`${base}/api/articles`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ quiz_user_id: quizUserId }),
+        })
+      } catch (err) {
+        console.warn('Auto-fetch articles failed:', err)
+      }
+    })()
+  }, [routeFromQuiz, score])
+
   useEffect(() => {
     if (routeScore == null) return
     try {
@@ -73,7 +106,10 @@ export default function ResultsPage() {
     } catch {
       /* ignore */
     }
-  }, [routeScore])
+    if (routePersona) {
+      setPersonaProfile(routePersona)
+    }
+  }, [routeScore, routePersona])
 
   useEffect(() => {
     if (routeScore != null) {
@@ -101,6 +137,7 @@ export default function ResultsPage() {
         const s = normalizeScore(data.score)
         setLoadError(null)
         setFetchedScore(s)
+        setPersonaProfile(data.persona_profile ?? null)
         try {
           localStorage.setItem(SCORE_CACHE_KEY, String(s))
         } catch {
@@ -148,7 +185,8 @@ export default function ResultsPage() {
     setRetakeBusy(true)
     try {
       const userId = localStorage.getItem(USER_ID_KEY)
-      if (userId) await deleteSession(userId)
+      const token = localStorage.getItem(AUTH_TOKEN_KEY)
+      if (userId) await deleteSession(userId, token)
     } catch {
       /* ignore */
     }
@@ -275,6 +313,34 @@ export default function ResultsPage() {
             </button>
           </div>
         </header>
+
+        {personaProfile ? (
+          <section className={styles.personaCard}>
+            <h2 className={styles.personaTitle}>Profile summary</h2>
+            <p className={styles.personaText}>
+              {personaProfile.persona ? (
+                <>Persona: <strong>{personaProfile.persona}</strong>.</>
+              ) : null}
+              {personaProfile.preferred_content ? (
+                <>
+                  {' '}
+                  Preferred content: <strong>{personaProfile.preferred_content}</strong>.
+                </>
+              ) : null}
+            </p>
+            {Array.isArray(personaProfile.interest_tags) &&
+            personaProfile.interest_tags.length ? (
+              <p className={styles.personaText}>
+                Interest tags: <strong>{personaProfile.interest_tags.join(", ")}</strong>
+              </p>
+            ) : null}
+            {personaProfile.search_query ? (
+              <p className={styles.personaText}>
+                Recommended search: <strong>{personaProfile.search_query}</strong>
+              </p>
+            ) : null}
+          </section>
+        ) : null}
 
         <Content dir={dir} />
       </main>

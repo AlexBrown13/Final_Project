@@ -5,6 +5,7 @@ import { getUiStrings } from "../../config/uiStrings.js";
 import { AUTH_TOKEN_KEY, USER_ID_KEY } from "../../config/storageKeys.js";
 import { useDirection } from "../../context/useDirection.js";
 import { getResult, loginUser } from "../../utils/api.js";
+import { SCORE_CACHE_KEY } from "../../config/storageKeys.js";
 import styles from "./AuthForm.module.css";
 
 function pickErrors(data, unexpectedLabel) {
@@ -21,7 +22,16 @@ async function resolveRedirectTarget() {
 
   const { res, data } = await getResult(userId);
   if (res.ok && data?.completed && data?.score != null) {
-    return { path: "/results", state: { score: Number(data.score) } };
+    // Cache score so guards (e.g. ArticlePage) work immediately after login
+    try { localStorage.setItem(SCORE_CACHE_KEY, String(data.score)); } catch { /* ignore */ }
+    return {
+      path: "/results",
+      state: {
+        score: Number(data.score),
+        persona_profile: data.persona_profile ?? null,
+        // fromQuiz is intentionally absent — articles already exist, no re-fetch needed
+      },
+    };
   }
   return { path: "/" };
 }

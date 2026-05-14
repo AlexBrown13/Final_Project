@@ -1,9 +1,11 @@
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from flask import Flask
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-from dotenv import load_dotenv
-
 from routes.map_route import map_bp
 from routes.auth_route import auth_bp
 from routes.chat_route import chat_bp
@@ -14,13 +16,13 @@ from routes.graphs_route import graphs_bp
 from routes.trends_route import trends_bp
 from routes.articles_route import articles_bp
 from jwt_blocklist import is_jti_revoked
-
-load_dotenv()
+from extensions import limiter
 
 app = Flask(__name__)
 app.config["JWT_SECRET_KEY"] = os.environ.get('JWT_SECRET_KEY')
 
 jwt = JWTManager(app)
+limiter.init_app(app)
 
 @jwt.token_in_blocklist_loader
 def check_if_token_revoked(_jwt_header, jwt_payload):
