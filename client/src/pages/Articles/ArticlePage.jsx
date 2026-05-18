@@ -19,7 +19,7 @@ export default function ArticlePage() {
   const [tagInput, setTagInput] = useState("");
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileError, setProfileError] = useState("");
-
+  
   const { dir, locale } = useDirection();
   const s = useMemo(() => getUiStrings(locale), [locale]);
 
@@ -33,6 +33,7 @@ export default function ArticlePage() {
 
   // If score isn't cached locally, verify against the DB before redirecting.
   // Covers fresh sessions, new devices, or cleared localStorage.
+  
   useEffect(() => {
     if (!token || !userId || score) return;
     let cancelled = false;

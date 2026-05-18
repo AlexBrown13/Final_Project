@@ -635,3 +635,69 @@
 2026-05-18 21:48:39,180 [INFO] MongoDB Atlas: connection established successfully.
 2026-05-18 22:28:43,734 [INFO] MongoDB Atlas: connection established successfully.
 2026-05-18 22:29:08,009 [INFO] MongoDB Atlas: connection established successfully.
+2026-05-18 22:36:35,487 [INFO] MongoDB Atlas: connection established successfully.
+2026-05-18 22:37:36,809 [INFO] MongoDB Atlas: connection established successfully.
+2026-05-18 22:37:42,570 [INFO] MongoDB Atlas: connection established successfully.
+2026-05-18 22:37:50,416 [INFO] MongoDB Atlas: connection established successfully.
+2026-05-18 22:37:57,430 [INFO] MongoDB Atlas: connection established successfully.
+2026-05-18 22:38:02,867 [INFO] MongoDB Atlas: connection established successfully.
+2026-05-18 22:38:08,359 [INFO] MongoDB Atlas: connection established successfully.
+2026-05-18 22:40:25,703 [INFO] MongoDB Atlas: connection established successfully.
+2026-05-18 22:40:31,733 [INFO] MongoDB Atlas: connection established successfully.
+2026-05-18 22:41:50,944 [INFO] MongoDB Atlas: connection established successfully.
+2026-05-18 22:52:54,792 [INFO] MongoDB Atlas: connection established successfully.
+2026-05-18 22:52:58,919 [INFO] MongoDB Atlas: connection established successfully.
+2026-05-18 22:55:13,599 [INFO] New session created for user_id: cd2f9fdb-994a-4000-856e-675f86be6c26
+2026-05-18 23:03:22,645 [INFO] MongoDB Atlas: connection established successfully.
+2026-05-18 23:03:34,907 [INFO] MongoDB Atlas: connection established successfully.
+2026-05-18 23:03:43,064 [INFO] MongoDB Atlas: connection established successfully.
+2026-05-18 23:04:56,303 [INFO] New session created for user_id: 98e85336-529f-48e8-8e31-bf87538db936
+2026-05-18 23:06:29,116 [INFO] Session deleted for quiz user_id: 98e85336-529f-48e8-8e31-bf87538db936
+2026-05-18 23:06:29,117 [WARNING] Invalid ObjectId when deleting articles: '98e85336-529f-48e8-8e31-bf87538db936' is not a valid ObjectId, it must be a 12-byte input or a 24-character hex string
+2026-05-18 23:06:30,228 [INFO] New session created for user_id: 98e85336-529f-48e8-8e31-bf87538db936
+2026-05-18 23:07:35,845 [INFO] Session deleted for quiz user_id: 98e85336-529f-48e8-8e31-bf87538db936
+2026-05-18 23:07:35,847 [WARNING] Invalid ObjectId when deleting articles: '98e85336-529f-48e8-8e31-bf87538db936' is not a valid ObjectId, it must be a 12-byte input or a 24-character hex string
+2026-05-18 23:07:36,475 [INFO] New session created for user_id: 98e85336-529f-48e8-8e31-bf87538db936
+2026-05-18 23:08:11,888 [INFO] Session deleted for quiz user_id: 98e85336-529f-48e8-8e31-bf87538db936
+2026-05-18 23:08:11,890 [WARNING] Invalid ObjectId when deleting articles: '98e85336-529f-48e8-8e31-bf87538db936' is not a valid ObjectId, it must be a 12-byte input or a 24-character hex string
+2026-05-18 23:08:12,395 [INFO] New session created for user_id: 98e85336-529f-48e8-8e31-bf87538db936
+2026-05-18 23:09:17,535 [INFO] Session deleted for quiz user_id: 98e85336-529f-48e8-8e31-bf87538db936
+2026-05-18 23:09:17,539 [WARNING] Invalid ObjectId when deleting articles: '98e85336-529f-48e8-8e31-bf87538db936' is not a valid ObjectId, it must be a 12-byte input or a 24-character hex string
+2026-05-18 23:09:18,047 [INFO] New session created for user_id: 98e85336-529f-48e8-8e31-bf87538db936
+2026-05-18 23:09:24,240 [INFO] Session deleted for quiz user_id: 98e85336-529f-48e8-8e31-bf87538db936
+2026-05-18 23:09:24,241 [WARNING] Invalid ObjectId when deleting articles: '98e85336-529f-48e8-8e31-bf87538db936' is not a valid ObjectId, it must be a 12-byte input or a 24-character hex string
+2026-05-18 23:09:24,750 [INFO] New session created for user_id: 98e85336-529f-48e8-8e31-bf87538db936
+2026-05-18 23:16:06,617 [INFO] Generated dynamic question successfully
+2026-05-18 23:17:27,313 [INFO] Generated dynamic question successfully
+2026-05-18 23:19:43,009 [INFO] Generated dynamic question successfully
+2026-05-18 23:20:17,356 [INFO] Generated dynamic question successfully
+2026-05-18 23:21:19,415 [INFO] Extracting persona for user_id: 98e85336-529f-48e8-8e31-bf87538db936
+2026-05-18 23:21:20,019 [INFO] User 98e85336-529f-48e8-8e31-bf87538db936 persona: researcher → score 3
+2026-05-18 23:31:27,780 [INFO] MongoDB Atlas: connection established successfully.
+2026-05-18 23:31:34,945 [INFO] MongoDB Atlas: connection established successfully.
+2026-05-18 23:31:42,955 [INFO] MongoDB Atlas: connection established successfully.
+2026-05-18 23:31:57,250 [INFO] MongoDB Atlas: connection established successfully.
+2026-05-18 23:32:23,564 [INFO] Upserted: 15, Modified: 0
+2026-05-18 23:35:04,842 [INFO] New session created for user_id: f3a076cf-4956-4466-8e23-c7f272cd39c5
+2026-05-18 23:35:06,284 [INFO] Session deleted for quiz user_id: f3a076cf-4956-4466-8e23-c7f272cd39c5
+2026-05-18 23:35:06,765 [INFO] New session created for user_id: f3a076cf-4956-4466-8e23-c7f272cd39c5
+2026-05-18 23:35:07,564 [INFO] Session deleted for quiz user_id: f3a076cf-4956-4466-8e23-c7f272cd39c5
+2026-05-18 23:35:08,266 [INFO] New session created for user_id: f3a076cf-4956-4466-8e23-c7f272cd39c5
+2026-05-18 23:35:24,962 [INFO] Session deleted for quiz user_id: f3a076cf-4956-4466-8e23-c7f272cd39c5
+2026-05-18 23:35:25,572 [INFO] New session created for user_id: f3a076cf-4956-4466-8e23-c7f272cd39c5
+2026-05-18 23:35:37,835 [INFO] Session deleted for quiz user_id: f3a076cf-4956-4466-8e23-c7f272cd39c5
+2026-05-18 23:35:38,300 [INFO] New session created for user_id: f3a076cf-4956-4466-8e23-c7f272cd39c5
+2026-05-18 23:37:27,942 [INFO] Session deleted for quiz user_id: f3a076cf-4956-4466-8e23-c7f272cd39c5
+2026-05-18 23:37:28,428 [INFO] New session created for user_id: f3a076cf-4956-4466-8e23-c7f272cd39c5
+2026-05-18 23:37:30,174 [INFO] Session deleted for quiz user_id: f3a076cf-4956-4466-8e23-c7f272cd39c5
+2026-05-18 23:37:30,690 [INFO] New session created for user_id: f3a076cf-4956-4466-8e23-c7f272cd39c5
+2026-05-18 23:43:17,814 [INFO] Session deleted for quiz user_id: f3a076cf-4956-4466-8e23-c7f272cd39c5
+2026-05-18 23:43:18,380 [INFO] New session created for user_id: f3a076cf-4956-4466-8e23-c7f272cd39c5
+2026-05-18 23:43:20,689 [INFO] Session deleted for quiz user_id: f3a076cf-4956-4466-8e23-c7f272cd39c5
+2026-05-18 23:43:21,308 [INFO] New session created for user_id: f3a076cf-4956-4466-8e23-c7f272cd39c5
+2026-05-18 23:46:42,989 [INFO] Session deleted for quiz user_id: f3a076cf-4956-4466-8e23-c7f272cd39c5
+2026-05-18 23:46:43,486 [INFO] New session created for user_id: f3a076cf-4956-4466-8e23-c7f272cd39c5
+2026-05-18 23:46:44,223 [INFO] Session deleted for quiz user_id: f3a076cf-4956-4466-8e23-c7f272cd39c5
+2026-05-18 23:46:44,786 [INFO] New session created for user_id: f3a076cf-4956-4466-8e23-c7f272cd39c5
+2026-05-18 23:46:47,374 [INFO] Session deleted for quiz user_id: f3a076cf-4956-4466-8e23-c7f272cd39c5
+2026-05-18 23:46:47,835 [INFO] New session created for user_id: f3a076cf-4956-4466-8e23-c7f272cd39c5
