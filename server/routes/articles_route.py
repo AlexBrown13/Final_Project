@@ -1,7 +1,6 @@
 import re
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from bson import ObjectId
 from bson.errors import InvalidId
 from services.mongo import articles_collection, chat_collection
 from services.openalex_articles import main
@@ -48,7 +47,7 @@ def get_articles():
     try:
         user_id_str = get_jwt_identity()
         try:
-            user_id = ObjectId(user_id_str)
+            user_id = user_id_str
         except InvalidId:
             return jsonify({"error": "Invalid user identity"}), 400
 
@@ -88,7 +87,7 @@ def update_profile():
     try:
         user_id_str = get_jwt_identity()
         try:
-            user_id = ObjectId(user_id_str)
+            user_id = user_id_str
         except InvalidId:
             return jsonify({"error": "Invalid user identity"}), 400
 
@@ -139,7 +138,7 @@ def articles():
     try:
         user_id_str = get_jwt_identity()
         try:
-            user_id = ObjectId(user_id_str)
+            user_id = user_id_str
         except InvalidId:
             return jsonify({"error": "Invalid user identity"}), 400
 

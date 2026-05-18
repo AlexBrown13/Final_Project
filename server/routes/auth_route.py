@@ -3,6 +3,7 @@ from flask_jwt_extended import create_access_token, jwt_required, get_jwt
 from pymongo.errors import PyMongoError
 import bcrypt
 import re
+import uuid
 from services.mongo import users_collection
 from jwt_blocklist import revoke_jti
 
@@ -73,8 +74,12 @@ def register():
 
     hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
 
+    # generaye user_id unique
+    user_id = str(uuid.uuid4())
+
     try:
         response = users_collection.insert_one({
+            "user_id": user_id,
             "email": email,
             "password": hashed
         })
@@ -101,7 +106,7 @@ def login():
     
     email = data.get("email").strip().lower()
     password = data.get("password")
-    
+
     try:
         user = users_collection.find_one({"email": email})
     except PyMongoError:
@@ -112,11 +117,12 @@ def login():
     
     #access_token = create_access_token(identity=email)
     access_token = create_access_token(
-        identity=str(user["_id"]),
+        #identity=str(user["_id"]),
+        identity=user["user_id"],
         additional_claims={"email": email}
     )
 
-    return jsonify({"message": "Login success", "token": access_token}), 200
+    return jsonify({"message": "Login success", "token": access_token, "user_id": user["user_id"]}), 200
 
 
 # Logout route
