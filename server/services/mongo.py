@@ -1,6 +1,7 @@
 import os
 from pymongo import MongoClient
 from dotenv import load_dotenv, find_dotenv
+from pymongo.errors import ConnectionFailure
 load_dotenv(dotenv_path=find_dotenv())
 from utils.logger import logger
 
@@ -50,6 +51,7 @@ calls_collection = db['calls']
 trends_collection = db["trends"]
 articles_collection = db["articles"]
 token_blocklist_collection = db["token_blocklist"]
+ai_assistant_collection = db["ai_assistant"]
 
 try:
     # Auto-expire revoked JTIs after 1 day
