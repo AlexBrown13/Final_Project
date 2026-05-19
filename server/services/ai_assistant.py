@@ -36,7 +36,7 @@ def check_ollama():
         sys.exit(2)
 
 
-def ask_ollama(question, history):
+def ask_ollama(question, history, history_chat):
     PROMPT = f'''
     You are an AI assistant specializing in trauma related education and support.
     
@@ -63,8 +63,9 @@ def ask_ollama(question, history):
         - Uses professional terminology naturally (PTSD, prevalence, efficacy, etc.)
         - Wants depth: mechanisms, prevalence rates, treatment efficacy, Israel-specific data
 
-    User histroy conversation: {history}
-    User question: {question}
+    User histroy quiz: {history}
+    User AI chat histroy {history_chat}
+    User current question: {question}
     '''
     
     try:
@@ -93,11 +94,7 @@ def save_conversation_to_db(convs, user_id):
         messages = []
         
         for conv in convs:
-            msg = {
-                "user_id": user_id,
-                "conversations": conv
-            }
-
+           
             messages.append(
                 UpdateOne(
                     {"user_id": user_id},
@@ -122,13 +119,14 @@ def main(user_id=None, question=None):
     try:
         check_ollama()
         
-        conversation = chat_collection.find_one({"user_id": user_id})
+        quiz_history = chat_collection.find_one({"user_id": user_id})
+        assistant_history = ai_assistant_collection.find_one({"user_id": user_id})
+
+        if not quiz_history or not assistant_history:
+            logger.error("AI-Assistant: quiz or assistant chat not found")
+            raise ValueError("quiz or assistant chat not found")
         
-        if not conversation:
-            logger.error("AI-Assistant: conversation not found")
-            raise ValueError("Conversation not found")
-        
-        answer = ask_ollama(question, history=conversation)
+        answer = ask_ollama(question, history=quiz_history, history_chat=assistant_history)
 
         save_conversation_to_db([{"question": question, 'answer': answer}], user_id)
     
