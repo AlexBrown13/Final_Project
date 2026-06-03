@@ -1,9 +1,10 @@
 .nav {
-  background: #f8f9fa;
-  border-bottom: 0.5px solid rgba(65, 100, 90, 0.2);
+  background: var(--color-nav-bg);
+  border-bottom: 1px solid var(--color-nav-border);
   position: sticky;
   top: 0;
   z-index: 20;
+  transition: background 0.35s ease, border-color 0.35s ease;
 }
 
 .inner {
@@ -21,7 +22,7 @@
   font-family: 'Heebo', system-ui, sans-serif;
   font-weight: 600;
   font-size: 1.05rem;
-  color: #41645a;
+  color: var(--color-primary);
   text-decoration: none;
   line-height: 1.25;
 }
@@ -37,88 +38,96 @@
   display: inline-flex;
   align-items: stretch;
   border-radius: 999px;
-  border: 0.5px solid rgba(65, 100, 90, 0.28);
+  border: 1px solid var(--color-nav-border);
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.6);
+  background: var(--color-surface);
 }
 
 .langBtn {
   font-family: 'Heebo', system-ui, sans-serif;
   font-weight: 600;
   font-size: 0.8rem;
-  color: #41645a;
+  color: var(--color-text);
   background: transparent;
   border: none;
   padding: 0.4rem 0.75rem;
   cursor: pointer;
   line-height: 1.2;
+  transition: background 0.2s ease;
 }
 
 .langBtn:hover {
-  background: rgba(126, 170, 133, 0.12);
+  background: var(--color-border);
 }
 
 .langBtnActive {
-  background: #e1ebe2;
-  color: #41645a;
+  background: var(--color-border);
+  color: var(--color-primary);
 }
 
 .langBtn + .langBtn {
-  border-inline-start: 0.5px solid rgba(65, 100, 90, 0.22);
+  border-inline-start: 1px solid var(--color-nav-border);
 }
 
 .link {
   font-family: 'Heebo', system-ui, sans-serif;
   font-weight: 500;
   font-size: 0.95rem;
-  color: #41645a;
+  color: var(--color-text);
   text-decoration: none;
   border-radius: 999px;
   padding: 0.35rem 0.75rem;
+  transition: background 0.2s ease;
 }
 
 .link:hover {
-  background: rgba(126, 170, 133, 0.15);
+  background: var(--color-border);
 }
 
 .authLink {
   font-family: 'Heebo', system-ui, sans-serif;
   font-weight: 600;
   font-size: 0.9rem;
-  color: #41645a;
+  color: var(--color-primary);
   text-decoration: none;
   border-radius: 999px;
   padding: 0.35rem 0.85rem;
-  border: 0.5px solid rgba(65, 100, 90, 0.35);
-  background: #fff;
+  border: 1px solid var(--color-nav-border);
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: background 0.2s ease;
 }
 
 .authLink:hover {
-  background: rgba(158, 196, 208, 0.25);
+  background: var(--color-border);
 }
 
 .logoutBackhroundColor {
-  background: #f8e087
+  background: var(--color-primary);
+  color: var(--color-surface);
+  border-color: var(--color-primary);
 }
 
 .logoutBackhroundColor:hover {
-  background: #f0d570
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
 }
 
 .donate {
   font-family: 'Heebo', system-ui, sans-serif;
   font-weight: 600;
   font-size: 0.9rem;
-  color: #fff;
-  background: #7eaa85;
+  color: var(--color-surface);
+  background: var(--color-primary);
   text-decoration: none;
   border-radius: 999px;
   padding: 0.45rem 1.1rem;
-  border: 0.5px solid rgba(65, 100, 90, 0.25);
+  border: 1px solid var(--color-nav-border);
+  transition: filter 0.2s ease;
 }
 
 .donate:hover {
-  filter: brightness(0.97);
+  filter: brightness(0.92);
 }
 
 .dropdown {
@@ -135,10 +144,10 @@
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
-  background: #fff;
-  border: 0.5px solid rgba(65, 100, 90, 0.2);
-  border-radius: 0.6rem;
-  box-shadow: 0 4px 16px rgba(65, 100, 90, 0.1);
+  background: var(--color-surface);
+  border: 1px solid var(--color-nav-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
   min-width: 160px;
   z-index: 100;
   display: flex;
@@ -150,11 +159,12 @@
   font-family: 'Heebo', system-ui, sans-serif;
   font-weight: 500;
   font-size: 0.9rem;
-  color: #41645a;
+  color: var(--color-text);
   text-decoration: none;
   padding: 0.55rem 1rem;
+  transition: background 0.2s ease;
 }
 
 .dropdownItem:hover {
-  background: rgba(126, 170, 133, 0.15);
+  background: var(--color-border);
 }

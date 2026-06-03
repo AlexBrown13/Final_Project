@@ -1,5 +1,68 @@
 @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600&family=Heebo:wght@400;500;600&display=swap');
 
+/* ── Persona themes ──────────────────────────────────────────────────── */
+
+/* Default + Beginner: warm, large, approachable */
+:root {
+  --color-bg: #fdf6ef;
+  --color-surface: #fffbf5;
+  --color-primary: #c07840;
+  --color-primary-hover: #a06030;
+  --color-text: #2d3e30;
+  --color-muted: #7a9080;
+  --color-border: #e4d8cc;
+  --color-nav-bg: #fffbf5;
+  --color-nav-border: rgba(65, 100, 90, 0.2);
+  --radius: 14px;
+  --shadow: 0 4px 20px rgba(65, 100, 90, 0.12);
+  --color-callout: #f8e087;
+  --color-bubble-ai: #e1ebe2;
+  --color-bubble-user: #f6e4dc;
+}
+
+/* Typography scaling — all rem values in the app scale automatically */
+html { font-size: 17px; }
+html[data-persona="informed-learner"] { font-size: 15px; }
+html[data-persona="researcher"] { font-size: 13px; }
+
+/* Informed learner: balanced, neutral, close to original branding */
+html[data-persona="informed-learner"] {
+  --color-bg: #f4f7f6;
+  --color-surface: #ffffff;
+  --color-primary: #41645a;
+  --color-primary-hover: #2f4e45;
+  --color-text: #1e3330;
+  --color-muted: #5a7a72;
+  --color-border: #d8e6e2;
+  --color-nav-bg: #ffffff;
+  --color-nav-border: rgba(65, 100, 90, 0.2);
+  --radius: 10px;
+  --shadow: 0 2px 12px rgba(65, 100, 90, 0.1);
+  --color-callout: #e2f0e4;
+  --color-bubble-ai: #e8f0ec;
+  --color-bubble-user: #eef4f2;
+}
+
+/* Researcher: dark, dense, clinical */
+html[data-persona="researcher"] {
+  color-scheme: dark;
+  --color-bg: #0f1a18;
+  --color-surface: #142220;
+  --color-primary: #4fc3a1;
+  --color-primary-hover: #38a98a;
+  --color-text: #b8ccc8;
+  --color-muted: #527068;
+  --color-border: #1e3530;
+  --color-nav-bg: #0b1412;
+  --color-nav-border: rgba(79, 195, 161, 0.15);
+  --radius: 4px;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  --color-callout: #182824;
+  --color-bubble-ai: #1a2f2a;
+  --color-bubble-user: #1e3530;
+}
+/* ─────────────────────────────────────────────────────────────────────── */
+
 *,
 *::before,
 *::after {
@@ -14,9 +77,10 @@ body {
   margin: 0;
   min-height: 100vh;
   font-family: 'Heebo', 'Assistant', system-ui, -apple-system, sans-serif;
-  background: #f8f9fa;
-  color: #41645a;
+  background: var(--color-bg);
+  color: var(--color-text);
   -webkit-font-smoothing: antialiased;
+  transition: background 0.35s ease, color 0.35s ease;
 }
 
 #root {

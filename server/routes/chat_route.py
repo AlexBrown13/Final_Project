@@ -81,6 +81,7 @@ def parse_persona_profile(raw: str) -> dict:
             "persona": parsed.get("persona", "beginner"),
             "interest_tags": interest_tags,
             "preferred_content": parsed.get("preferred_content", ""),
+            "primary_topic": parsed.get("primary_topic", ""),
             "search_query": parsed.get("search_query", "")
         }
     except (json.JSONDecodeError, ValueError, TypeError) as e:
@@ -89,6 +90,7 @@ def parse_persona_profile(raw: str) -> dict:
             "persona": "beginner",
             "interest_tags": [],
             "preferred_content": "",
+            "primary_topic": "",
             "search_query": ""
         }
 

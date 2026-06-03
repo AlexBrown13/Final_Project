@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { DirectionProvider } from "./context/DirectionProvider.jsx";
+import { PersonaProvider } from "./context/PersonaProvider.jsx";
 import { MapProvider } from "./context/MapContext";
 import GuestRoute from "./components/GuestRoute.jsx";
 import QuizPage from "./pages/QuizPage.jsx";
@@ -19,6 +20,7 @@ import ArticlePage from "./pages/Articles/ArticlePage.jsx";
 
 export default function App() {
   return (
+    <PersonaProvider>
     <DirectionProvider>
       <MapProvider>
         <BrowserRouter>
@@ -58,5 +60,6 @@ export default function App() {
         </BrowserRouter>
       </MapProvider>
     </DirectionProvider>
+    </PersonaProvider>
   );
 }

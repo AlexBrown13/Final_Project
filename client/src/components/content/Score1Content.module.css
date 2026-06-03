@@ -5,10 +5,11 @@
 }
 
 .section {
-  background: #f6e4dc;
-  border: 0.5px solid rgba(65, 100, 90, 0.28);
-  border-radius: 20px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
   padding: 2.25rem 2rem;
+  box-shadow: var(--shadow);
 }
 
 .h2 {
@@ -16,7 +17,7 @@
   font-weight: 600;
   font-size: 1.65rem;
   line-height: 1.35;
-  color: #7eaa85;
+  color: var(--color-primary);
   margin: 0 0 0.35rem;
 }
 
@@ -25,7 +26,7 @@
   font-weight: 600;
   font-size: 1.2rem;
   line-height: 1.35;
-  color: #7eaa85;
+  color: var(--color-primary);
   opacity: 0.92;
   margin: 0 0 1.25rem;
 }
@@ -35,7 +36,7 @@
   font-weight: 400;
   font-size: 1.12rem;
   line-height: 1.85;
-  color: #41645a;
+  color: var(--color-text);
   margin: 0 0 1.15rem;
 }
 
@@ -47,16 +48,16 @@
 .callout {
   margin-top: 1.5rem;
   padding: 1.1rem 1.2rem;
-  border-radius: 14px;
-  background: #f8e087;
-  border: 0.5px solid rgba(65, 100, 90, 0.22);
+  border-radius: calc(var(--radius) * 0.75);
+  background: var(--color-callout);
+  border: 1px solid var(--color-border);
 }
 
 .calloutP {
   font-family: 'Heebo', system-ui, sans-serif;
   font-size: 1.02rem;
   line-height: 1.75;
-  color: #41645a;
+  color: var(--color-text);
   margin: 0;
 }
 

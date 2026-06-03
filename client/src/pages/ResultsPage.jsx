@@ -5,6 +5,13 @@ import BackendDown from '../components/BackendDown.jsx'
 import Score1Content from '../components/content/Score1Content.jsx'
 import Score2Content from '../components/content/Score2Content.jsx'
 import Score3Content from '../components/content/Score3Content.jsx'
+import BeginnerHero from '../components/results/BeginnerHero.jsx'
+import InformedHero from '../components/results/InformedHero.jsx'
+import ResearcherHero from '../components/results/ResearcherHero.jsx'
+import BeginnerPersonaCard from '../components/results/BeginnerPersonaCard.jsx'
+import InformedPersonaCard from '../components/results/InformedPersonaCard.jsx'
+import ResearcherPersonaCard from '../components/results/ResearcherPersonaCard.jsx'
+import '../components/results/results-components.css'
 import {
   USER_ID_KEY,
   QUIZ_MESSAGES_KEY,
@@ -13,6 +20,7 @@ import {
   AUTH_TOKEN_KEY,
 } from '../config/storageKeys.js'
 import { useDirection } from '../context/useDirection.js'
+import { usePersona } from '../context/usePersona.js'
 import { fetchHealth, getResult, deleteSession } from '../utils/api.js'
 import { getApiBase } from '../config/api.js'
 import styles from './ResultsPage.module.css'
@@ -21,6 +29,12 @@ function normalizeScore(n) {
   const s = Number(n)
   if (s === 2 || s === 3) return s
   return 1
+}
+
+function scoreToPersona(s) {
+  if (s === 3) return 'researcher'
+  if (s === 2) return 'informed learner'
+  return 'beginner'
 }
 
 function clearQuizLocalState() {
@@ -37,6 +51,7 @@ export default function ResultsPage() {
   const location = useLocation()
   const navigate = useNavigate()
   const { dir, locale } = useDirection()
+  const { setPersona } = usePersona()
   const rtl = dir === 'rtl'
 
   const routeScore =
@@ -109,6 +124,7 @@ export default function ResultsPage() {
     if (routePersona) {
       setPersonaProfile(routePersona)
     }
+    setPersona(routePersona?.persona || scoreToPersona(routeScore))
   }, [routeScore, routePersona])
 
   useEffect(() => {
@@ -138,6 +154,7 @@ export default function ResultsPage() {
         setLoadError(null)
         setFetchedScore(s)
         setPersonaProfile(data.persona_profile ?? null)
+        setPersona(data.persona_profile?.persona || scoreToPersona(s))
         try {
           localStorage.setItem(SCORE_CACHE_KEY, String(s))
         } catch {
@@ -164,8 +181,10 @@ export default function ResultsPage() {
       try {
         const cached = localStorage.getItem(SCORE_CACHE_KEY)
         if (cached != null && cached !== '') {
+          const s = normalizeScore(cached)
           setLoadError(null)
-          setFetchedScore(normalizeScore(cached))
+          setFetchedScore(s)
+          setPersona(scoreToPersona(s))
           return
         }
       } catch {
@@ -289,59 +308,24 @@ export default function ResultsPage() {
 
   const Content =
     score === 1 ? Score1Content : score === 2 ? Score2Content : Score3Content
+  const Hero =
+    score === 1 ? BeginnerHero : score === 2 ? InformedHero : ResearcherHero
+  const PersonaCard =
+    score === 1 ? BeginnerPersonaCard : score === 2 ? InformedPersonaCard : ResearcherPersonaCard
 
   return (
     <div className={styles.page} data-score={String(score)}>
       <Navbar />
       <main className={styles.main} lang={locale}>
-        <header className={styles.hero}>
-          <p className={styles.kicker}>התאמה אישית לפי תוצאת השאלון</p>
-          <h1 className={styles.heroTitle}>טראומה בישראל — מסלול למידה</h1>
-          <p className={styles.heroEn} lang="en">
-            Trauma in Israel — a learning path shaped for you (score {score}).
-          </p>
-          <div className={styles.heroActions}>
-            <button
-              type="button"
-              className={styles.retake}
-              disabled={retakeBusy}
-              onClick={onRetake}
-            >
-              {retakeBusy
-                ? (rtl ? 'מאפס…' : 'Resetting…')
-                : (rtl ? 'עשה את השאלון מחדש' : 'Retake quiz')}
-            </button>
-          </div>
-        </header>
-
-        {personaProfile ? (
-          <section className={styles.personaCard}>
-            <h2 className={styles.personaTitle}>Profile summary</h2>
-            <p className={styles.personaText}>
-              {personaProfile.persona ? (
-                <>Persona: <strong>{personaProfile.persona}</strong>.</>
-              ) : null}
-              {personaProfile.preferred_content ? (
-                <>
-                  {' '}
-                  Preferred content: <strong>{personaProfile.preferred_content}</strong>.
-                </>
-              ) : null}
-            </p>
-            {Array.isArray(personaProfile.interest_tags) &&
-            personaProfile.interest_tags.length ? (
-              <p className={styles.personaText}>
-                Interest tags: <strong>{personaProfile.interest_tags.join(", ")}</strong>
-              </p>
-            ) : null}
-            {personaProfile.search_query ? (
-              <p className={styles.personaText}>
-                Recommended search: <strong>{personaProfile.search_query}</strong>
-              </p>
-            ) : null}
-          </section>
-        ) : null}
-
+        <Hero
+          onRetake={onRetake}
+          retakeBusy={retakeBusy}
+          rtl={rtl}
+          personaProfile={personaProfile}
+        />
+        {personaProfile && (
+          <PersonaCard profile={personaProfile} rtl={rtl} />
+        )}
         <Content dir={dir} />
       </main>
     </div>
