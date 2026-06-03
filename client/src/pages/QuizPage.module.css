@@ -44,6 +44,39 @@
   margin-bottom: 1rem;
 }
 
+.crisisBanner {
+  border: 2px solid #f87171;
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+  background: #fff5f5;
+  margin-bottom: 1rem;
+}
+
+.crisisTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #b91c1c;
+  margin: 0 0 0.4rem;
+}
+
+.crisisResources {
+  margin: 0.5rem 0 0.75rem;
+  padding-inline-start: 1.2rem;
+  font-size: 0.9rem;
+  color: #1f2937;
+  line-height: 1.8;
+}
+
+.crisisResources a {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.crisisAvail {
+  color: #6b7280;
+  font-size: 0.82rem;
+}
+
 .bannerText {
   font-family: 'Heebo', system-ui, sans-serif;
   font-size: 0.9rem;

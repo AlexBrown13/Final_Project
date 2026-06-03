@@ -3,52 +3,6 @@
 # PROMPTS
 # ──────────────────────────────────────────────
 
-SCORING_SYSTEM_PROMPT = """
-You are analyzing a conversation between a user and a system about trauma in Israel.
-Your job is to assign the user a score from 1 to 3 based on their responses.
-
-Score 1 — General public / beginner:
-- No psychology background
-- Wants to understand what trauma is at a basic level
-- Personal curiosity or emotional motivation
-- Uses simple, non-academic language
-- Examples: "I went through something hard and want to understand it",
-  "I heard about trauma and want to know more"
-
-Score 2 — Informed learner / student:
-- Some familiarity with psychology concepts
-- Interested in both personal stories and some data or research
-- Could be a student, educator, social worker, or engaged layperson
-- Mix of personal and intellectual interest
-- Examples: "I study psychology and want to understand trauma more deeply",
-  "I work with people and want to learn how trauma affects them"
-
-Score 3 — Researcher / professional:
-- Strong academic or clinical background
-- Interested in data, studies, statistics, and clinical frameworks
-- Uses professional terminology naturally (PTSD, prevalence, efficacy, etc.)
-- Wants depth: mechanisms, prevalence rates, treatment efficacy, Israel-specific data
-- Examples: "I'm researching PTSD rates post-October 7 and need peer-reviewed data",
-  "I'm a clinical psychologist looking for epidemiological statistics"
-
-Important edge-case rules:
-- A person using academic words they've clearly heard but can't explain → score 1 or 2
-- A professional writing casually or briefly → look at WHAT they say, not HOW they say it
-- If the user expresses clinical or research goals at any point, lean toward score 3
-- If unclear after all questions, prefer score 2 over score 1 (give benefit of the doubt)
-- Base your score ONLY on the content and meaning of the user's answers, not writing style
-
-Rules:
-- Return ONLY valid JSON — no extra text, no markdown fences, no explanation outside the JSON
-- The reason must be a complete sentence
-
-Required format:
-{
-  "score": 1,
-  "reason": "Short explanation in the same language the user used in the conversation"
-}
-"""
-
 DYNAMIC_QUESTION_SYSTEM_PROMPT = """
 You are conducting a warm, natural conversation with a user to understand their level of
 knowledge, interests, and relationship to the topic of trauma in Israel.
@@ -119,8 +73,14 @@ Edge-case rules:
 
 Provide only valid JSON with these five fields:
 - persona: one of "beginner", "informed learner", "researcher"
-- interest_tags: list of 2–4 short topic tags from the user's answers
-  (e.g. ["PTSD", "children", "October 7", "resilience"])
+- interest_tags: list of 3–5 specific topic tags derived from the user's answers.
+  Tags must be concrete and differentiating — specific enough to distinguish one article from another.
+  FORBIDDEN tags (too generic, already anchored in every query): "trauma", "Israel", "mental health",
+  "psychology", "stress", "health", "support", "wellbeing", "awareness".
+  GOOD tags: "PTSD", "children", "veterans", "October 7", "resilience", "domestic violence",
+  "EMDR", "CBT", "bereavement", "refugees", "sexual assault", "hypervigilance", "intervention",
+  "prevalence", "treatment", "anxiety", "depression", "soldiers", "civilians", "Holocaust survivors".
+  If the user gave vague answers, infer the most specific topic from context rather than falling back to generic terms.
 - preferred_content: short phrase describing what kind of content the user prefers
   (e.g. "personal stories and basic explanations", "research data and clinical frameworks")
 - primary_topic: the single most specific topic or group this user cares about most

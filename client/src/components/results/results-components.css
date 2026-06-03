@@ -1,3 +1,21 @@
+/* ── Results entrance animations ─────────────────────────────────────── */
+@keyframes heroEntrance {
+  from { opacity: 0; transform: scale(0.97) translateY(16px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes heroChild {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideUpResult {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes resultFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 /* ── Beginner Hero ────────────────────────────────────────────────────── */
 .beginner-hero {
   background: var(--color-surface);
@@ -61,6 +79,15 @@
 .beginner-hero__retake:hover { background: var(--color-border); }
 .beginner-hero__retake:disabled { opacity: 0.5; cursor: wait; }
 
+/* Beginner animations — container rises, then its contents reveal in sequence
+   so the result reads as a staged "moment", not a single box appearing. */
+.beginner-hero  { animation: heroEntrance 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.beginner-hero__badge    { animation: heroChild 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.18s both; }
+.beginner-hero__title    { animation: heroChild 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.28s both; }
+.beginner-hero__subtitle { animation: heroChild 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.38s both; }
+.beginner-hero__retake   { animation: heroChild 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.48s both; }
+.beginner-card  { animation: slideUpResult 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.55s both; }
+
 
 /* ── Informed Hero ────────────────────────────────────────────────────── */
 .informed-hero {
@@ -113,6 +140,10 @@
 
 .informed-hero__retake:hover { background: var(--color-border); }
 .informed-hero__retake:disabled { opacity: 0.5; cursor: wait; }
+
+/* Informed animations */
+.informed-hero  { animation: resultFade 0.4s ease both; }
+.informed-card  { animation: resultFade 0.4s ease 0.12s both; }
 
 
 /* ── Researcher Hero ──────────────────────────────────────────────────── */

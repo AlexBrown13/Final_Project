@@ -498,6 +498,46 @@
   padding: 14px;
 }
 
+/* ── Article entrance animations ────────────────────────────────────── */
+@keyframes cardSlideUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cardFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Beginner (default): staggered slide-up */
+.article-card { animation: cardSlideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.article-card:nth-child(1)  { animation-delay: 0.04s; }
+.article-card:nth-child(2)  { animation-delay: 0.08s; }
+.article-card:nth-child(3)  { animation-delay: 0.12s; }
+.article-card:nth-child(4)  { animation-delay: 0.16s; }
+.article-card:nth-child(5)  { animation-delay: 0.20s; }
+.article-card:nth-child(6)  { animation-delay: 0.24s; }
+.article-card:nth-child(7)  { animation-delay: 0.28s; }
+.article-card:nth-child(8)  { animation-delay: 0.32s; }
+.article-card:nth-child(9)  { animation-delay: 0.36s; }
+.article-card:nth-child(10) { animation-delay: 0.40s; }
+.article-card:nth-child(11) { animation-delay: 0.44s; }
+.article-card:nth-child(12) { animation-delay: 0.48s; }
+.article-card:nth-child(13) { animation-delay: 0.52s; }
+.article-card:nth-child(14) { animation-delay: 0.56s; }
+.article-card:nth-child(n+15) { animation-delay: 0.60s; }
+
+/* Informed learner: a single restrained fade, no stagger */
+html[data-persona="informed-learner"] .article-card {
+  animation: cardFade 0.4s ease both;
+  animation-delay: 0.05s;
+}
+
+/* Researcher: no animation — immediate, clinical */
+html[data-persona="researcher"] .article-card {
+  animation: none;
+}
+
 @media (max-width: 760px) {
   .article-meta-grid {
     grid-template-columns: 1fr;

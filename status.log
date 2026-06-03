@@ -660,3 +660,90 @@
 2026-05-25 11:44:17,932 [WARNING] Failed to create token_blocklist indexes: SSL handshake failed: ac-mpz1tgm-shard-00-02.tnkjlj7.mongodb.net:27017: [SSL: TLSV1_ALERT_INTERNAL_ERROR] tlsv1 alert internal error (_ssl.c:1081) (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms),SSL handshake failed: ac-mpz1tgm-shard-00-01.tnkjlj7.mongodb.net:27017: [SSL: TLSV1_ALERT_INTERNAL_ERROR] tlsv1 alert internal error (_ssl.c:1081) (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms),SSL handshake failed: ac-mpz1tgm-shard-00-00.tnkjlj7.mongodb.net:27017: [SSL: TLSV1_ALERT_INTERNAL_ERROR] tlsv1 alert internal error (_ssl.c:1081) (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms), Timeout: 5.0s, Topology Description: <TopologyDescription id: 6a140bd1044dfbb6e8a84c15, topology_type: ReplicaSetNoPrimary, servers: [<ServerDescription ('ac-mpz1tgm-shard-00-00.tnkjlj7.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('SSL handshake failed: ac-mpz1tgm-shard-00-00.tnkjlj7.mongodb.net:27017: [SSL: TLSV1_ALERT_INTERNAL_ERROR] tlsv1 alert internal error (_ssl.c:1081) (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>, <ServerDescription ('ac-mpz1tgm-shard-00-01.tnkjlj7.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('SSL handshake failed: ac-mpz1tgm-shard-00-01.tnkjlj7.mongodb.net:27017: [SSL: TLSV1_ALERT_INTERNAL_ERROR] tlsv1 alert internal error (_ssl.c:1081) (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>, <ServerDescription ('ac-mpz1tgm-shard-00-02.tnkjlj7.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('SSL handshake failed: ac-mpz1tgm-shard-00-02.tnkjlj7.mongodb.net:27017: [SSL: TLSV1_ALERT_INTERNAL_ERROR] tlsv1 alert internal error (_ssl.c:1081) (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>]>
 2026-05-25 11:46:36,999 [ERROR] MongoDB find error: SSL handshake failed: ac-mpz1tgm-shard-00-02.tnkjlj7.mongodb.net:27017: [SSL: TLSV1_ALERT_INTERNAL_ERROR] tlsv1 alert internal error (_ssl.c:1081) (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms),SSL handshake failed: ac-mpz1tgm-shard-00-01.tnkjlj7.mongodb.net:27017: [SSL: TLSV1_ALERT_INTERNAL_ERROR] tlsv1 alert internal error (_ssl.c:1081) (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms),SSL handshake failed: ac-mpz1tgm-shard-00-00.tnkjlj7.mongodb.net:27017: [SSL: TLSV1_ALERT_INTERNAL_ERROR] tlsv1 alert internal error (_ssl.c:1081) (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms), Timeout: 5.0s, Topology Description: <TopologyDescription id: 6a140bd1044dfbb6e8a84c15, topology_type: ReplicaSetNoPrimary, servers: [<ServerDescription ('ac-mpz1tgm-shard-00-00.tnkjlj7.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('SSL handshake failed: ac-mpz1tgm-shard-00-00.tnkjlj7.mongodb.net:27017: [SSL: TLSV1_ALERT_INTERNAL_ERROR] tlsv1 alert internal error (_ssl.c:1081) (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>, <ServerDescription ('ac-mpz1tgm-shard-00-01.tnkjlj7.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('SSL handshake failed: ac-mpz1tgm-shard-00-01.tnkjlj7.mongodb.net:27017: [SSL: TLSV1_ALERT_INTERNAL_ERROR] tlsv1 alert internal error (_ssl.c:1081) (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>, <ServerDescription ('ac-mpz1tgm-shard-00-02.tnkjlj7.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('SSL handshake failed: ac-mpz1tgm-shard-00-02.tnkjlj7.mongodb.net:27017: [SSL: TLSV1_ALERT_INTERNAL_ERROR] tlsv1 alert internal error (_ssl.c:1081) (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>]>
 2026-05-25 11:46:43,354 [ERROR] MongoDB find error: SSL handshake failed: ac-mpz1tgm-shard-00-02.tnkjlj7.mongodb.net:27017: [SSL: TLSV1_ALERT_INTERNAL_ERROR] tlsv1 alert internal error (_ssl.c:1081) (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms),SSL handshake failed: ac-mpz1tgm-shard-00-01.tnkjlj7.mongodb.net:27017: [SSL: TLSV1_ALERT_INTERNAL_ERROR] tlsv1 alert internal error (_ssl.c:1081) (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms),SSL handshake failed: ac-mpz1tgm-shard-00-00.tnkjlj7.mongodb.net:27017: [SSL: TLSV1_ALERT_INTERNAL_ERROR] tlsv1 alert internal error (_ssl.c:1081) (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms), Timeout: 5.0s, Topology Description: <TopologyDescription id: 6a140bd1044dfbb6e8a84c15, topology_type: ReplicaSetNoPrimary, servers: [<ServerDescription ('ac-mpz1tgm-shard-00-00.tnkjlj7.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('SSL handshake failed: ac-mpz1tgm-shard-00-00.tnkjlj7.mongodb.net:27017: [SSL: TLSV1_ALERT_INTERNAL_ERROR] tlsv1 alert internal error (_ssl.c:1081) (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>, <ServerDescription ('ac-mpz1tgm-shard-00-01.tnkjlj7.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('SSL handshake failed: ac-mpz1tgm-shard-00-01.tnkjlj7.mongodb.net:27017: [SSL: TLSV1_ALERT_INTERNAL_ERROR] tlsv1 alert internal error (_ssl.c:1081) (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>, <ServerDescription ('ac-mpz1tgm-shard-00-02.tnkjlj7.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('SSL handshake failed: ac-mpz1tgm-shard-00-02.tnkjlj7.mongodb.net:27017: [SSL: TLSV1_ALERT_INTERNAL_ERROR] tlsv1 alert internal error (_ssl.c:1081) (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>]>
+2026-06-03 16:33:31,496 [ERROR] MongoDB Atlas: connection failed Wrong type for minPoolSize, value must be an integer, not <class 'NoneType'>
+2026-06-03 16:37:17,243 [ERROR] MongoDB Atlas: server not available
+2026-06-03 16:54:48,538 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-03 16:54:50,717 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-03 16:55:21,937 [INFO] Session deleted for quiz user_id: 5db99f63-b066-4a6f-be44-21427297c3c2
+2026-06-03 16:55:22,697 [INFO] New session created for user_id: 5db99f63-b066-4a6f-be44-21427297c3c2
+2026-06-03 16:55:48,824 [INFO] New session created for user_id: 52f90a56-a1bb-40d9-bc68-7167a5c17176
+2026-06-03 16:56:18,795 [INFO] New session created for user_id: 55670063-9548-40be-bc25-02042ad96281
+2026-06-03 16:57:39,752 [INFO] Session deleted for quiz user_id: 55670063-9548-40be-bc25-02042ad96281
+2026-06-03 16:57:39,753 [WARNING] Invalid ObjectId when deleting articles: 'b806bfd8-f3bc-4944-8c10-c63261202e10' is not a valid ObjectId, it must be a 12-byte input or a 24-character hex string
+2026-06-03 16:57:40,768 [INFO] New session created for user_id: 55670063-9548-40be-bc25-02042ad96281
+2026-06-03 16:57:54,960 [INFO] Generated dynamic question successfully
+2026-06-03 16:58:02,999 [INFO] Generated dynamic question successfully
+2026-06-03 16:58:35,025 [INFO] Generated dynamic question successfully
+2026-06-03 16:58:44,352 [INFO] Generated dynamic question successfully
+2026-06-03 16:58:51,806 [INFO] Extracting persona for user_id: 55670063-9548-40be-bc25-02042ad96281
+2026-06-03 16:58:52,214 [INFO] User 55670063-9548-40be-bc25-02042ad96281 persona: informed learner → score 2
+2026-06-03 16:58:57,031 [INFO] Upserted: 15, Modified: 0
+2026-06-03 16:59:49,684 [INFO] Upserted: 15, Modified: 0
+2026-06-03 17:00:41,380 [INFO] Session deleted for quiz user_id: 55670063-9548-40be-bc25-02042ad96281
+2026-06-03 17:00:41,380 [WARNING] Invalid ObjectId when deleting articles: 'b806bfd8-f3bc-4944-8c10-c63261202e10' is not a valid ObjectId, it must be a 12-byte input or a 24-character hex string
+2026-06-03 17:00:43,420 [INFO] New session created for user_id: 55670063-9548-40be-bc25-02042ad96281
+2026-06-03 17:00:46,915 [INFO] Upserted: 15, Modified: 0
+2026-06-03 17:01:58,263 [INFO] Session deleted for quiz user_id: 55670063-9548-40be-bc25-02042ad96281
+2026-06-03 17:01:58,263 [WARNING] Invalid ObjectId when deleting articles: 'b806bfd8-f3bc-4944-8c10-c63261202e10' is not a valid ObjectId, it must be a 12-byte input or a 24-character hex string
+2026-06-03 17:01:59,335 [INFO] New session created for user_id: 55670063-9548-40be-bc25-02042ad96281
+2026-06-03 17:02:11,299 [INFO] Generated dynamic question successfully
+2026-06-03 17:02:37,549 [INFO] Generated dynamic question successfully
+2026-06-03 17:02:46,179 [INFO] Generated dynamic question successfully
+2026-06-03 17:02:59,903 [INFO] Generated dynamic question successfully
+2026-06-03 17:03:11,483 [INFO] Extracting persona for user_id: 55670063-9548-40be-bc25-02042ad96281
+2026-06-03 17:03:12,223 [INFO] User 55670063-9548-40be-bc25-02042ad96281 persona: researcher → score 3
+2026-06-03 17:03:16,596 [INFO] Upserted: 15, Modified: 0
+2026-06-03 17:05:10,736 [INFO] Upserted: 15, Modified: 0
+2026-06-03 17:14:25,191 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-03 17:14:33,025 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-03 17:15:01,017 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-03 17:15:12,396 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-03 17:15:22,789 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-03 17:15:30,684 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-03 17:26:46,221 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-03 17:27:13,963 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-03 17:30:19,635 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-03 17:30:25,807 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-03 17:30:30,761 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-03 17:30:38,189 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-03 17:30:43,116 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-03 17:52:27,166 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-03 18:24:45,145 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-03 18:53:56,943 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-03 18:54:19,229 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-03 18:55:39,674 [INFO] Session deleted for quiz user_id: 55670063-9548-40be-bc25-02042ad96281
+2026-06-03 18:55:41,201 [INFO] New session created for user_id: 55670063-9548-40be-bc25-02042ad96281
+2026-06-03 18:56:05,771 [INFO] Generated dynamic question successfully
+2026-06-03 18:56:37,047 [INFO] Generated dynamic question successfully
+2026-06-03 18:56:46,493 [INFO] Generated dynamic question successfully
+2026-06-03 18:57:01,334 [INFO] Generated dynamic question successfully
+2026-06-03 18:57:08,632 [INFO] Extracting persona for user_id: 55670063-9548-40be-bc25-02042ad96281
+2026-06-03 18:57:09,127 [INFO] User 55670063-9548-40be-bc25-02042ad96281 persona: beginner → score 1
+2026-06-03 19:06:28,178 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-03 19:06:37,687 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-03 19:07:38,277 [INFO] Session deleted for quiz user_id: 55670063-9548-40be-bc25-02042ad96281
+2026-06-03 19:07:38,278 [INFO] Deleted 0 articles for user: b806bfd8-f3bc-4944-8c10-c63261202e10
+2026-06-03 19:07:40,705 [INFO] New session created for user_id: 55670063-9548-40be-bc25-02042ad96281
+2026-06-03 19:07:41,324 [INFO] Fetched 64 candidates → reranked → keeping top 15
+2026-06-03 19:07:41,330 [INFO] Upserted: 15, Modified: 0
+2026-06-03 19:07:42,799 [INFO] Fetched 64 candidates → reranked → keeping top 15
+2026-06-03 19:07:42,803 [INFO] Upserted: 0, Modified: 0
+2026-06-03 19:07:44,547 [INFO] Fetched 64 candidates → reranked → keeping top 15
+2026-06-03 19:07:44,551 [INFO] Upserted: 0, Modified: 0
+2026-06-03 19:07:58,921 [INFO] Generated dynamic question successfully
+2026-06-03 19:08:02,914 [INFO] Extracting persona for user_id: 55670063-9548-40be-bc25-02042ad96281
+2026-06-03 19:08:03,317 [INFO] User 55670063-9548-40be-bc25-02042ad96281 persona: researcher → score 3
+2026-06-03 19:08:13,765 [INFO] Fetched 56 candidates → reranked → keeping top 15
+2026-06-03 19:08:13,780 [INFO] Upserted: 15, Modified: 0
+2026-06-03 19:08:57,477 [INFO] Session deleted for quiz user_id: 55670063-9548-40be-bc25-02042ad96281
+2026-06-03 19:08:57,478 [INFO] Deleted 0 articles for user: b806bfd8-f3bc-4944-8c10-c63261202e10
+2026-06-03 19:08:59,402 [INFO] New session created for user_id: 55670063-9548-40be-bc25-02042ad96281
+2026-06-03 19:09:04,947 [INFO] Fetched 56 candidates → reranked → keeping top 15
+2026-06-03 19:09:04,951 [INFO] Upserted: 15, Modified: 0
+2026-06-03 19:09:14,365 [INFO] Generated dynamic question successfully
+2026-06-03 19:09:19,868 [INFO] Generated dynamic question successfully
+2026-06-03 19:09:23,919 [INFO] Extracting persona for user_id: 55670063-9548-40be-bc25-02042ad96281
+2026-06-03 19:09:24,611 [INFO] User 55670063-9548-40be-bc25-02042ad96281 persona: informed learner → score 2
+2026-06-03 19:09:31,360 [INFO] Fetched 46 candidates → reranked → keeping top 15
+2026-06-03 19:09:31,364 [INFO] Upserted: 15, Modified: 0
+2026-06-03 19:15:00,702 [INFO] MongoDB Atlas: connection established successfully.

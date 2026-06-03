@@ -2,10 +2,9 @@ import { useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../../components/Navbar.jsx";
 import { getUiStrings } from "../../config/uiStrings.js";
-import { AUTH_TOKEN_KEY, USER_ID_KEY } from "../../config/storageKeys.js";
+import { AUTH_TOKEN_KEY, USER_ID_KEY, SCORE_CACHE_KEY } from "../../config/storageKeys.js";
 import { useDirection } from "../../context/useDirection.js";
-import { getResult, loginUser } from "../../utils/api.js";
-import { SCORE_CACHE_KEY } from "../../config/storageKeys.js";
+import { loginUser } from "../../utils/api.js";
 import styles from "./AuthForm.module.css";
 
 function pickErrors(data, unexpectedLabel) {
@@ -16,20 +15,15 @@ function pickErrors(data, unexpectedLabel) {
   return [unexpectedLabel];
 }
 
-async function resolveRedirectTarget() {
-  const userId = localStorage.getItem(USER_ID_KEY);
-  if (!userId) return { path: "/" };
-
-  const { res, data } = await getResult(userId);
-  if (res.ok && data?.completed && data?.score != null) {
-    // Cache score so guards (e.g. ArticlePage) work immediately after login
-    try { localStorage.setItem(SCORE_CACHE_KEY, String(data.score)); } catch { /* ignore */ }
+function resolveRedirectTarget(score, persona_profile) {
+  if (score != null) {
+    try { localStorage.setItem(SCORE_CACHE_KEY, String(score)); } catch { /* ignore */ }
     return {
       path: "/results",
       state: {
-        score: Number(data.score),
-        persona_profile: data.persona_profile ?? null,
-        // fromQuiz is intentionally absent — articles already exist, no re-fetch needed
+        score: Number(score),
+        persona_profile: persona_profile ?? null,
+        // fromQuiz intentionally absent — articles already exist, no re-fetch needed
       },
     };
   }
@@ -59,7 +53,8 @@ export default function Login() {
     setErrors([]);
 
     try {
-      const { res, data } = await loginUser(email.trim(), password);
+      const quizUserId = localStorage.getItem(USER_ID_KEY);
+      const { res, data } = await loginUser(email.trim(), password, quizUserId);
       if (!res.ok) {
         setErrors(pickErrors(data, s.authUnexpectedError));
         return;
@@ -70,7 +65,7 @@ export default function Login() {
       }
 
       localStorage.setItem(AUTH_TOKEN_KEY, data.token);
-      const target = await resolveRedirectTarget();
+      const target = resolveRedirectTarget(data.score, data.persona_profile);
       navigate(target.path, { replace: true, state: target.state });
     } catch {
       setErrors([s.authNetworkError]);

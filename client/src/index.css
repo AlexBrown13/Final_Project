@@ -2,22 +2,22 @@
 
 /* ── Persona themes ──────────────────────────────────────────────────── */
 
-/* Default + Beginner: warm, large, approachable */
+/* Default + Beginner: Mint Cream background, Muted Teal accents */
 :root {
-  --color-bg: #fdf6ef;
-  --color-surface: #fffbf5;
-  --color-primary: #c07840;
-  --color-primary-hover: #a06030;
-  --color-text: #2d3e30;
-  --color-muted: #7a9080;
-  --color-border: #e4d8cc;
-  --color-nav-bg: #fffbf5;
-  --color-nav-border: rgba(65, 100, 90, 0.2);
+  --color-bg: #e1ebe2;
+  --color-surface: #f8f9fa;
+  --color-primary: #7da984;
+  --color-primary-hover: #5a8863;
+  --color-text: #2d3f3a;
+  --color-muted: #6b857a;
+  --color-border: #c2d8c6;
+  --color-nav-bg: #f8f9fa;
+  --color-nav-border: rgba(125, 169, 132, 0.25);
   --radius: 14px;
-  --shadow: 0 4px 20px rgba(65, 100, 90, 0.12);
-  --color-callout: #f8e087;
-  --color-bubble-ai: #e1ebe2;
-  --color-bubble-user: #f6e4dc;
+  --shadow: 0 4px 20px rgba(125, 169, 132, 0.15);
+  --color-callout: #d4e4d8;
+  --color-bubble-ai: #d4e4d8;
+  --color-bubble-user: #c0d5c5;
 }
 
 /* Typography scaling — all rem values in the app scale automatically */
@@ -25,41 +25,40 @@ html { font-size: 17px; }
 html[data-persona="informed-learner"] { font-size: 15px; }
 html[data-persona="researcher"] { font-size: 13px; }
 
-/* Informed learner: balanced, neutral, close to original branding */
+/* Informed learner: Granite — more serious, denser */
 html[data-persona="informed-learner"] {
-  --color-bg: #f4f7f6;
-  --color-surface: #ffffff;
-  --color-primary: #41645a;
-  --color-primary-hover: #2f4e45;
-  --color-text: #1e3330;
-  --color-muted: #5a7a72;
-  --color-border: #d8e6e2;
-  --color-nav-bg: #ffffff;
-  --color-nav-border: rgba(65, 100, 90, 0.2);
+  --color-bg: #f0f5f2;
+  --color-surface: #f8f9fa;
+  --color-primary: #4b645f;
+  --color-primary-hover: #374d49;
+  --color-text: #263830;
+  --color-muted: #5a726c;
+  --color-border: #bccec9;
+  --color-nav-bg: #f8f9fa;
+  --color-nav-border: rgba(75, 100, 95, 0.2);
   --radius: 10px;
-  --shadow: 0 2px 12px rgba(65, 100, 90, 0.1);
-  --color-callout: #e2f0e4;
-  --color-bubble-ai: #e8f0ec;
-  --color-bubble-user: #eef4f2;
+  --shadow: 0 2px 12px rgba(75, 100, 95, 0.12);
+  --color-callout: #d8e8e4;
+  --color-bubble-ai: #d8e8e4;
+  --color-bubble-user: #c8ddd8;
 }
 
-/* Researcher: dark, dense, clinical */
+/* Researcher: Light Blue — clinical, professional, data-driven */
 html[data-persona="researcher"] {
-  color-scheme: dark;
-  --color-bg: #0f1a18;
-  --color-surface: #142220;
-  --color-primary: #4fc3a1;
-  --color-primary-hover: #38a98a;
-  --color-text: #b8ccc8;
-  --color-muted: #527068;
-  --color-border: #1e3530;
-  --color-nav-bg: #0b1412;
-  --color-nav-border: rgba(79, 195, 161, 0.15);
+  --color-bg: #eaf4f7;
+  --color-surface: #f8f9fa;
+  --color-primary: #4a8fa3;
+  --color-primary-hover: #3a7a8c;
+  --color-text: #1e3d4a;
+  --color-muted: #4a7585;
+  --color-border: #9ec4d0;
+  --color-nav-bg: #f8f9fa;
+  --color-nav-border: rgba(158, 196, 208, 0.3);
   --radius: 4px;
-  --shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-  --color-callout: #182824;
-  --color-bubble-ai: #1a2f2a;
-  --color-bubble-user: #1e3530;
+  --shadow: 0 2px 8px rgba(158, 196, 208, 0.2);
+  --color-callout: #d2eaf1;
+  --color-bubble-ai: #d2eaf1;
+  --color-bubble-user: #b8dde8;
 }
 /* ─────────────────────────────────────────────────────────────────────── */
 
@@ -67,6 +66,7 @@ html[data-persona="researcher"] {
 *::before,
 *::after {
   box-sizing: border-box;
+  transition: background-color 0.35s ease, border-color 0.3s ease, color 0.25s ease, box-shadow 0.3s ease;
 }
 
 html {
@@ -80,7 +80,6 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
-  transition: background 0.35s ease, color 0.35s ease;
 }
 
 #root {
@@ -95,4 +94,55 @@ button,
 input,
 textarea {
   font: inherit;
+}
+
+/* ── Global animations ───────────────────────────────────────────────────
+   Defined here (not in CSS Modules) so keyframe names are never hashed
+   and are always reliably referenced by persona-scoped selectors. */
+
+@keyframes quizSlideInLeft {
+  from { opacity: 0; transform: translateX(-40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes quizSlideInRight {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes quizBubbleFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes quizTypingPulse {
+  0%, 100% { opacity: 0.15; }
+  50%      { opacity: 1; }
+}
+
+/* Beginner (default): slide in from sides */
+.quiz-bubble-ai   { animation: quizSlideInLeft  0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.quiz-bubble-user { animation: quizSlideInRight 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.quiz-typing      { animation: quizTypingPulse  1.4s ease-in-out infinite; }
+
+/* Informed learner: fade only */
+html[data-persona="informed-learner"] .quiz-bubble-ai,
+html[data-persona="informed-learner"] .quiz-bubble-user { animation: quizBubbleFade 0.4s ease both; }
+html[data-persona="informed-learner"] .quiz-typing      { animation: quizTypingPulse 1.4s ease-in-out infinite; }
+
+/* Researcher: no animation */
+html[data-persona="researcher"] .quiz-bubble-ai,
+html[data-persona="researcher"] .quiz-bubble-user { animation: none; }
+html[data-persona="researcher"] .quiz-typing      { animation: none; opacity: 0.6; }
+
+/* ── Accessibility: respect reduced-motion ──────────────────────────────
+   Critical for a trauma-focused app — users with PTSD or vestibular
+   sensitivity can be physically affected by motion. This neutralizes every
+   entrance animation and theme transition across the whole app at once. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -4,7 +4,10 @@
       "Bash(xargs grep -l \"useEffect\")",
       "Bash(python -c \"from extensions import limiter; print\\('extensions ok'\\)\")",
       "Bash(python -c \"from app import app; print\\('app ok'\\)\")",
-      "Bash(python -c ' *)"
+      "Bash(python -c ' *)",
+      "Bash(pip install *)",
+      "Bash(cat vite.config.js)",
+      "Bash(cat vite.config.ts)"
     ]
   }
 }

@@ -1,7 +1,5 @@
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from bson import ObjectId
-from bson.errors import InvalidId
 from services.mongo import chat_collection, articles_collection
 from utils.logger import logger
 
@@ -26,13 +24,9 @@ def delete_session_route(user_id):
         articles_deleted = 0
         auth_user_id_str = get_jwt_identity()
         if auth_user_id_str:
-            try:
-                auth_user_id = ObjectId(auth_user_id_str)
-                articles_result = articles_collection.delete_many({"user_id": auth_user_id})
-                articles_deleted = articles_result.deleted_count
-                logger.info(f"Deleted {articles_deleted} articles for user: {auth_user_id_str}")
-            except InvalidId as e:
-                logger.warning(f"Invalid ObjectId when deleting articles: {e}")
+            articles_result = articles_collection.delete_many({"user_id": auth_user_id_str})
+            articles_deleted = articles_result.deleted_count
+            logger.info(f"Deleted {articles_deleted} articles for user: {auth_user_id_str}")
 
         return jsonify({
             "message": "Session deleted successfully",

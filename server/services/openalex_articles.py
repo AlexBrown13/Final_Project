@@ -1,70 +1,162 @@
 from pymongo import UpdateOne
 from pyalex import Works
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
 
 from services.mongo import articles_collection
 from utils.logger import logger
+
+_ISRAEL_TERMS = {"israel", "ישראל"}
+_PER_TAG_LIMIT = 20    # wide candidate net per tag
+_FALLBACK_LIMIT = 40   # wider net when no tags
+_EXTRA_QUERY_LIMIT = 15
+_TOP_K = 15            # keep only the best N after reranking
 
 
 def reconstruct_abstract(abstract_index):
     if not abstract_index:
         return None
-
     word_positions = []
     for word, positions in abstract_index.items():
         for pos in positions:
             word_positions.append((pos, word))
-
     word_positions.sort()
     return " ".join(word for _, word in word_positions)
 
 
-def main(user_id, tags=None, query=None):
-    if tags:
-        if len(tags) == 1:
-            query = f"trauma AND Israel AND {tags[0]}"
-        else:
-            query = f"trauma AND Israel AND ({' OR '.join(tags)})"
-    elif not query or not str(query).strip():
-        query = "trauma AND Israel AND mental health"
+_SELECT_FIELDS = [
+    "id", "title", "publication_year", "doi",
+    "primary_location", "host_venue", "authorships",
+    "abstract_inverted_index", "cited_by_count",
+]
+
+def _fetch(query_str, per_page):
+    return (
+        Works()
+        .search(query_str)
+        .filter(type="article", publication_year=">2014")
+        .select(_SELECT_FIELDS)
+        .get(per_page=per_page)
+    )
+
+
+def _rerank(candidates, tags):
+    """
+    Score all candidates by TF-IDF cosine similarity to the user's tags.
+    Returns candidates sorted best-first.
+
+    This is the candidate generation + reranking pattern:
+    OpenAlex casts a wide net → TF-IDF selects the most relevant subset.
+    Only the top _TOP_K survive into MongoDB.
+    """
+    if not candidates or not tags:
+        return candidates
+
+    docs = [
+        " ".join([(c.get("title") or ""), (c.get("abstract") or "")])
+        for c in candidates
+    ]
+    query = " ".join(tags)
 
     try:
-        works = Works().search(query).filter(type="article").get(per_page=15)
-
-        operations = []
-        for work in works:
-            abstract = reconstruct_abstract(work.get("abstract_inverted_index"))
-            doc = {
-                "user_id": user_id,
-                "openalex_id": work["id"],
-                "title": work.get("title", "No title"),
-                "year": work.get("publication_year", None),
-                "journal": (
-                    ((work.get("primary_location") or {}).get("source") or {}).get("display_name")
-                    or ((work.get("host_venue") or {}).get("display_name"))
-                ),
-                "url": work.get("doi", None),
-                "pdf_url": work.get("primary_location", {}).get("pdf_url", None),
-                "abstract": abstract,
-                "authors": [
-                    a.get("author", {}).get("display_name")
-                    for a in work.get("authorships", [])[:2]
-                ],
-                "persona_query": query,
-            }
-            operations.append(
-                UpdateOne(
-                    {"openalex_id": work["id"], "user_id": user_id},
-                    {"$set": doc},
-                    upsert=True,
-                )
-            )
-
-        if operations:
-            result = articles_collection.bulk_write(operations)
-            logger.info(f"Upserted: {result.upserted_count}, Modified: {result.modified_count}")
-
+        vectorizer = TfidfVectorizer(
+            stop_words="english",
+            ngram_range=(1, 2),
+            sublinear_tf=True,
+        )
+        corpus = docs + [query]
+        tfidf_matrix = vectorizer.fit_transform(corpus)
+        query_vec = tfidf_matrix[-1]
+        doc_matrix = tfidf_matrix[:-1]
+        scores = cosine_similarity(query_vec, doc_matrix).flatten()
     except Exception as e:
-        logger.error(f"openalex_articles error: {e}")
+        logger.warning(f"TF-IDF reranking failed, keeping original order: {e}")
+        return candidates
+
+    ranked = sorted(zip(scores, candidates), key=lambda x: x[0], reverse=True)
+    return [c for _, c in ranked]
+
+
+def main(user_id, tags=None, search_query=None):
+    # Strip "Israel" from tags — it is already anchored in every query
+    clean_tags = [t for t in (tags or []) if t.lower() not in _ISRAEL_TERMS]
+
+    # Build (query_string, per_page) pairs — one query per tag for topic coverage
+    fetch_plan = []
+    if clean_tags:
+        for tag in clean_tags:
+            fetch_plan.append((f"trauma AND Israel AND {tag}", _PER_TAG_LIMIT))
+    if search_query and str(search_query).strip():
+        fetch_plan.append((str(search_query).strip(), _EXTRA_QUERY_LIMIT))
+    if not fetch_plan:
+        fetch_plan.append(("trauma AND Israel AND mental health", _FALLBACK_LIMIT))
+
+    # Phase 1 — candidate generation: fetch a wide pool from OpenAlex
+    seen = set()
+    candidates = []
+
+    for query_str, per_page in fetch_plan:
+        try:
+            works = _fetch(query_str, per_page)
+            for work in works:
+                work_id = work.get("id")
+                if not work_id or work_id in seen:
+                    continue
+                seen.add(work_id)
+
+                abstract = reconstruct_abstract(work.get("abstract_inverted_index"))
+                doc = {
+                    "user_id": user_id,
+                    "openalex_id": work_id,
+                    "title": work.get("title", "No title"),
+                    "year": work.get("publication_year"),
+                    "journal": (
+                        ((work.get("primary_location") or {}).get("source") or {}).get("display_name")
+                        or ((work.get("host_venue") or {}).get("display_name"))
+                    ),
+                    "url": work.get("doi"),
+                    "pdf_url": (work.get("primary_location") or {}).get("pdf_url"),
+                    "abstract": abstract,
+                    "authors": [
+                        a.get("author", {}).get("display_name")
+                        for a in work.get("authorships", [])[:2]
+                    ],
+                    "persona_query": query_str,
+                    "cited_by_count": work.get("cited_by_count", 0),
+                }
+                candidates.append(doc)
+        except Exception as e:
+            logger.error(f"openalex query error ({query_str!r}): {e}")
+
+    if not candidates:
+        logger.warning("No candidates fetched from OpenAlex")
+        return
+
+    # Phase 2 — reranking: score all candidates by TF-IDF cosine similarity,
+    # then keep only the top _TOP_K. MongoDB stores the best articles, not just
+    # whatever OpenAlex happened to return first.
+    ranked = _rerank(candidates, clean_tags or ["trauma", "mental health"])
+    top = ranked[:_TOP_K]
+
+    logger.info(
+        f"Fetched {len(candidates)} candidates → reranked → keeping top {len(top)}"
+    )
+
+    operations = [
+        UpdateOne(
+            {"openalex_id": doc["openalex_id"], "user_id": user_id},
+            {"$set": doc},
+            upsert=True,
+        )
+        for doc in top
+    ]
+
+    if operations:
+        result = articles_collection.bulk_write(operations)
+        logger.info(
+            f"Upserted: {result.upserted_count}, Modified: {result.modified_count}"
+        )
 
 
 if __name__ == "__main__":

@@ -141,6 +141,12 @@ const STRINGS = {
     profileSave: "שמור ורענן מאמרים",
     profileSaving: "שומר…",
     profileSaveError: "לא ניתן לעדכן את הפרופיל.",
+    crisisTitle: "נראה שאתה עובר משהו קשה",
+    crisisBody: "אנחנו כאן. אם אתה במצוקה, יש אנשים שיכולים לעזור — עכשיו.",
+    crisisPhone: "טלפון",
+    crisisOnline: "אונליין",
+    crisisContinue: "המשך את השאלון",
+    crisisDismiss: "סגור",
   },
   en: {
     serverDownTitle: "The server is unavailable",
@@ -279,6 +285,12 @@ const STRINGS = {
     profileSave: "Save & refresh articles",
     profileSaving: "Saving…",
     profileSaveError: "Could not update profile.",
+    crisisTitle: "It sounds like you're going through something difficult",
+    crisisBody: "We're here. If you're in distress, there are people who can help — right now.",
+    crisisPhone: "Phone",
+    crisisOnline: "Online",
+    crisisContinue: "Continue the quiz",
+    crisisDismiss: "Close",
   },
 };
 

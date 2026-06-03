@@ -15,26 +15,29 @@ if not db_name:
     logger.error("Initialization failed: Missing DB_ATLAS_NAME environment variable.")
     raise ValueError("Missing DB_ATLAS_NAME environment variable")
 
-try:
-    mongo_client = MongoClient(
-        mongo_url,
-        maxPoolSize=os.environ.get("MAX_POOL_SIZE"), 
-        minPoolSize=os.environ.get("MIN_POOL_SIZE"),
-        serverSelectionTimeoutMS=os.environ.get("MONGO_TIMEOUT")
-    )
+def _int_env(key):
+    val = os.environ.get(key)
+    try:
+        return int(val) if val is not None else None
+    except (ValueError, TypeError):
+        return None
 
-    # Test the connection
+_kwargs = {}
+for _k, _env in [("maxPoolSize", "MAX_POOL_SIZE"), ("minPoolSize", "MIN_POOL_SIZE"), ("serverSelectionTimeoutMS", "MONGO_TIMEOUT")]:
+    _v = _int_env(_env)
+    if _v is not None:
+        _kwargs[_k] = _v
+
+try:
+    mongo_client = MongoClient(mongo_url, **_kwargs)
     mongo_client.admin.command('ping')
     logger.info("MongoDB Atlas: connection established successfully.")
-    
-except ValueError as type_err:
-    logger.error("MongoDB Atlas: configuration pool sizes or timeout variables")
-    pass
 except ConnectionFailure:
-    logger.error(f"MongoDB Atlas: server not available")
+    logger.error("MongoDB Atlas: server not available")
+    raise
 except Exception as e:
     logger.error(f"MongoDB Atlas: connection failed {e}")
-
+    raise
 
 db = mongo_client[db_name]
 
