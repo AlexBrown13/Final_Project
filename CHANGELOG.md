@@ -313,3 +313,84 @@ JWT identity is stored as a UUID string (`str(uuid.uuid4())`). The delete route 
 **File:** `client/src/pages/Articles/ArticlePage.jsx`
 
 When the articles page found an empty DB, it POST'd to generate articles then GET'd to retrieve them. If the POST returned a 500 error, `postRes.ok` was never checked — the GET ran anyway, returned an empty list, and the user saw no articles with no error message. Fixed by throwing on `!postRes.ok` before proceeding to the GET.
+
+### Wrong Login Redirect URL
+**File:** `client/src/pages/Articles/ArticlePage.jsx`
+
+The articles page redirected unauthenticated users to `/login`, which doesn't exist in the router. React Router hit the wildcard `*` route and sent the user to the quiz page (`/`) instead of the login page. Fixed to `/auth/login`.
+
+### Dead Code Removal
+**Files:** `server/routes/articles_route.py`, `server/routes/chat_score_route.py`, `server/routes/auth_route.py`
+
+- Three `try/except InvalidId` blocks in the articles routes were unreachable — `user_id = user_id_str` is a plain assignment that can never raise `InvalidId`. Removed.
+- `score_reason` field in `chat_score_route.py` was always empty — it was set by a scoring system deleted in a previous session. Removed.
+- Two commented-out lines in `auth_route.py` leftover from an earlier refactor. Removed.
+
+---
+
+## 11. Persona Restored on Login
+
+**Files:** `server/routes/auth_route.py`, `client/src/pages/Auth/Login.jsx`, `client/src/utils/api.js`
+
+**Problem:** Quiz sessions are stored in MongoDB under a random quiz UUID (device-specific, stored in `localStorage`). When a user logged in, the app tried to find their quiz session using the local UUID — which worked on the same device but failed on any other device or after clearing localStorage.
+
+**Fix:** The login request now sends the local `quiz_user_id` (quiz UUID from `localStorage`) to the server alongside email and password. The server looks up the completed quiz session and returns `score` and `persona_profile` directly in the login response. The client uses those immediately to navigate to `/results` with the correct persona — no second round-trip, no `localStorage` dependency.
+
+```python
+# auth_route.py — login now returns saved persona
+quiz_user_id = data.get("quiz_user_id")
+if quiz_user_id:
+    session = chat_collection.find_one(
+        {"user_id": quiz_user_id, "completed": True},
+        {"score": 1, "persona_profile": 1}
+    )
+    if session:
+        score = session.get("score")
+        persona_profile = session.get("persona_profile")
+```
+
+The persona is now restored from the database at login time, not from `localStorage`.
+
+---
+
+## 12. OpenAlex Abstract Fix
+
+**File:** `server/services/openalex_articles.py`
+
+OpenAlex's `abstract_inverted_index` field was not being explicitly requested in the API call. Without an explicit `.select()`, pyalex returns a default field set that may omit the abstract. All articles were being stored with `abstract: null`, causing every article card to display "No abstract available" — and degrading TF-IDF ranking quality since it was only scoring on titles.
+
+Fixed by adding an explicit field selection to every OpenAlex fetch:
+
+```python
+_SELECT_FIELDS = [
+    "id", "title", "publication_year", "doi",
+    "primary_location", "host_venue", "authorships",
+    "abstract_inverted_index", "cited_by_count",
+]
+
+Works().search(query).filter(...).select(_SELECT_FIELDS).get(per_page=per_page)
+```
+
+---
+
+## 13. Animation Implementation Fix
+
+**Files:** `client/src/index.css`, `client/src/pages/QuizPage.jsx`
+
+The quiz bubble animations were defined inside `QuizPage.module.css`. In Vite, CSS Modules locally scope `@keyframes` names by hashing them. When animations are referenced inside `:global()` persona-selector overrides, the scoping becomes inconsistent and animations silently fail to run.
+
+Fixed by moving all quiz animations out of the CSS module and into `index.css` (global, never hashed). Plain global class names (`quiz-bubble-ai`, `quiz-bubble-user`, `quiz-typing`) were added alongside the module classes on the elements so they can be targeted reliably from global CSS.
+
+```jsx
+// QuizPage.jsx — global class alongside module class
+className={m.role === "user"
+  ? `${styles.bubbleUser} quiz-bubble-user`
+  : `${styles.bubbleAi} quiz-bubble-ai`}
+```
+
+```css
+/* index.css — global, never hashed, always reliable */
+.quiz-bubble-ai   { animation: quizSlideInLeft  0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.quiz-bubble-user { animation: quizSlideInRight 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.quiz-typing      { animation: quizTypingPulse  1.4s ease-in-out infinite; }
+```
