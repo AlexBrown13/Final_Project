@@ -169,7 +169,6 @@ def main(user_id, tags=None, search_query=None):
         pdf_url = doc.get("pdf_url")
         if pdf_url:
             content = _fetch_pdf_content(pdf_url)
-            print(f"\n\ncontent {content} \n\n")
             if content:
                 doc["pdf_content"] = content
                 logger.info(f"PDF extracted for: {doc['title'][:60]!r}")

@@ -6,6 +6,7 @@ import { useDirection } from "../../context/useDirection.js";
 import { getUiStrings } from "../../config/uiStrings.js";
 import { AUTH_TOKEN_KEY, USER_ID_KEY, SCORE_CACHE_KEY } from "../../config/storageKeys.js";
 import { getResult, trackArticleClick } from "../../utils/api.js";
+import ArticleChatBubble from "./ArticleChatBubble.jsx";
 import "./ArticlePage.css";
 
 export default function ArticlePage() {
@@ -385,6 +386,7 @@ export default function ArticlePage() {
           </div>
         )}
       </main>
+      <ArticleChatBubble />
     </div>
   );
 }
