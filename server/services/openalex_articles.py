@@ -27,7 +27,7 @@ def reconstruct_abstract(abstract_index):
 
 _SELECT_FIELDS = [
     "id", "title", "publication_year", "doi",
-    "primary_location", "host_venue", "authorships",
+    "primary_location", "authorships",
     "abstract_inverted_index", "cited_by_count",
 ]
 
@@ -98,7 +98,9 @@ def main(user_id, tags=None, search_query=None):
 
     for query_str, per_page in fetch_plan:
         try:
+            print(f"\n\nquery_str: {query_str} per_page: {per_page} user_id: {user_id}")
             works = _fetch(query_str, per_page)
+            print(f"works: {works}\n\n")
             for work in works:
                 work_id = work.get("id")
                 if not work_id or work_id in seen:
@@ -111,10 +113,7 @@ def main(user_id, tags=None, search_query=None):
                     "openalex_id": work_id,
                     "title": work.get("title", "No title"),
                     "year": work.get("publication_year"),
-                    "journal": (
-                        ((work.get("primary_location") or {}).get("source") or {}).get("display_name")
-                        or ((work.get("host_venue") or {}).get("display_name"))
-                    ),
+                    "journal": ((work.get("primary_location") or {}).get("source") or {}).get("display_name"),
                     "url": work.get("doi"),
                     "pdf_url": (work.get("primary_location") or {}).get("pdf_url"),
                     "abstract": abstract,
