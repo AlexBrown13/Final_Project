@@ -12,5 +12,7 @@ semanticscholar
 pyalex
 scikit-learn
 numpy
+requests
+pypdf
 #python -m pip install -r Requirements.txt
 #python.exe -m pip install --upgrade pip

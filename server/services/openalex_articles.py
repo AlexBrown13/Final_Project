@@ -1,11 +1,35 @@
+import io
+import requests
 from pymongo import UpdateOne
 from pyalex import Works
+from pypdf import PdfReader
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 
 from services.mongo import articles_collection
 from utils.logger import logger
+
+_PDF_TIMEOUT = 10       # seconds per request
+_PDF_MAX_PAGES = 5      # only extract first 5 pages
+_PDF_MAX_CHARS = 50_000 # cap stored text to ~50 KB
+
+
+def _fetch_pdf_content(pdf_url):
+    try:
+        pdf_url='https://www.psychiatrist.com/pdf-serve/effective-treatments-for-ptsd-practice-guidelines-from-the-international-society-for-traumatic-stress-studies-pdf/'
+        resp = requests.get(pdf_url, timeout=_PDF_TIMEOUT, stream=True)
+        resp.raise_for_status()
+        if "pdf" not in resp.headers.get("content-type", "").lower():
+            return None
+        reader = PdfReader(io.BytesIO(resp.content))
+        text = "\n".join(
+            page.extract_text() or "" for page in reader.pages[:_PDF_MAX_PAGES]
+        ).strip()
+        return text[:_PDF_MAX_CHARS] if text else None
+    except Exception as e:
+        logger.debug(f"PDF fetch failed ({pdf_url!r}): {e}")
+        return None
 
 _ISRAEL_TERMS = {"israel", "ישראל"}
 _PER_TAG_LIMIT = 20    # wide candidate net per tag
@@ -98,9 +122,7 @@ def main(user_id, tags=None, search_query=None):
 
     for query_str, per_page in fetch_plan:
         try:
-            print(f"\n\nquery_str: {query_str} per_page: {per_page} user_id: {user_id}")
             works = _fetch(query_str, per_page)
-            print(f"works: {works}\n\n")
             for work in works:
                 work_id = work.get("id")
                 if not work_id or work_id in seen:
@@ -141,6 +163,16 @@ def main(user_id, tags=None, search_query=None):
     logger.info(
         f"Fetched {len(candidates)} candidates → reranked → keeping top {len(top)}"
     )
+
+    # Phase 3 — PDF enrichment: only for top articles that have a pdf_url
+    for doc in top:
+        pdf_url = doc.get("pdf_url")
+        if pdf_url:
+            content = _fetch_pdf_content(pdf_url)
+            print(f"\n\ncontent {content} \n\n")
+            if content:
+                doc["pdf_content"] = content
+                logger.info(f"PDF extracted for: {doc['title'][:60]!r}")
 
     operations = [
         UpdateOne(
