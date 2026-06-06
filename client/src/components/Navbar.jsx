@@ -103,6 +103,12 @@ export default function Navbar() {
           <Link to="/map" className={styles.link}>
             {s.navMap}
           </Link>
+          <Link to="/articles" className={styles.link}>
+            {s.navArticles}
+          </Link>
+          <Link to="/trends" className={styles.link}>
+            {s.navTrends}
+          </Link>
           <div className={styles.dropdown} ref={dropdownRef}>
             <button
               type="button"

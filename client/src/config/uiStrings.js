@@ -56,6 +56,8 @@ const STRINGS = {
     navGraphSleep: "שינה",
     navGraphTraffic: "תאונות דרכים",
     navGraphDomestic: "אלימות במשפחה",
+    navArticles: "מאמרים",
+    navTrends: "מגמות",
     graphIsraelTitle: "ישראל לפני ואחרי 7 באוקטובר",
     graphIsraelSubtitle: "השלכות כלכליות ונפשיות",
     graphIsraelDesc:
@@ -204,6 +206,8 @@ const STRINGS = {
     navGraphSleep: "Sleep",
     navGraphTraffic: "Traffic accidents",
     navGraphDomestic: "Domestic violence",
+    navArticles: "Articles",
+    navTrends: "Trends",
     graphIsraelTitle: "Israel Before and After Oct. 7",
     graphIsraelSubtitle: "Economic & Mental Health Impact",
     graphIsraelDesc:
