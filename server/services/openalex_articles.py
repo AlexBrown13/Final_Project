@@ -1,11 +1,35 @@
+import io
+import requests
 from pymongo import UpdateOne
 from pyalex import Works
+from pypdf import PdfReader
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 
 from services.mongo import articles_collection
 from utils.logger import logger
+
+_PDF_TIMEOUT = 10       # seconds per request
+_PDF_MAX_PAGES = 5      # only extract first 5 pages
+_PDF_MAX_CHARS = 50_000 # cap stored text to ~50 KB
+
+
+def _fetch_pdf_content(pdf_url):
+    try:
+        pdf_url='https://www.psychiatrist.com/pdf-serve/effective-treatments-for-ptsd-practice-guidelines-from-the-international-society-for-traumatic-stress-studies-pdf/'
+        resp = requests.get(pdf_url, timeout=_PDF_TIMEOUT, stream=True)
+        resp.raise_for_status()
+        if "pdf" not in resp.headers.get("content-type", "").lower():
+            return None
+        reader = PdfReader(io.BytesIO(resp.content))
+        text = "\n".join(
+            page.extract_text() or "" for page in reader.pages[:_PDF_MAX_PAGES]
+        ).strip()
+        return text[:_PDF_MAX_CHARS] if text else None
+    except Exception as e:
+        logger.debug(f"PDF fetch failed ({pdf_url!r}): {e}")
+        return None
 
 _ISRAEL_TERMS = {"israel", "ישראל"}
 _PER_TAG_LIMIT = 20    # wide candidate net per tag
@@ -27,7 +51,7 @@ def reconstruct_abstract(abstract_index):
 
 _SELECT_FIELDS = [
     "id", "title", "publication_year", "doi",
-    "primary_location", "host_venue", "authorships",
+    "primary_location", "authorships",
     "abstract_inverted_index", "cited_by_count",
 ]
 
@@ -111,10 +135,7 @@ def main(user_id, tags=None, search_query=None):
                     "openalex_id": work_id,
                     "title": work.get("title", "No title"),
                     "year": work.get("publication_year"),
-                    "journal": (
-                        ((work.get("primary_location") or {}).get("source") or {}).get("display_name")
-                        or ((work.get("host_venue") or {}).get("display_name"))
-                    ),
+                    "journal": ((work.get("primary_location") or {}).get("source") or {}).get("display_name"),
                     "url": work.get("doi"),
                     "pdf_url": (work.get("primary_location") or {}).get("pdf_url"),
                     "abstract": abstract,
@@ -142,6 +163,15 @@ def main(user_id, tags=None, search_query=None):
     logger.info(
         f"Fetched {len(candidates)} candidates → reranked → keeping top {len(top)}"
     )
+
+    # Phase 3 — PDF enrichment: only for top articles that have a pdf_url
+    for doc in top:
+        pdf_url = doc.get("pdf_url")
+        if pdf_url:
+            content = _fetch_pdf_content(pdf_url)
+            if content:
+                doc["pdf_content"] = content
+                logger.info(f"PDF extracted for: {doc['title'][:60]!r}")
 
     operations = [
         UpdateOne(

@@ -3,7 +3,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine,
   ScatterChart, Scatter, ZAxis,
   BarChart, Bar, LabelList, Cell,
-  ResponsiveContainer, defs as SvgDefs,
+  ResponsiveContainer,
 } from 'recharts'
 import Navbar from '../components/Navbar.jsx'
 import { useDirection } from '../context/useDirection.js'
