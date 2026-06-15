@@ -10,4 +10,9 @@ pytrends
 pandas
 semanticscholar
 pyalex
-#python3 -m pip install -r Requirements.txt
+scikit-learn
+numpy
+requests
+pypdf
+#python -m pip install -r Requirements.txt
+#python.exe -m pip install --upgrade pip

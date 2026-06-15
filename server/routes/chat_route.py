@@ -7,6 +7,7 @@ from services.groq import (
     extract_persona_profile
 )
 from utils.logger import logger
+from utils.distress import detect_distress, get_resources
 from extensions import limiter
 from utils.chat_prompts import (
     DYNAMIC_QUESTION_SYSTEM_PROMPT,
@@ -65,22 +66,62 @@ def clean_ai_json(raw: str) -> str:
     )
 
 
+# Tags that are already anchored in every OpenAlex query or are too broad
+# to differentiate one article from another — filtered out after LLM extraction
+_GENERIC_TAGS = {
+    "trauma", "israel", "mental health", "psychology", "stress",
+    "health", "support", "wellbeing", "awareness", "disorder",
+    "psychiatric", "emotional", "psychological", "therapy", "treatment",
+    "research", "study", "war", "conflict",
+}
+
+
+def _clean_tags(raw_tags, primary_topic=None):
+    """
+    Filter out generic/anchor tags and deduplicate.
+    Falls back to primary_topic if everything gets filtered.
+    """
+    if not isinstance(raw_tags, list):
+        raw_tags = [raw_tags] if isinstance(raw_tags, str) else []
+
+    seen = set()
+    cleaned = []
+    for t in raw_tags:
+        if not isinstance(t, str):
+            continue
+        t = t.strip()
+        if not t:
+            continue
+        if t.lower() in _GENERIC_TAGS:
+            continue
+        if t.lower() in seen:
+            continue
+        seen.add(t.lower())
+        cleaned.append(t)
+
+    # If all tags were filtered out, use primary_topic as a fallback tag
+    if not cleaned and primary_topic and isinstance(primary_topic, str):
+        pt = primary_topic.strip()
+        if pt and pt.lower() not in _GENERIC_TAGS:
+            cleaned = [pt]
+
+    return cleaned[:5]
+
+
 def parse_persona_profile(raw: str) -> dict:
     """
-    Safely parse persona JSON from the AI and normalize basic fields.
+    Safely parse persona JSON from the AI, filter generic tags, and normalize fields.
     """
     try:
         parsed = json.loads(clean_ai_json(raw))
-        interest_tags = parsed.get("interest_tags", [])
-        if isinstance(interest_tags, str):
-            interest_tags = [interest_tags]
-        if not isinstance(interest_tags, list):
-            interest_tags = []
+        primary_topic = parsed.get("primary_topic", "")
+        interest_tags = _clean_tags(parsed.get("interest_tags", []), primary_topic)
 
         return {
             "persona": parsed.get("persona", "beginner"),
             "interest_tags": interest_tags,
             "preferred_content": parsed.get("preferred_content", ""),
+            "primary_topic": primary_topic,
             "search_query": parsed.get("search_query", "")
         }
     except (json.JSONDecodeError, ValueError, TypeError) as e:
@@ -89,6 +130,7 @@ def parse_persona_profile(raw: str) -> dict:
             "persona": "beginner",
             "interest_tags": [],
             "preferred_content": "",
+            "primary_topic": "",
             "search_query": ""
         }
 
@@ -119,6 +161,17 @@ def chat():
 
     if len(message) > 1000:
         return jsonify({"error": "Message too long — max 1000 characters"}), 400
+
+    distress_level = detect_distress(message)
+    if distress_level >= 2:
+        logger.warning(f"Distress level {distress_level} detected for user_id: {user_id}")
+        return jsonify({
+            "crisis": True,
+            "crisis_level": distress_level,
+            "resources": get_resources(locale),
+            "reply": None,
+            "completed": False,
+        }), 200
 
     try:
         client = client_groq()

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getUiStrings } from "../config/uiStrings.js";
-import { AUTH_TOKEN_KEY, USER_ID_KEY } from "../config/storageKeys.js";
+import { AUTH_TOKEN_KEY } from "../config/storageKeys.js";
 import { useDirection } from "../context/useDirection.js";
 import { logoutUser } from "../utils/api.js";
 import styles from "./Navbar.module.css";
@@ -51,7 +51,6 @@ export default function Navbar() {
     } finally {
       try {
         localStorage.removeItem(AUTH_TOKEN_KEY);
-        localStorage.removeItem(USER_ID_KEY);
       } catch {
         /* ignore */
       }
@@ -104,11 +103,11 @@ export default function Navbar() {
           <Link to="/map" className={styles.link}>
             {s.navMap}
           </Link>
+          <Link to="/articles" className={styles.link}>
+            {s.navArticles}
+          </Link>
           <Link to="/trends" className={styles.link}>
             {s.navTrends}
-          </Link>
-          <Link to="/articles" className={styles.link}>
-            {s.navArticle}
           </Link>
           <div className={styles.dropdown} ref={dropdownRef}>
             <button
@@ -149,10 +148,23 @@ export default function Navbar() {
                 >
                   {s.navGraphSleep}
                 </Link>
+                <Link
+                  to="/graphs/traffic"
+                  className={styles.dropdownItem}
+                  onClick={() => setGraphsOpen(false)}
+                >
+                  {s.navGraphTraffic}
+                </Link>
+                <Link
+                  to="/graphs/domestic-violence"
+                  className={styles.dropdownItem}
+                  onClick={() => setGraphsOpen(false)}
+                >
+                  {s.navGraphDomestic}
+                </Link>
               </div>
             )}
           </div>
-
           {!loggedIn ? (
             <>
               <Link to="/auth/login" className={styles.authLink}>
@@ -165,7 +177,7 @@ export default function Navbar() {
           ) : (
             <button
               type="button"
-              className={`${styles.authLink} ${styles.logoutBackhroundColor}`}
+              className={`${styles.authLink}`}
               onClick={handleLogout}
               disabled={loggingOut}
               aria-busy={loggingOut}

@@ -4,7 +4,7 @@ from pymongo.errors import PyMongoError
 import bcrypt
 import re
 import uuid
-from services.mongo import users_collection
+from services.mongo import users_collection, chat_collection
 from jwt_blocklist import revoke_jti
 
 auth_bp = Blueprint("auth", __name__)
@@ -55,7 +55,7 @@ def validate_register(data):
 # Register route
 @auth_bp.route('/register', methods=['POST'])
 def register():
-    data = request.get_json()
+    data = request.get_json() or {}
     
     # Validation input
     errors = validate_register(data)
@@ -97,7 +97,7 @@ def register():
 # Login route
 @auth_bp.route('/login', methods=['POST'])
 def login():
-    data = request.get_json()
+    data = request.get_json() or {}
     
     # Validation input
     errors = validate_register(data)
@@ -115,14 +115,32 @@ def login():
     if not user or not bcrypt.checkpw(password.encode('utf-8'), user["password"]):
         return jsonify({"error": "Invalid credentials"}), 401
     
-    #access_token = create_access_token(identity=email)
     access_token = create_access_token(
-        #identity=str(user["_id"]),
         identity=user["user_id"],
         additional_claims={"email": email}
     )
 
-    return jsonify({"message": "Login success", "token": access_token, "user_id": user["user_id"]}), 200
+    # If the client sends a quiz_user_id, look up that session and return
+    # the saved persona so the frontend can restore the correct theme/results.
+    quiz_user_id = data.get("quiz_user_id")
+    persona_profile = None
+    score = None
+    if quiz_user_id:
+        session = chat_collection.find_one(
+            {"user_id": quiz_user_id, "completed": True},
+            {"score": 1, "persona_profile": 1}
+        )
+        if session:
+            score = session.get("score")
+            persona_profile = session.get("persona_profile")
+
+    return jsonify({
+        "message": "Login success",
+        "token": access_token,
+        "user_id": user["user_id"],
+        "score": score,
+        "persona_profile": persona_profile,
+    }), 200
 
 
 # Logout route

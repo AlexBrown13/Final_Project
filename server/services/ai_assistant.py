@@ -36,38 +36,55 @@ def check_ollama():
         sys.exit(2)
 
 
-def ask_ollama(question, history, history_chat):
-    PROMPT = f'''
-    You are an AI assistant specializing in trauma related education and support.
-    
-    Each user has a score from 1-3 stroed in the database. your response must match the user's knowledge level,
-    communication style, and informational needs based on thier score. 
-    
-    User score levels:
+def ask_ollama(question, persona_profile, history_chat):
+    persona = persona_profile.get("persona", "beginner")
+    interest_tags = persona_profile.get("interest_tags", [])
+    preferred_content = persona_profile.get("preferred_content", "")
+    primary_topic = persona_profile.get("primary_topic", "")
 
-    Score 1 - General public / beginner:
-        - No psychology background
-        - Wants to understand what trauma is at a basic level
-        - Personal curiosity or emotional motivation
-        - Uses simple, non-academic language 
+    tags_str = ", ".join(interest_tags) if interest_tags else "general trauma topics"
 
-    Score 2 - Informed learner / student:
-        - Some familiarity with psychology concepts
-        - Interested in both personal stories and some data or research
-        - Could be a student, educator, social worker, or engaged layperson
-        - Mix of personal and intellectual interest
+    if persona == "researcher":
+        level_instruction = (
+            "Use academic and clinical language. Lead with data, mechanisms, and research findings. "
+            "Cite specific statistics, prevalence rates, or clinical frameworks where relevant. "
+            "Assume the user has professional literacy — do not over-explain basic concepts."
+        )
+    elif persona == "informed learner":
+        level_instruction = (
+            "Balance accessible explanations with references to research and real-world data. "
+            "Use some professional terms but always explain them briefly. "
+            "Mix human stories with factual context."
+        )
+    else:
+        level_instruction = (
+            "Use simple, warm, non-academic language. Avoid clinical jargon entirely. "
+            "Focus on relatable explanations, personal stories, and practical support. "
+            "Be compassionate — this user may have a personal connection to the topic."
+        )
 
-    Score 3 - Researcher / professional:
-        - Strong academic or clinical background
-        - Interested in data, studies, statistics, and clinical frameworks
-        - Uses professional terminology naturally (PTSD, prevalence, efficacy, etc.)
-        - Wants depth: mechanisms, prevalence rates, treatment efficacy, Israel-specific data
+    topic_line = f"The user's primary focus is: {primary_topic}." if primary_topic else ""
+    content_line = f"They prefer: {preferred_content}." if preferred_content else ""
 
-    User histroy quiz: {history}
-    User AI chat histroy {history_chat}
-    User current question: {question}
-    '''
-    
+    PROMPT = f'''You are an AI assistant specializing in trauma-related education and support in Israel.
+
+User profile:
+- Knowledge level: {persona}
+- Interests: {tags_str}
+{topic_line}
+{content_line}
+
+How to respond:
+{level_instruction}
+Connect your answer to the user's specific interests and primary focus wherever relevant.
+Keep your response focused and useful — do not pad with unnecessary reassurances or disclaimers.
+
+Previous conversation:
+{history_chat}
+
+User question: {question}
+'''
+
     try:
         payload = {
             "model": 'llama3.1',
@@ -80,7 +97,6 @@ def ask_ollama(question, history, history_chat):
             json=payload
         )
 
-        # If Ollama returns 400 or 500 error, this trigger an exception
         response.raise_for_status()
         return response.json().get('response', "").strip()
 
@@ -118,15 +134,26 @@ def save_conversation_to_db(convs, user_id):
 def main(user_id=None, question=None):
     try:
         check_ollama()
-        
+
         quiz_history = chat_collection.find_one({"user_id": user_id})
         assistant_history = ai_assistant_collection.find_one({"user_id": user_id})
 
-        if not quiz_history or not assistant_history:
-            logger.error("AI-Assistant: quiz or assistant chat not found")
-            raise ValueError("quiz or assistant chat not found")
-        
-        answer = ask_ollama(question, history=quiz_history, history_chat=assistant_history)
+        if not quiz_history:
+            logger.error("AI-Assistant: quiz history not found")
+            raise ValueError("quiz history not found")
+
+        persona_profile = quiz_history.get("persona_profile") or {}
+
+        # Format the last 6 assistant exchanges as readable context
+        prev_conversations = ""
+        if assistant_history and assistant_history.get("conversations"):
+            recent = assistant_history["conversations"][-6:]
+            prev_conversations = "\n".join([
+                f"User: {c.get('question', '')}\nAssistant: {c.get('answer', '')}"
+                for c in recent
+            ])
+
+        answer = ask_ollama(question, persona_profile=persona_profile, history_chat=prev_conversations)
 
         save_conversation_to_db([{"question": question, 'answer': answer}], user_id)
     

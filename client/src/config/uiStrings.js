@@ -56,6 +56,8 @@ const STRINGS = {
     navGraphSleep: "שינה",
     navGraphTraffic: "תאונות דרכים",
     navGraphDomestic: "אלימות במשפחה",
+    navArticles: "מאמרים",
+    navTrends: "מגמות",
     graphIsraelTitle: "ישראל לפני ואחרי 7 באוקטובר",
     graphIsraelSubtitle: "השלכות כלכליות ונפשיות",
     graphIsraelDesc:
@@ -141,6 +143,12 @@ const STRINGS = {
     profileSave: "שמור ורענן מאמרים",
     profileSaving: "שומר…",
     profileSaveError: "לא ניתן לעדכן את הפרופיל.",
+    crisisTitle: "נראה שאתה עובר משהו קשה",
+    crisisBody: "אנחנו כאן. אם אתה במצוקה, יש אנשים שיכולים לעזור — עכשיו.",
+    crisisPhone: "טלפון",
+    crisisOnline: "אונליין",
+    crisisContinue: "המשך את השאלון",
+    crisisDismiss: "סגור",
   },
   en: {
     serverDownTitle: "The server is unavailable",
@@ -198,6 +206,8 @@ const STRINGS = {
     navGraphSleep: "Sleep",
     navGraphTraffic: "Traffic accidents",
     navGraphDomestic: "Domestic violence",
+    navArticles: "Articles",
+    navTrends: "Trends",
     graphIsraelTitle: "Israel Before and After Oct. 7",
     graphIsraelSubtitle: "Economic & Mental Health Impact",
     graphIsraelDesc:
@@ -279,6 +289,12 @@ const STRINGS = {
     profileSave: "Save & refresh articles",
     profileSaving: "Saving…",
     profileSaveError: "Could not update profile.",
+    crisisTitle: "It sounds like you're going through something difficult",
+    crisisBody: "We're here. If you're in distress, there are people who can help — right now.",
+    crisisPhone: "Phone",
+    crisisOnline: "Online",
+    crisisContinue: "Continue the quiz",
+    crisisDismiss: "Close",
   },
 };
 

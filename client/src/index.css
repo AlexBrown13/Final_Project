@@ -1,9 +1,72 @@
 @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600&family=Heebo:wght@400;500;600&display=swap');
 
+/* ── Persona themes ──────────────────────────────────────────────────── */
+
+/* Default + Beginner: Mint Cream background, Muted Teal accents */
+:root {
+  --color-bg: #e1ebe2;
+  --color-surface: #f8f9fa;
+  --color-primary: #7da984;
+  --color-primary-hover: #5a8863;
+  --color-text: #2d3f3a;
+  --color-muted: #6b857a;
+  --color-border: #c2d8c6;
+  --color-nav-bg: #f8f9fa;
+  --color-nav-border: rgba(125, 169, 132, 0.25);
+  --radius: 14px;
+  --shadow: 0 4px 20px rgba(125, 169, 132, 0.15);
+  --color-callout: #d4e4d8;
+  --color-bubble-ai: #d4e4d8;
+  --color-bubble-user: #c0d5c5;
+}
+
+/* Typography scaling — all rem values in the app scale automatically */
+html { font-size: 17px; }
+html[data-persona="informed-learner"] { font-size: 15px; }
+html[data-persona="researcher"] { font-size: 13px; }
+
+/* Informed learner: Granite — more serious, denser */
+html[data-persona="informed-learner"] {
+  --color-bg: #f0f5f2;
+  --color-surface: #f8f9fa;
+  --color-primary: #4b645f;
+  --color-primary-hover: #374d49;
+  --color-text: #263830;
+  --color-muted: #5a726c;
+  --color-border: #bccec9;
+  --color-nav-bg: #f8f9fa;
+  --color-nav-border: rgba(75, 100, 95, 0.2);
+  --radius: 10px;
+  --shadow: 0 2px 12px rgba(75, 100, 95, 0.12);
+  --color-callout: #d8e8e4;
+  --color-bubble-ai: #d8e8e4;
+  --color-bubble-user: #c8ddd8;
+}
+
+/* Researcher: Light Blue — clinical, professional, data-driven */
+html[data-persona="researcher"] {
+  --color-bg: #eaf4f7;
+  --color-surface: #f8f9fa;
+  --color-primary: #4a8fa3;
+  --color-primary-hover: #3a7a8c;
+  --color-text: #1e3d4a;
+  --color-muted: #4a7585;
+  --color-border: #9ec4d0;
+  --color-nav-bg: #f8f9fa;
+  --color-nav-border: rgba(158, 196, 208, 0.3);
+  --radius: 4px;
+  --shadow: 0 2px 8px rgba(158, 196, 208, 0.2);
+  --color-callout: #d2eaf1;
+  --color-bubble-ai: #d2eaf1;
+  --color-bubble-user: #b8dde8;
+}
+/* ─────────────────────────────────────────────────────────────────────── */
+
 *,
 *::before,
 *::after {
   box-sizing: border-box;
+  transition: background-color 0.35s ease, border-color 0.3s ease, color 0.25s ease, box-shadow 0.3s ease;
 }
 
 html {
@@ -14,8 +77,8 @@ body {
   margin: 0;
   min-height: 100vh;
   font-family: 'Heebo', 'Assistant', system-ui, -apple-system, sans-serif;
-  background: #f8f9fa;
-  color: #41645a;
+  background: var(--color-bg);
+  color: var(--color-text);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -31,4 +94,55 @@ button,
 input,
 textarea {
   font: inherit;
+}
+
+/* ── Global animations ───────────────────────────────────────────────────
+   Defined here (not in CSS Modules) so keyframe names are never hashed
+   and are always reliably referenced by persona-scoped selectors. */
+
+@keyframes quizSlideInLeft {
+  from { opacity: 0; transform: translateX(-40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes quizSlideInRight {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes quizBubbleFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes quizTypingPulse {
+  0%, 100% { opacity: 0.15; }
+  50%      { opacity: 1; }
+}
+
+/* Beginner (default): slide in from sides */
+.quiz-bubble-ai   { animation: quizSlideInLeft  0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.quiz-bubble-user { animation: quizSlideInRight 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.quiz-typing      { animation: quizTypingPulse  1.4s ease-in-out infinite; }
+
+/* Informed learner: fade only */
+html[data-persona="informed-learner"] .quiz-bubble-ai,
+html[data-persona="informed-learner"] .quiz-bubble-user { animation: quizBubbleFade 0.4s ease both; }
+html[data-persona="informed-learner"] .quiz-typing      { animation: quizTypingPulse 1.4s ease-in-out infinite; }
+
+/* Researcher: no animation */
+html[data-persona="researcher"] .quiz-bubble-ai,
+html[data-persona="researcher"] .quiz-bubble-user { animation: none; }
+html[data-persona="researcher"] .quiz-typing      { animation: none; opacity: 0.6; }
+
+/* ── Accessibility: respect reduced-motion ──────────────────────────────
+   Critical for a trauma-focused app — users with PTSD or vestibular
+   sensitivity can be physically affected by motion. This neutralizes every
+   entrance animation and theme transition across the whole app at once. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -51,13 +51,13 @@ export async function registerUser(email, password) {
 /**
  * POST /auth/login
  */
-export async function loginUser(email, password) {
+export async function loginUser(email, password, quizUserId = null) {
   const base = getApiBase();
 
   const res = await fetch(`${base}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, quiz_user_id: quizUserId }),
   });
 
   try {
@@ -116,6 +116,16 @@ export async function getResult(userId) {
   const res = await fetch(`${base}/result/${encodeURIComponent(userId)}`);
   const data = await parseJsonSafe(res);
   return { res, data };
+}
+
+export async function trackArticleClick(articleId, token) {
+  const base = getApiBase();
+  const authToken = token || localStorage.getItem(AUTH_TOKEN_KEY);
+  const res = await fetch(`${base}/api/articles/${encodeURIComponent(articleId)}/click`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${authToken}` },
+  });
+  return { res };
 }
 
 /**

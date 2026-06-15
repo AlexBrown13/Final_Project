@@ -5,7 +5,8 @@ import { getApiBase } from "../../config/api.js";
 import { useDirection } from "../../context/useDirection.js";
 import { getUiStrings } from "../../config/uiStrings.js";
 import { AUTH_TOKEN_KEY, USER_ID_KEY, SCORE_CACHE_KEY } from "../../config/storageKeys.js";
-import { getResult } from "../../utils/api.js";
+import { getResult, trackArticleClick } from "../../utils/api.js";
+import ArticleChatBubble from "./ArticleChatBubble.jsx";
 import "./ArticlePage.css";
 
 export default function ArticlePage() {
@@ -28,7 +29,7 @@ export default function ArticlePage() {
   const score = localStorage.getItem(SCORE_CACHE_KEY);
 
   useEffect(() => {
-    if (!token) navigate("/login", { replace: true });
+    if (!token) navigate("/auth/login", { replace: true });
   }, [token, navigate]);
 
   // If score isn't cached locally, verify against the DB before redirecting.
@@ -75,7 +76,7 @@ export default function ArticlePage() {
 
   const redirectToLogin = useCallback(() => {
     try { localStorage.removeItem(AUTH_TOKEN_KEY); } catch {}
-    navigate("/login", { replace: true });
+    navigate("/auth/login", { replace: true });
   }, [navigate]);
 
   const getAbstractPreview = (article) => {
@@ -141,6 +142,7 @@ export default function ArticlePage() {
           body: JSON.stringify({ quiz_user_id: userId }),
         });
         if (postRes.status === 401) { redirectToLogin(); return; }
+        if (!postRes.ok) throw new Error(`${ui.articlesErrorFetchPrefix} (${postRes.status})`);
 
         const res2 = await fetch(`${base}/api/articles?${params}`, {
           method: "GET",
@@ -274,6 +276,7 @@ export default function ArticlePage() {
                           target="_blank"
                           rel="noreferrer"
                           dir="ltr"
+                          onClick={() => article._id && trackArticleClick(article._id, token)}
                         >
                           {urlValue}
                         </a>
@@ -383,6 +386,7 @@ export default function ArticlePage() {
           </div>
         )}
       </main>
+      <ArticleChatBubble />
     </div>
   );
 }

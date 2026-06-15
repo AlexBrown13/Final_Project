@@ -129,6 +129,11 @@ export default function QuizPage() {
 
   const handleChatResponse = useCallback(
     async (data, res) => {
+      if (data.crisis) {
+        setBanner({ kind: "crisis", resources: data.resources || [] });
+        return;
+      }
+
       if (res.status === 429) {
         setBanner({ kind: "rate_limit" });
         return;
@@ -276,6 +281,8 @@ export default function QuizPage() {
     }
   };
 
+  const isCrisis = banner?.kind === "crisis";
+
   const bannerText =
     banner?.kind === "rate_limit"
       ? s.errorRateLimit
@@ -314,24 +321,36 @@ export default function QuizPage() {
           <p className={styles.subtitle}>{s.quizSubtitle}</p>
         </header>
 
-        {banner && bannerText ? (
+        {isCrisis ? (
+          <div className={styles.crisisBanner} role="alert">
+            <p className={styles.crisisTitle}>{s.crisisTitle}</p>
+            <p className={styles.bannerText}>{s.crisisBody}</p>
+            <ul className={styles.crisisResources}>
+              {(banner.resources || []).map((r, i) => (
+                <li key={i}>
+                  <strong>{r.name}</strong>
+                  {r.number && <> — {s.crisisPhone}: <strong>{r.number}</strong></>}
+                  {r.url && <> — {s.crisisOnline}: <a href={r.url} target="_blank" rel="noreferrer">{r.url}</a></>}
+                  {r.available && <span className={styles.crisisAvail}> ({r.available})</span>}
+                </li>
+              ))}
+            </ul>
+            <div className={styles.bannerActions}>
+              <button type="button" className={styles.retry} onClick={dismissBanner}>
+                {s.crisisContinue}
+              </button>
+            </div>
+          </div>
+        ) : banner && bannerText ? (
           <div className={styles.banner} role="alert">
             <p className={styles.bannerText}>{bannerText}</p>
             <div className={styles.bannerActions}>
               {banner.kind === "generic" ? (
-                <button
-                  type="button"
-                  className={styles.retry}
-                  onClick={retryAfterError}
-                >
+                <button type="button" className={styles.retry} onClick={retryAfterError}>
                   {s.retry}
                 </button>
               ) : null}
-              <button
-                type="button"
-                className={styles.dismiss}
-                onClick={dismissBanner}
-              >
+              <button type="button" className={styles.dismiss} onClick={dismissBanner}>
                 {s.dismiss}
               </button>
             </div>
@@ -353,7 +372,9 @@ export default function QuizPage() {
                   key={`${i}-${m.role}`}
                   dir={bubbleDir}
                   className={
-                    m.role === "user" ? styles.bubbleUser : styles.bubbleAi
+                    m.role === "user"
+                      ? `${styles.bubbleUser} quiz-bubble-user`
+                      : `${styles.bubbleAi} quiz-bubble-ai`
                   }
                 >
                   <p className={styles.bubbleText}>{m.text}</p>
@@ -361,7 +382,7 @@ export default function QuizPage() {
               );
             })}
             {(loading || bootLoading) && (
-              <div className={styles.typing} aria-live="polite">
+              <div className={`${styles.typing} quiz-typing`} aria-live="polite">
                 …
               </div>
             )}

@@ -8,7 +8,7 @@
   font-family: 'Heebo', system-ui, sans-serif;
   font-weight: 600;
   font-size: 0.9rem;
-  color: #41645a;
+  color: var(--color-text);
   margin: 0 0 0.35rem;
   line-height: 1.4;
 }
@@ -16,15 +16,14 @@
 .source {
   font-family: 'Heebo', system-ui, sans-serif;
   font-size: 0.72rem;
-  color: #41645a;
-  opacity: 0.6;
+  color: var(--color-muted);
   margin: 0.3rem 0 0;
   text-align: center;
 }
 
 .loading {
-  border-radius: 10px;
-  background: rgba(65, 100, 90, 0.07);
+  border-radius: var(--radius);
+  background: var(--color-border);
   animation: pulse 1.6s ease-in-out infinite;
 }
 

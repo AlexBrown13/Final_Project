@@ -1,6 +1,5 @@
 .page {
   min-height: 100vh;
-  background: #f8f9fa;
 }
 
 .main {
@@ -13,7 +12,7 @@
   font-family: 'Heebo', system-ui, sans-serif;
   font-size: clamp(1.8rem, 3.5vw, 2.5rem);
   font-weight: 700;
-  color: #41645a;
+  color: var(--color-primary);
   margin: 0;
 }
 
@@ -21,22 +20,22 @@
   margin-top: 0.45rem;
   margin-bottom: 1.25rem;
   font-family: 'Heebo', system-ui, sans-serif;
-  color: rgba(65, 100, 90, 0.7);
+  color: var(--color-muted);
 }
 
 .rangePanel {
-  background: #fff;
-  border: 1px solid rgba(126, 170, 133, 0.25);
-  border-radius: 1rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
   padding: 1rem 1.25rem;
   margin-bottom: 1.5rem;
-  box-shadow: 0 4px 16px rgba(65, 100, 90, 0.06);
+  box-shadow: var(--shadow);
 }
 
 .rangeTitle {
   font-family: 'Heebo', system-ui, sans-serif;
   font-size: 0.92rem;
-  color: #41645a;
+  color: var(--color-text);
   font-weight: 700;
   margin: 0 0 0.7rem;
 }
@@ -52,24 +51,25 @@
   flex-direction: column;
   gap: 0.3rem;
   font-family: 'Heebo', system-ui, sans-serif;
-  color: rgba(65, 100, 90, 0.78);
+  color: var(--color-muted);
   font-size: 0.8rem;
 }
 
 .dateInput {
-  border: 1px solid rgba(65, 100, 90, 0.22);
-  border-radius: 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
   padding: 0.5rem 0.55rem;
   font-family: 'Heebo', system-ui, sans-serif;
   font-size: 0.92rem;
-  color: #41645a;
-  background: #fff;
+  color: var(--color-text);
+  background: var(--color-bg);
+  transition: border-color 0.2s ease;
 }
 
 .dateInput:focus {
   outline: none;
-  border-color: #7eaa85;
-  box-shadow: 0 0 0 2px rgba(126, 170, 133, 0.18);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-nav-border);
 }
 
 .presetRow {
@@ -80,10 +80,10 @@
 }
 
 .presetBtn {
-  border: 1px solid rgba(126, 170, 133, 0.6);
+  border: 1px solid var(--color-border);
   border-radius: 999px;
-  background: #f4f8f5;
-  color: #41645a;
+  background: var(--color-surface);
+  color: var(--color-text);
   padding: 0.28rem 0.76rem;
   font-family: 'Heebo', system-ui, sans-serif;
   font-size: 0.8rem;
@@ -93,7 +93,7 @@
 }
 
 .presetBtn:hover {
-  background: #e8f0eb;
+  background: var(--color-border);
   transform: translateY(-1px);
 }
 
@@ -105,10 +105,10 @@
 }
 
 .miniCard {
-  background: #fff;
-  border: 1px solid rgba(126, 170, 133, 0.2);
-  border-radius: 1rem;
-  box-shadow: 0 6px 18px rgba(65, 100, 90, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
   padding: 0.35rem 0.4rem 0.2rem;
 }
 
@@ -120,33 +120,35 @@
 }
 
 .featureBtn {
-  border: 1px solid;
-  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
   padding: 0.42rem 0.8rem;
   font-family: 'Heebo', system-ui, sans-serif;
   font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
+  background: var(--color-surface);
+  color: var(--color-text);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .featureBtn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 3px 12px rgba(65, 100, 90, 0.14);
+  box-shadow: var(--shadow);
 }
 
 .mainChartCard {
-  background: #fff;
-  border: 1px solid rgba(126, 170, 133, 0.2);
-  border-radius: 1rem;
-  box-shadow: 0 6px 18px rgba(65, 100, 90, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
   padding: 0.8rem 0.7rem 0.35rem;
 }
 
 .loading,
 .emptyState {
   font-family: 'Heebo', system-ui, sans-serif;
-  color: rgba(65, 100, 90, 0.65);
+  color: var(--color-muted);
   text-align: center;
   padding: 2.5rem 0;
 }
