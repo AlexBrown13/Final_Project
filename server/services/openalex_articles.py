@@ -3,11 +3,9 @@ import requests
 from pymongo import UpdateOne
 from pyalex import Works
 from pypdf import PdfReader
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-import numpy as np
 
 from services.mongo import articles_collection
+from services.ranker import hybrid_rank
 from utils.logger import logger
 
 _PDF_TIMEOUT = 10       # seconds per request
@@ -67,11 +65,10 @@ def _fetch(query_str, per_page):
 
 def _rerank(candidates, tags):
     """
-    Score all candidates by TF-IDF cosine similarity to the user's tags.
+    Score all candidates using BM25 + embedding cosine similarity.
     Returns candidates sorted best-first.
 
-    This is the candidate generation + reranking pattern:
-    OpenAlex casts a wide net → TF-IDF selects the most relevant subset.
+    OpenAlex casts a wide net → hybrid ranker selects the most relevant subset.
     Only the top _TOP_K survive into MongoDB.
     """
     if not candidates or not tags:
@@ -84,18 +81,9 @@ def _rerank(candidates, tags):
     query = " ".join(tags)
 
     try:
-        vectorizer = TfidfVectorizer(
-            stop_words="english",
-            ngram_range=(1, 2),
-            sublinear_tf=True,
-        )
-        corpus = docs + [query]
-        tfidf_matrix = vectorizer.fit_transform(corpus)
-        query_vec = tfidf_matrix[-1]
-        doc_matrix = tfidf_matrix[:-1]
-        scores = cosine_similarity(query_vec, doc_matrix).flatten()
+        scores = hybrid_rank(docs, query)
     except Exception as e:
-        logger.warning(f"TF-IDF reranking failed, keeping original order: {e}")
+        logger.warning(f"Hybrid reranking failed, keeping original order: {e}")
         return candidates
 
     ranked = sorted(zip(scores, candidates), key=lambda x: x[0], reverse=True)

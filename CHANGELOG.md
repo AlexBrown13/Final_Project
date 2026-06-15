@@ -85,81 +85,69 @@ Results from all queries are merged. A `seen` set of OpenAlex IDs prevents dupli
 
 ---
 
-## 3. Candidate Generation + TF-IDF Reranking Pipeline
+## 3. Candidate Generation + Hybrid BM25 + Embedding Reranking Pipeline
 
-**Files:** `server/services/openalex_articles.py`, `server/routes/articles_route.py`
+**Files:** `server/services/ranker.py`, `server/services/openalex_articles.py`, `server/routes/articles_route.py`
 
-TF-IDF + cosine similarity runs in **two places** — during ingestion (deciding what to store) and at display time (deciding the order to show).
+A hybrid BM25 + sentence-embedding ranker runs in **two places** — during ingestion (deciding what to store) and at display time (deciding the order to show). TF-IDF was replaced because it is purely keyword-based: "soldiers" and "veterans" score zero similarity, "PTSD" and "post-traumatic stress" are completely unrelated to it.
 
 ### Phase 1 — Candidate generation + reranking at fetch time
 
-OpenAlex is queried with a wide net — **20 articles per tag** instead of 5. After deduplication this produces a pool of up to 60–80 candidates. TF-IDF + cosine similarity then scores every candidate against the user's tags. Only the **top 15 highest-scoring articles** survive into MongoDB.
+OpenAlex is queried with a wide net — **20 articles per tag**. After deduplication this produces a pool of up to 60–80 candidates. The hybrid ranker scores every candidate against the user's tags. Only the **top 15 highest-scoring articles** survive into MongoDB.
 
-This is the **candidate generation + reranking** pattern used by Google, Netflix, and Spotify: cast a wide net, then filter aggressively by relevance. The database only ever stores the best articles — not just whatever OpenAlex happened to return first.
+This is the **candidate generation + reranking** pattern used by Google, Netflix, and Spotify: cast a wide net, then filter aggressively by relevance.
 
 ### Phase 2 — Reranking at display time
 
-When the articles page loads, TF-IDF runs again on the stored articles incorporating click engagement and recency, producing the final ranked order shown to the user.
+When the articles page loads, the hybrid ranker runs again on the stored articles, incorporating click engagement and recency, to produce the final ranked order shown to the user.
 
 ### What was broken before
 
 The old code checked whether user tags appeared in `persona_query` — the query string used to fetch the article. Since every article was fetched with the same query (which contained all the tags), every article scored identically on relevance. The ranking was essentially random.
 
-### How TF-IDF works
+### How BM25 works
 
-TF-IDF assigns each word in a document a weight based on two factors:
+BM25 (Best Match 25) is the ranking function used by Elasticsearch and most modern search engines. It improves on TF-IDF in two ways:
 
-**TF — Term Frequency:** How often does this word appear in this document?
-A word that appears many times in an abstract is likely important to that article.
-With `sublinear_tf=True`, the formula uses `log(1 + count)` to prevent very frequent words from dominating:
+**Term saturation:** In TF-IDF, "PTSD" appearing 20 times scores 20× more than appearing once. BM25 uses a saturation curve — after a few mentions, extra repetitions barely increase the score. One focused mention is almost as strong as many.
+
+**Document length normalization:** A 2000-word abstract mentioning "PTSD" once scores higher in TF-IDF than a focused 200-word abstract, simply because the longer doc has more words. BM25 normalizes by document length so shorter, more focused abstracts are not penalized.
+
+BM25 is still keyword-based — "soldiers" and "veterans" score zero similarity. That is what embeddings fix.
+
+### How sentence embeddings work
+
+A neural network (`all-MiniLM-L6-v2`, ~90 MB) reads the full text of an article and produces a **dense vector** — 384 numbers encoding the *meaning* of the text. These vectors capture semantic relationships learned from hundreds of millions of sentences:
+
+- "soldiers traumatized by combat" → vector A
+- "veterans with PTSD from war" → vector B
+- A and B point in nearly the same direction → high cosine similarity
+
+This means "October 7 survivors" matches "Nova festival victims", "children" matches "youth and adolescents", and "EMDR" matches "eye movement desensitization" — without any of those synonyms needing to appear in the text.
+
+The model is loaded once on server startup and cached in memory. Encoding 60–80 abstracts takes under 1 second on CPU.
+
+### Hybrid score
+
+Both methods are normalised to [0, 1] and averaged:
+
 ```
-TF(term, doc) = log(1 + count of term in doc)
+content_score = 0.5 × BM25_normalised + 0.5 × embedding_cosine
 ```
 
-**IDF — Inverse Document Frequency:** How rare is this word across all documents?
-A word like "trauma" appears in every article — it tells us nothing about which article is more relevant. A word like "hypervigilance" appears in only a few — it is a strong relevance signal.
-```
-IDF(term) = log(total number of articles / number of articles containing term)
-```
-
-**Combined:**
-```
-TF-IDF(term, doc) = TF(term, doc) × IDF(term)
-```
-Common words across all articles get low scores. Rare, specific terms get high scores.
-
-### How cosine similarity works
-
-Once every article and the user's query are represented as TF-IDF vectors (one dimension per unique word), cosine similarity measures how similar two vectors are by computing the angle between them:
-
-```
-cosine_similarity(query, article) = (query · article) / (|query| × |article|)
-```
-
-This produces a value between 0 (completely unrelated) and 1 (identical direction). Crucially, it is **length-independent** — a short abstract that is highly focused on the user's topic scores higher than a long abstract where the topic is mentioned only in passing.
-
-### How it works in this system
-
-1. All article texts (title + abstract) are collected into a list
-2. The user's interest tags are joined into a query string: `"PTSD children October 7"`
-3. The TF-IDF vectorizer fits on all article texts plus the query — building a shared vocabulary
-4. Each article and the query become vectors in that vocabulary space
-5. Cosine similarity is computed between the query vector and every article vector
-6. Articles closest in direction to the user's interests rank highest
-
-**Bigrams** (`ngram_range=(1,2)`) are included so phrases like "mental health", "post-traumatic", and "October 7" are treated as single meaningful units rather than split into individual words.
-
-**English stopwords** ("the", "a", "is", "of") are removed — they carry no relevance signal.
+BM25 covers exact term matches that embeddings might underweight (specific acronyms like "EMDR", "CBT", "IDF"). Embeddings cover semantic relationships that BM25 misses entirely. Each method covers the other's blindspot.
 
 ### Final ranking formula
 
 ```
-final_score = 0.60 × cosine_similarity   (TF-IDF content relevance)
-            + 0.25 × click_score          (click_count / 10, capped at 1.0)
-            + 0.15 × recency_score        (publication year, normalised 2000–2026)
+final_score = 0.60 × content_score   (hybrid BM25 + embedding)
+            + 0.25 × click_score     (click_count / 10, capped at 1.0)
+            + 0.15 × recency_score   (publication year, normalised 2000–2026)
 ```
 
-Content relevance carries the most weight (0.60) since it is now a meaningful signal. Click engagement (0.25) reflects real user behavior. Recency (0.15) favors recent research without letting it override content relevance.
+### Architecture
+
+All ranking logic lives in `server/services/ranker.py` — a single `hybrid_rank(docs, query)` function imported by both `openalex_articles.py` and `articles_route.py`. The `SentenceTransformer` model is loaded lazily on first call and cached globally so it is never loaded twice.
 
 ---
 

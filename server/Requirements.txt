@@ -12,6 +12,8 @@ semanticscholar
 pyalex
 scikit-learn
 numpy
+rank-bm25
+sentence-transformers
 requests
 pypdf
 #python -m pip install -r Requirements.txt

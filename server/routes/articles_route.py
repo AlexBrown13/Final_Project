@@ -1,13 +1,12 @@
 import re
 import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from bson import ObjectId
 from bson.errors import InvalidId
 from services.mongo import articles_collection, chat_collection
 from services.openalex_articles import main
+from services.ranker import hybrid_rank
 from utils.logger import logger
 
 articles_bp = Blueprint("openalex_articles", __name__)
@@ -39,16 +38,15 @@ def sanitize_tags(raw):
 
 def rank_articles(articles: list, user_tags: list) -> list:
     """
-    Rank articles using TF-IDF + cosine similarity for content relevance,
-    combined with click engagement and recency signals.
+    Rank articles using hybrid BM25 + embedding cosine similarity for content
+    relevance, combined with click engagement and recency signals.
 
-    TF-IDF builds a term-frequency/inverse-document-frequency matrix over all
-    article texts. Cosine similarity then measures the angle between each
-    article vector and the user query vector — articles closer in direction
-    to the query rank higher regardless of document length.
+    BM25 catches exact keyword matches ("EMDR", "CBT").
+    Embeddings catch semantic matches ("soldiers" ≈ "veterans").
+    Both are normalised to [0, 1] then averaged: content = 0.5×BM25 + 0.5×emb.
 
     Final score:
-      0.6 × cosine similarity (TF-IDF content relevance)
+      0.6 × hybrid content relevance
       0.25 × click engagement (normalised, capped at 10 clicks)
       0.15 × recency          (publication year, 2000–2026 range)
     """
@@ -62,23 +60,14 @@ def rank_articles(articles: list, user_tags: list) -> list:
     query = " ".join(user_tags) if user_tags else "trauma Israel mental health"
 
     try:
-        vectorizer = TfidfVectorizer(
-            stop_words="english",
-            ngram_range=(1, 2),
-            sublinear_tf=True,
-        )
-        corpus = docs + [query]
-        tfidf_matrix = vectorizer.fit_transform(corpus)
-        query_vec = tfidf_matrix[-1]
-        doc_matrix = tfidf_matrix[:-1]
-        similarities = cosine_similarity(query_vec, doc_matrix).flatten()
+        content_scores = hybrid_rank(docs, query)
     except Exception as e:
-        logger.warning(f"TF-IDF ranking failed, falling back to recency: {e}")
-        similarities = np.zeros(len(articles))
+        logger.warning(f"Hybrid ranking failed, falling back to recency: {e}")
+        content_scores = np.zeros(len(articles))
 
     scored = []
     for i, article in enumerate(articles):
-        content_score = float(similarities[i])
+        content_score = float(content_scores[i])
         click_score = min(article.get("click_count", 0) / 10.0, 1.0)
         year = article.get("year") or 2000
         recency_score = max(0.0, min((int(year) - 2000) / 26.0, 1.0))
