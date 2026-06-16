@@ -1,5 +1,6 @@
 import io
 import requests
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pymongo import UpdateOne
 from pyalex import Works
 from pypdf import PdfReader
@@ -15,7 +16,6 @@ _PDF_MAX_CHARS = 50_000 # cap stored text to ~50 KB
 
 def _fetch_pdf_content(pdf_url):
     try:
-        pdf_url='https://www.psychiatrist.com/pdf-serve/effective-treatments-for-ptsd-practice-guidelines-from-the-international-society-for-traumatic-stress-studies-pdf/'
         resp = requests.get(pdf_url, timeout=_PDF_TIMEOUT, stream=True)
         resp.raise_for_status()
         if "pdf" not in resp.headers.get("content-type", "").lower():
@@ -87,7 +87,9 @@ def _rerank(candidates, tags):
         return candidates
 
     ranked = sorted(zip(scores, candidates), key=lambda x: x[0], reverse=True)
-    return [c for _, c in ranked]
+    for score, doc in ranked:
+        doc['content_score'] = float(score)
+    return [doc for _, doc in ranked]
 
 
 def main(user_id, tags=None, search_query=None):
@@ -131,8 +133,6 @@ def main(user_id, tags=None, search_query=None):
                         a.get("author", {}).get("display_name")
                         for a in work.get("authorships", [])[:2]
                     ],
-                    "persona_query": query_str,
-                    "cited_by_count": work.get("cited_by_count", 0),
                 }
                 candidates.append(doc)
         except Exception as e:
@@ -152,14 +152,17 @@ def main(user_id, tags=None, search_query=None):
         f"Fetched {len(candidates)} candidates → reranked → keeping top {len(top)}"
     )
 
-    # Phase 3 — PDF enrichment: only for top articles that have a pdf_url
-    for doc in top:
-        pdf_url = doc.get("pdf_url")
-        if pdf_url:
-            content = _fetch_pdf_content(pdf_url)
-            if content:
-                doc["pdf_content"] = content
-                logger.info(f"PDF extracted for: {doc['title'][:60]!r}")
+    # Phase 3 — PDF enrichment: fetch all PDFs concurrently
+    pdf_docs = [d for d in top if d.get("pdf_url")]
+    if pdf_docs:
+        with ThreadPoolExecutor(max_workers=8) as ex:
+            futures = {ex.submit(_fetch_pdf_content, d["pdf_url"]): d for d in pdf_docs}
+            for fut in as_completed(futures):
+                doc = futures[fut]
+                content = fut.result()
+                if content:
+                    doc["pdf_content"] = content
+                    logger.info(f"PDF extracted for: {doc['title'][:60]!r}")
 
     operations = [
         UpdateOne(

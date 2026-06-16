@@ -120,19 +120,36 @@ def login():
         additional_claims={"email": email}
     )
 
-    # If the client sends a quiz_user_id, look up that session and return
-    # the saved persona so the frontend can restore the correct theme/results.
-    quiz_user_id = data.get("quiz_user_id")
+    # Restore persona/score for the returning user.
+    # 1. Try auth_user_id link — works from any device after first login.
+    # 2. Fall back to quiz_user_id sent by this device — covers first-time login.
+    #    When found this way, write auth_user_id so future logins skip step 2.
     persona_profile = None
     score = None
-    if quiz_user_id:
-        session = chat_collection.find_one(
-            {"user_id": quiz_user_id, "completed": True},
-            {"score": 1, "persona_profile": 1}
-        )
-        if session:
-            score = session.get("score")
-            persona_profile = session.get("persona_profile")
+
+    session = chat_collection.find_one(
+        {"auth_user_id": user["user_id"], "completed": True},
+        {"score": 1, "persona_profile": 1}
+    )
+    if not session:
+        quiz_user_id = data.get("quiz_user_id")
+        if quiz_user_id:
+            session = chat_collection.find_one(
+                {"user_id": quiz_user_id, "completed": True},
+                {"score": 1, "persona_profile": 1}
+            )
+            if session:
+                try:
+                    chat_collection.update_one(
+                        {"user_id": quiz_user_id, "completed": True},
+                        {"$set": {"auth_user_id": user["user_id"]}}
+                    )
+                except Exception:
+                    pass  # non-critical; persona still returned below
+
+    if session:
+        score = session.get("score")
+        persona_profile = session.get("persona_profile")
 
     return jsonify({
         "message": "Login success",

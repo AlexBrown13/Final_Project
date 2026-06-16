@@ -1,12 +1,10 @@
 import re
-import numpy as np
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from bson import ObjectId
 from bson.errors import InvalidId
 from services.mongo import articles_collection, chat_collection
 from services.openalex_articles import main
-from services.ranker import hybrid_rank
 from utils.logger import logger
 
 articles_bp = Blueprint("openalex_articles", __name__)
@@ -38,36 +36,20 @@ def sanitize_tags(raw):
 
 def rank_articles(articles: list, user_tags: list) -> list:
     """
-    Rank articles using hybrid BM25 + embedding cosine similarity for content
-    relevance, combined with click engagement and recency signals.
-
-    BM25 catches exact keyword matches ("EMDR", "CBT").
-    Embeddings catch semantic matches ("soldiers" ≈ "veterans").
-    Both are normalised to [0, 1] then averaged: content = 0.5×BM25 + 0.5×emb.
+    Sort articles using the content_score stored at ingestion time, combined
+    with live click engagement and recency. No ML inference on reads.
 
     Final score:
-      0.6 × hybrid content relevance
-      0.25 × click engagement (normalised, capped at 10 clicks)
-      0.15 × recency          (publication year, 2000–2026 range)
+      0.6 × content_score  (BM25+embedding, computed once at ingestion)
+      0.25 × click score   (normalised, capped at 10 clicks)
+      0.15 × recency       (publication year, 2000–2026 range)
     """
     if not articles:
         return articles
 
-    docs = [
-        " ".join([(a.get("title") or ""), (a.get("abstract") or "")])
-        for a in articles
-    ]
-    query = " ".join(user_tags) if user_tags else "trauma Israel mental health"
-
-    try:
-        content_scores = hybrid_rank(docs, query)
-    except Exception as e:
-        logger.warning(f"Hybrid ranking failed, falling back to recency: {e}")
-        content_scores = np.zeros(len(articles))
-
     scored = []
-    for i, article in enumerate(articles):
-        content_score = float(content_scores[i])
+    for article in articles:
+        content_score = float(article.get("content_score") or 0.0)
         click_score = min(article.get("click_count", 0) / 10.0, 1.0)
         year = article.get("year") or 2000
         recency_score = max(0.0, min((int(year) - 2000) / 26.0, 1.0))
@@ -113,6 +95,7 @@ def get_articles():
                 "abstract": 1,
                 "authors": 1,
                 "click_count": 1,
+                "content_score": 1,
             }
         )
 

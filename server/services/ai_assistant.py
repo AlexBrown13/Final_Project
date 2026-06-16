@@ -18,8 +18,14 @@ OLLAMA_URL  = "http://localhost:11434"
 MODEL = "llama3" 
 
 
-# Make sure Ollama is runing
+_ollama_checked_at = 0.0
+_OLLAMA_CHECK_TTL = 60  # re-check at most once per minute
+
 def check_ollama():
+    import time
+    global _ollama_checked_at
+    if time.monotonic() - _ollama_checked_at < _OLLAMA_CHECK_TTL:
+        return
     try:
         res = requests.get(f"{OLLAMA_URL}/api/tags", timeout=5)
         if res.status_code == 200:
@@ -27,13 +33,14 @@ def check_ollama():
             logger.info(f"Ollama is runing. Available models {models}")
             if not any(MODEL in m for m in models):
                 logger.warning(f"Model not found")
-                sys.exit(2) 
+                sys.exit(2)
         else:
             logger.error("Connection to Ollama failed")
             raise ConnectionError()
     except Exception:
         logger.error(f"Ollma is not running or not reachable at {OLLAMA_URL}")
         sys.exit(2)
+    _ollama_checked_at = time.monotonic()
 
 
 def ask_ollama(question, persona_profile, history_chat):

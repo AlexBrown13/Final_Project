@@ -748,3 +748,390 @@
 2026-06-03 19:09:31,364 [INFO] Upserted: 15, Modified: 0
 2026-06-03 19:15:00,702 [INFO] MongoDB Atlas: connection established successfully.
 2026-06-15 19:07:27,877 [ERROR] MongoDB Atlas: connection failed The resolution lifetime expired after 21.602 seconds: Server Do53:8.8.8.8@53 answered The DNS operation timed out.; Server Do53:8.8.4.4@53 answered The DNS operation timed out.; Server Do53:8.8.8.8@53 answered The DNS operation timed out.; Server Do53:8.8.4.4@53 answered The DNS operation timed out.; Server Do53:8.8.8.8@53 answered The DNS operation timed out.; Server Do53:8.8.4.4@53 answered The DNS operation timed out.; Server Do53:8.8.8.8@53 answered The DNS operation timed out.; Server Do53:8.8.4.4@53 answered The DNS operation timed out.; Server Do53:8.8.8.8@53 answered The DNS operation timed out.; Server Do53:8.8.4.4@53 answered The DNS operation timed out.
+2026-06-16 12:38:52,323 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 12:39:10,768 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 12:39:47,576 [INFO] New session created for user_id: a590beb8-a5db-4d84-9220-f95233cbdfbb
+2026-06-16 12:40:37,254 [INFO] Session deleted for quiz user_id: a590beb8-a5db-4d84-9220-f95233cbdfbb
+2026-06-16 12:40:37,255 [INFO] Deleted 0 articles for user: ce143198-954d-49a4-bbcf-93ab900d1652
+2026-06-16 12:40:37,938 [INFO] New session created for user_id: a590beb8-a5db-4d84-9220-f95233cbdfbb
+2026-06-16 12:42:08,403 [INFO] Generated dynamic question successfully
+2026-06-16 12:42:41,768 [INFO] Generated dynamic question successfully
+2026-06-16 12:43:01,981 [INFO] Generated dynamic question successfully
+2026-06-16 12:43:24,892 [INFO] Generated dynamic question successfully
+2026-06-16 12:43:42,135 [INFO] Extracting persona for user_id: a590beb8-a5db-4d84-9220-f95233cbdfbb
+2026-06-16 12:43:42,527 [INFO] User a590beb8-a5db-4d84-9220-f95233cbdfbb persona: informed learner → score 2
+2026-06-16 12:44:21,139 [INFO] Loading sentence-transformer model 'all-MiniLM-L6-v2' (first call: ~90 MB download if not cached)
+2026-06-16 12:44:26,297 [INFO] Loading sentence-transformer model 'all-MiniLM-L6-v2' (first call: ~90 MB download if not cached)
+2026-06-16 12:44:26,893 [INFO] Sentence-transformer model ready.
+2026-06-16 12:44:30,128 [INFO] Fetched 58 candidates → reranked → keeping top 15
+2026-06-16 12:44:30,142 [INFO] Sentence-transformer model ready.
+2026-06-16 12:44:31,637 [INFO] Fetched 58 candidates → reranked → keeping top 15
+2026-06-16 12:44:31,689 [INFO] PDF extracted for: 'Hope, Agency, and the Lived Experience of Violence: A Qualit'
+2026-06-16 12:44:33,119 [INFO] PDF extracted for: 'Hope, Agency, and the Lived Experience of Violence: A Qualit'
+2026-06-16 12:44:34,526 [INFO] PDF extracted for: 'PTSD, Depression, and Anxiety among Palestinian Women Victim'
+2026-06-16 12:44:35,157 [INFO] PDF extracted for: 'PTSD, Depression, and Anxiety among Palestinian Women Victim'
+2026-06-16 12:44:35,582 [INFO] PDF extracted for: 'Dental and maxillofacial injuries associated with domestic v'
+2026-06-16 12:44:36,280 [INFO] PDF extracted for: 'Dental and maxillofacial injuries associated with domestic v'
+2026-06-16 12:44:36,616 [INFO] PDF extracted for: 'Women’s approval of domestic physical violence against wives'
+2026-06-16 12:44:37,408 [INFO] PDF extracted for: 'Women’s approval of domestic physical violence against wives'
+2026-06-16 12:44:37,755 [INFO] PDF extracted for: 'Trauma, PTSD, Anxiety, and Resilience in Palestinian Childre'
+2026-06-16 12:44:38,676 [INFO] PDF extracted for: 'Trauma, PTSD, Anxiety, and Resilience in Palestinian Childre'
+2026-06-16 12:44:38,905 [INFO] PDF extracted for: 'IMPRoving Outcomes for children exposed to domestic ViolencE'
+2026-06-16 12:44:39,844 [INFO] PDF extracted for: 'IMPRoving Outcomes for children exposed to domestic ViolencE'
+2026-06-16 12:44:40,022 [INFO] PDF extracted for: 'The Resilience Function of Character Strengths in the Face o'
+2026-06-16 12:44:41,246 [INFO] PDF extracted for: 'The Resilience Function of Character Strengths in the Face o'
+2026-06-16 12:44:41,321 [INFO] PDF extracted for: 'Resilience in Context: A Brief and Culturally Grounded Measu'
+2026-06-16 12:44:42,523 [INFO] PDF extracted for: 'Resilience in Context: A Brief and Culturally Grounded Measu'
+2026-06-16 12:44:42,668 [INFO] PDF extracted for: 'Climate Change, Conflict, and Children'
+2026-06-16 12:44:43,680 [INFO] PDF extracted for: 'Climate Change, Conflict, and Children'
+2026-06-16 12:44:43,840 [INFO] PDF extracted for: 'How does social support enhance resilience in the trauma-exp'
+2026-06-16 12:44:44,765 [INFO] PDF extracted for: 'How does social support enhance resilience in the trauma-exp'
+2026-06-16 12:44:44,915 [INFO] PDF extracted for: 'Mechanisms linking childhood trauma exposure and psychopatho'
+2026-06-16 12:44:44,931 [INFO] Upserted: 15, Modified: 0
+2026-06-16 12:44:45,821 [INFO] PDF extracted for: 'Mechanisms linking childhood trauma exposure and psychopatho'
+2026-06-16 12:44:45,824 [INFO] Upserted: 0, Modified: 0
+2026-06-16 12:47:21,459 [INFO] Fetched 58 candidates → reranked → keeping top 15
+2026-06-16 12:47:22,887 [INFO] PDF extracted for: 'Hope, Agency, and the Lived Experience of Violence: A Qualit'
+2026-06-16 12:47:23,996 [INFO] PDF extracted for: 'PTSD, Depression, and Anxiety among Palestinian Women Victim'
+2026-06-16 12:47:24,317 [INFO] Fetched 58 candidates → reranked → keeping top 15
+2026-06-16 12:47:25,101 [INFO] PDF extracted for: 'Dental and maxillofacial injuries associated with domestic v'
+2026-06-16 12:47:25,741 [INFO] PDF extracted for: 'Hope, Agency, and the Lived Experience of Violence: A Qualit'
+2026-06-16 12:47:26,134 [INFO] PDF extracted for: 'Women’s approval of domestic physical violence against wives'
+2026-06-16 12:47:26,823 [INFO] PDF extracted for: 'PTSD, Depression, and Anxiety among Palestinian Women Victim'
+2026-06-16 12:47:27,168 [INFO] PDF extracted for: 'Trauma, PTSD, Anxiety, and Resilience in Palestinian Childre'
+2026-06-16 12:47:27,938 [INFO] PDF extracted for: 'Dental and maxillofacial injuries associated with domestic v'
+2026-06-16 12:47:28,260 [INFO] PDF extracted for: 'IMPRoving Outcomes for children exposed to domestic ViolencE'
+2026-06-16 12:47:29,013 [INFO] PDF extracted for: 'Women’s approval of domestic physical violence against wives'
+2026-06-16 12:47:29,355 [INFO] PDF extracted for: 'The Resilience Function of Character Strengths in the Face o'
+2026-06-16 12:47:30,111 [INFO] PDF extracted for: 'Trauma, PTSD, Anxiety, and Resilience in Palestinian Childre'
+2026-06-16 12:47:30,387 [INFO] PDF extracted for: 'Resilience in Context: A Brief and Culturally Grounded Measu'
+2026-06-16 12:47:31,208 [INFO] PDF extracted for: 'IMPRoving Outcomes for children exposed to domestic ViolencE'
+2026-06-16 12:47:31,490 [INFO] PDF extracted for: 'Climate Change, Conflict, and Children'
+2026-06-16 12:47:32,303 [INFO] PDF extracted for: 'The Resilience Function of Character Strengths in the Face o'
+2026-06-16 12:47:32,584 [INFO] PDF extracted for: 'How does social support enhance resilience in the trauma-exp'
+2026-06-16 12:47:33,357 [INFO] PDF extracted for: 'Resilience in Context: A Brief and Culturally Grounded Measu'
+2026-06-16 12:47:33,698 [INFO] PDF extracted for: 'Mechanisms linking childhood trauma exposure and psychopatho'
+2026-06-16 12:47:33,700 [INFO] Upserted: 15, Modified: 0
+2026-06-16 12:47:34,469 [INFO] PDF extracted for: 'Climate Change, Conflict, and Children'
+2026-06-16 12:47:35,572 [INFO] PDF extracted for: 'How does social support enhance resilience in the trauma-exp'
+2026-06-16 12:47:37,590 [INFO] PDF extracted for: 'Mechanisms linking childhood trauma exposure and psychopatho'
+2026-06-16 12:47:37,592 [INFO] Upserted: 0, Modified: 0
+2026-06-16 12:52:23,738 [INFO] Fetched 55 candidates → reranked → keeping top 15
+2026-06-16 12:52:25,234 [INFO] PDF extracted for: 'Hope, Agency, and the Lived Experience of Violence: A Qualit'
+2026-06-16 12:52:26,277 [INFO] PDF extracted for: 'PTSD, Depression, and Anxiety among Palestinian Women Victim'
+2026-06-16 12:52:27,330 [INFO] PDF extracted for: 'Dental and maxillofacial injuries associated with domestic v'
+2026-06-16 12:52:28,384 [INFO] PDF extracted for: 'Women’s approval of domestic physical violence against wives'
+2026-06-16 12:52:29,463 [INFO] PDF extracted for: 'Trauma, PTSD, Anxiety, and Resilience in Palestinian Childre'
+2026-06-16 12:52:30,526 [INFO] PDF extracted for: 'IMPRoving Outcomes for children exposed to domestic ViolencE'
+2026-06-16 12:52:31,667 [INFO] PDF extracted for: 'The Resilience Function of Character Strengths in the Face o'
+2026-06-16 12:52:32,728 [INFO] PDF extracted for: 'Resilience in Context: A Brief and Culturally Grounded Measu'
+2026-06-16 12:52:33,784 [INFO] PDF extracted for: 'Mechanisms linking childhood trauma exposure and psychopatho'
+2026-06-16 12:52:34,926 [INFO] PDF extracted for: 'How does social support enhance resilience in the trauma-exp'
+2026-06-16 12:52:34,929 [INFO] Upserted: 15, Modified: 0
+2026-06-16 12:52:40,723 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 12:54:27,709 [INFO] Session deleted for quiz user_id: a590beb8-a5db-4d84-9220-f95233cbdfbb
+2026-06-16 12:54:27,710 [INFO] Deleted 0 articles for user: ce143198-954d-49a4-bbcf-93ab900d1652
+2026-06-16 12:54:29,731 [INFO] New session created for user_id: a590beb8-a5db-4d84-9220-f95233cbdfbb
+2026-06-16 12:54:31,220 [INFO] Session deleted for quiz user_id: a590beb8-a5db-4d84-9220-f95233cbdfbb
+2026-06-16 12:54:31,220 [INFO] Deleted 0 articles for user: ce143198-954d-49a4-bbcf-93ab900d1652
+2026-06-16 12:54:31,920 [INFO] New session created for user_id: a590beb8-a5db-4d84-9220-f95233cbdfbb
+2026-06-16 12:54:38,848 [INFO] Loading sentence-transformer model 'all-MiniLM-L6-v2' (first call: ~90 MB download if not cached)
+2026-06-16 12:54:40,382 [INFO] Session deleted for quiz user_id: a590beb8-a5db-4d84-9220-f95233cbdfbb
+2026-06-16 12:54:40,383 [INFO] Deleted 0 articles for user: ce143198-954d-49a4-bbcf-93ab900d1652
+2026-06-16 12:54:41,402 [INFO] New session created for user_id: a590beb8-a5db-4d84-9220-f95233cbdfbb
+2026-06-16 12:54:43,061 [INFO] Sentence-transformer model ready.
+2026-06-16 12:54:44,382 [INFO] Fetched 59 candidates → reranked → keeping top 15
+2026-06-16 12:54:45,876 [INFO] PDF extracted for: 'Hope, Agency, and the Lived Experience of Violence: A Qualit'
+2026-06-16 12:54:46,932 [INFO] PDF extracted for: 'PTSD, Depression, and Anxiety among Palestinian Women Victim'
+2026-06-16 12:54:48,003 [INFO] PDF extracted for: 'Dental and maxillofacial injuries associated with domestic v'
+2026-06-16 12:54:49,054 [INFO] PDF extracted for: 'Women’s approval of domestic physical violence against wives'
+2026-06-16 12:54:50,281 [INFO] PDF extracted for: 'Trauma, PTSD, Anxiety, and Resilience in Palestinian Childre'
+2026-06-16 12:54:51,372 [INFO] PDF extracted for: 'IMPRoving Outcomes for children exposed to domestic ViolencE'
+2026-06-16 12:54:52,461 [INFO] PDF extracted for: 'Developmental and social–ecological perspectives on children'
+2026-06-16 12:54:53,529 [INFO] PDF extracted for: 'The Resilience Function of Character Strengths in the Face o'
+2026-06-16 12:54:54,587 [INFO] PDF extracted for: 'Resilience in Context: A Brief and Culturally Grounded Measu'
+2026-06-16 12:54:55,698 [INFO] PDF extracted for: 'Mechanisms linking childhood trauma exposure and psychopatho'
+2026-06-16 12:54:56,715 [INFO] PDF extracted for: 'How does social support enhance resilience in the trauma-exp'
+2026-06-16 12:54:56,718 [INFO] Upserted: 15, Modified: 0
+2026-06-16 12:55:15,535 [INFO] Generated dynamic question successfully
+2026-06-16 12:55:26,941 [INFO] Generated dynamic question successfully
+2026-06-16 12:55:42,317 [INFO] Generated dynamic question successfully
+2026-06-16 12:55:55,614 [INFO] Generated dynamic question successfully
+2026-06-16 12:55:58,193 [INFO] Extracting persona for user_id: a590beb8-a5db-4d84-9220-f95233cbdfbb
+2026-06-16 12:55:58,663 [INFO] User a590beb8-a5db-4d84-9220-f95233cbdfbb persona: informed learner → score 2
+2026-06-16 13:00:05,522 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 13:01:48,525 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 13:01:51,489 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 13:03:43,300 [INFO] New session created for user_id: dbfdbeaa-3f8c-49f7-8ff3-c969de7945ab
+2026-06-16 13:04:14,978 [INFO] Session deleted for quiz user_id: dbfdbeaa-3f8c-49f7-8ff3-c969de7945ab
+2026-06-16 13:04:14,979 [INFO] Deleted 15 articles for user: ce143198-954d-49a4-bbcf-93ab900d1652
+2026-06-16 13:04:15,659 [INFO] New session created for user_id: dbfdbeaa-3f8c-49f7-8ff3-c969de7945ab
+2026-06-16 13:05:00,652 [INFO] Generated dynamic question successfully
+2026-06-16 13:05:17,469 [INFO] Generated dynamic question successfully
+2026-06-16 13:05:30,902 [INFO] Generated dynamic question successfully
+2026-06-16 13:05:42,642 [INFO] Generated dynamic question successfully
+2026-06-16 13:05:47,744 [INFO] Extracting persona for user_id: dbfdbeaa-3f8c-49f7-8ff3-c969de7945ab
+2026-06-16 13:05:48,207 [INFO] User dbfdbeaa-3f8c-49f7-8ff3-c969de7945ab persona: beginner → score 1
+2026-06-16 13:06:04,651 [INFO] Loading sentence-transformer model 'all-MiniLM-L6-v2' (first call: ~90 MB download if not cached)
+2026-06-16 13:06:08,939 [INFO] Sentence-transformer model ready.
+2026-06-16 13:06:10,200 [INFO] Fetched 51 candidates → reranked → keeping top 15
+2026-06-16 13:06:11,762 [INFO] PDF extracted for: 'Associations between adverse childhood experiences and clini'
+2026-06-16 13:06:12,945 [INFO] PDF extracted for: 'The Psycho-Social Conditions of Asylum-Seekers from Darfur i'
+2026-06-16 13:06:14,065 [INFO] PDF extracted for: 'COVID-19 Isolation in Healthy Population in Israel: Challeng'
+2026-06-16 13:06:15,289 [INFO] PDF extracted for: 'Cognitive Flexibility Predicts PTSD Symptoms: Observational '
+2026-06-16 13:06:16,398 [INFO] PDF extracted for: 'Traumatic Events and PTSD Among Palestinian Children and Ado'
+2026-06-16 13:06:17,551 [INFO] PDF extracted for: 'Trapped in a Daydream: Daily Elevations in Maladaptive Daydr'
+2026-06-16 13:06:18,609 [INFO] PDF extracted for: 'Risk factors and comorbidity of ICD‐11 PTSD and complex PTSD'
+2026-06-16 13:06:19,750 [INFO] PDF extracted for: 'Modeling the effects of war exposure and daily stressors on '
+2026-06-16 13:06:20,862 [INFO] PDF extracted for: 'Translation and validation of the Chinese ICD-11 Internation'
+2026-06-16 13:06:21,960 [INFO] PDF extracted for: 'Estimating the risk of PTSD in recent trauma survivors: resu'
+2026-06-16 13:06:23,201 [INFO] PDF extracted for: 'Posttraumatic stress disorder in the World Mental Health Sur'
+2026-06-16 13:06:24,237 [INFO] PDF extracted for: 'MDMA-assisted therapy for moderate to severe PTSD: a randomi'
+2026-06-16 13:06:24,240 [INFO] Upserted: 15, Modified: 0
+2026-06-16 13:07:17,218 [ERROR] article-chat error: 'NoneType' object is not subscriptable
+2026-06-16 13:12:36,350 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 13:12:44,479 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 13:18:23,629 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 13:18:26,447 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 13:18:58,880 [INFO] New session created for user_id: ebdc5768-2ec9-42d0-8881-e15872da986f
+2026-06-16 13:19:17,060 [INFO] Session deleted for quiz user_id: ebdc5768-2ec9-42d0-8881-e15872da986f
+2026-06-16 13:19:17,061 [INFO] Deleted 15 articles for user: ce143198-954d-49a4-bbcf-93ab900d1652
+2026-06-16 13:19:17,739 [INFO] New session created for user_id: ebdc5768-2ec9-42d0-8881-e15872da986f
+2026-06-16 13:19:27,758 [INFO] Session deleted for quiz user_id: ebdc5768-2ec9-42d0-8881-e15872da986f
+2026-06-16 13:19:27,760 [INFO] Deleted 0 articles for user: ce143198-954d-49a4-bbcf-93ab900d1652
+2026-06-16 13:19:28,746 [INFO] New session created for user_id: ebdc5768-2ec9-42d0-8881-e15872da986f
+2026-06-16 13:19:38,156 [INFO] Loading sentence-transformer model 'all-MiniLM-L6-v2' (first call: ~90 MB download if not cached)
+2026-06-16 13:19:42,609 [INFO] Sentence-transformer model ready.
+2026-06-16 13:19:43,776 [INFO] Fetched 40 candidates → reranked → keeping top 15
+2026-06-16 13:19:45,450 [INFO] PDF extracted for: 'Post-traumatic growth in mental health recovery: qualitative'
+2026-06-16 13:19:46,624 [INFO] PDF extracted for: 'Posttraumatic stress disorder in the World Mental Health Sur'
+2026-06-16 13:19:47,661 [INFO] PDF extracted for: 'Empirical evidence about recovery and mental health'
+2026-06-16 13:19:48,760 [INFO] PDF extracted for: 'IMPACT OF HUMAN DISASTERS AND COVID-19 PANDEMIC ON MENTAL HE'
+2026-06-16 13:19:49,895 [INFO] PDF extracted for: 'Impact of COVID-19 lockdown on mental health in Germany: lon'
+2026-06-16 13:19:50,956 [INFO] PDF extracted for: 'The epidemiology of traumatic event exposure worldwide: resu'
+2026-06-16 13:19:52,085 [INFO] PDF extracted for: 'Mental health and psychosocial wellbeing of Syrians affected'
+2026-06-16 13:19:53,156 [INFO] PDF extracted for: 'Quality not quantity: loneliness subtypes, psychological tra'
+2026-06-16 13:19:54,246 [INFO] PDF extracted for: 'Mental health in elite athletes: International Olympic Commi'
+2026-06-16 13:19:55,332 [INFO] PDF extracted for: 'Association of <i>DSM-IV</i> Posttraumatic Stress Disorder W'
+2026-06-16 13:19:56,429 [INFO] PDF extracted for: 'Anxiety, depression, traumatic stress and COVID-19-related a'
+2026-06-16 13:19:56,433 [INFO] Upserted: 15, Modified: 0
+2026-06-16 13:20:26,051 [INFO] Generated dynamic question successfully
+2026-06-16 13:20:45,280 [INFO] Generated dynamic question successfully
+2026-06-16 13:20:55,823 [INFO] Generated dynamic question successfully
+2026-06-16 13:21:11,526 [INFO] Generated dynamic question successfully
+2026-06-16 13:21:33,479 [INFO] Extracting persona for user_id: ebdc5768-2ec9-42d0-8881-e15872da986f
+2026-06-16 13:21:33,885 [INFO] User ebdc5768-2ec9-42d0-8881-e15872da986f persona: beginner → score 1
+2026-06-16 13:21:40,399 [INFO] Fetched 40 candidates → reranked → keeping top 15
+2026-06-16 13:21:42,096 [INFO] PDF extracted for: 'Distress and Resilience in the Days of COVID-19: Comparing T'
+2026-06-16 13:21:43,148 [INFO] PDF extracted for: 'Maternal depression during pregnancy and offspring depressio'
+2026-06-16 13:21:44,194 [INFO] PDF extracted for: 'Hope and Resilience During a Pandemic Among Three Cultural G'
+2026-06-16 13:21:45,219 [INFO] PDF extracted for: 'Anxiety, depression, traumatic stress and COVID-19-related a'
+2026-06-16 13:21:46,294 [INFO] PDF extracted for: 'Organizational resilience: a capability-based conceptualizat'
+2026-06-16 13:21:47,388 [INFO] PDF extracted for: 'Cultural Predictors of Resilience in a Multinational Sample '
+2026-06-16 13:21:48,487 [INFO] PDF extracted for: 'Resilience in Context: A Brief and Culturally Grounded Measu'
+2026-06-16 13:21:49,513 [INFO] PDF extracted for: 'Systemic resilience: principles and processes for a science '
+2026-06-16 13:21:50,624 [INFO] PDF extracted for: 'How does social support enhance resilience in the trauma-exp'
+2026-06-16 13:21:51,693 [INFO] PDF extracted for: 'The Depression Anxiety Stress Scale 21: Development and Vali'
+2026-06-16 13:21:52,751 [INFO] PDF extracted for: 'The Benefits of Indirect Exposure to Trauma: The Relationshi'
+2026-06-16 13:21:53,863 [INFO] PDF extracted for: 'Prognostic neuroimaging biomarkers of trauma-related psychop'
+2026-06-16 13:21:53,866 [INFO] Upserted: 15, Modified: 0
+2026-06-16 13:22:09,104 [INFO] Fetched 40 candidates → reranked → keeping top 15
+2026-06-16 13:22:10,573 [INFO] PDF extracted for: 'Distress and Resilience in the Days of COVID-19: Comparing T'
+2026-06-16 13:22:11,664 [INFO] PDF extracted for: 'Maternal depression during pregnancy and offspring depressio'
+2026-06-16 13:22:12,710 [INFO] PDF extracted for: 'Hope and Resilience During a Pandemic Among Three Cultural G'
+2026-06-16 13:22:13,782 [INFO] PDF extracted for: 'Anxiety, depression, traumatic stress and COVID-19-related a'
+2026-06-16 13:22:14,849 [INFO] PDF extracted for: 'Organizational resilience: a capability-based conceptualizat'
+2026-06-16 13:22:15,915 [INFO] PDF extracted for: 'Cultural Predictors of Resilience in a Multinational Sample '
+2026-06-16 13:22:16,970 [INFO] PDF extracted for: 'Resilience in Context: A Brief and Culturally Grounded Measu'
+2026-06-16 13:22:18,059 [INFO] PDF extracted for: 'Systemic resilience: principles and processes for a science '
+2026-06-16 13:22:19,188 [INFO] PDF extracted for: 'How does social support enhance resilience in the trauma-exp'
+2026-06-16 13:22:20,268 [INFO] PDF extracted for: 'The Depression Anxiety Stress Scale 21: Development and Vali'
+2026-06-16 13:22:21,470 [INFO] PDF extracted for: 'The Benefits of Indirect Exposure to Trauma: The Relationshi'
+2026-06-16 13:22:22,530 [INFO] PDF extracted for: 'Prognostic neuroimaging biomarkers of trauma-related psychop'
+2026-06-16 13:22:22,533 [INFO] Upserted: 15, Modified: 0
+2026-06-16 13:22:36,437 [ERROR] article-chat error: 'NoneType' object is not subscriptable
+2026-06-16 13:25:51,553 [ERROR] article-chat error: 'NoneType' object is not subscriptable
+2026-06-16 13:27:49,230 [ERROR] article-chat error: 'NoneType' object is not subscriptable
+2026-06-16 13:28:00,349 [ERROR] article-chat error: 'NoneType' object is not subscriptable
+2026-06-16 13:39:54,660 [ERROR] article-chat error: 'NoneType' object is not subscriptable
+2026-06-16 13:40:02,930 [ERROR] article-chat error: 'NoneType' object is not subscriptable
+2026-06-16 13:56:59,253 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 13:57:24,740 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 13:57:31,176 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 13:57:49,670 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 13:58:26,112 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 13:58:38,005 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 14:03:40,250 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 14:03:43,566 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 14:05:07,461 [INFO] New session created for user_id: dbfdbeaa-3f8c-49f7-8ff3-c969de7945ab
+2026-06-16 14:05:25,945 [INFO] New session created for user_id: 0bf0e4c4-a0dd-4791-be3c-a1f3431f2ad8
+2026-06-16 14:05:27,293 [INFO] Session deleted for quiz user_id: 0bf0e4c4-a0dd-4791-be3c-a1f3431f2ad8
+2026-06-16 14:05:27,991 [INFO] New session created for user_id: 0bf0e4c4-a0dd-4791-be3c-a1f3431f2ad8
+2026-06-16 14:05:31,226 [INFO] Session deleted for quiz user_id: 0bf0e4c4-a0dd-4791-be3c-a1f3431f2ad8
+2026-06-16 14:05:31,648 [INFO] New session created for user_id: 0bf0e4c4-a0dd-4791-be3c-a1f3431f2ad8
+2026-06-16 14:05:44,054 [INFO] Session deleted for quiz user_id: 0bf0e4c4-a0dd-4791-be3c-a1f3431f2ad8
+2026-06-16 14:05:44,055 [INFO] Deleted 0 articles for user: ce143198-954d-49a4-bbcf-93ab900d1652
+2026-06-16 14:05:44,741 [INFO] New session created for user_id: 0bf0e4c4-a0dd-4791-be3c-a1f3431f2ad8
+2026-06-16 14:06:18,396 [INFO] Generated dynamic question successfully
+2026-06-16 14:06:29,273 [INFO] Generated dynamic question successfully
+2026-06-16 14:06:37,557 [INFO] Generated dynamic question successfully
+2026-06-16 14:06:49,021 [INFO] Generated dynamic question successfully
+2026-06-16 14:06:52,524 [INFO] Extracting persona for user_id: 0bf0e4c4-a0dd-4791-be3c-a1f3431f2ad8
+2026-06-16 14:06:53,022 [INFO] User 0bf0e4c4-a0dd-4791-be3c-a1f3431f2ad8 persona: researcher → score 3
+2026-06-16 14:06:58,074 [INFO] Loading sentence-transformer model 'all-MiniLM-L6-v2' (first call: ~90 MB download if not cached)
+2026-06-16 14:07:25,721 [INFO] Sentence-transformer model ready.
+2026-06-16 14:07:26,812 [INFO] Fetched 43 candidates → reranked → keeping top 15
+2026-06-16 14:07:28,567 [INFO] PDF extracted for: 'Traumatic Events and PTSD Among Palestinian Children and Ado'
+2026-06-16 14:07:31,819 [INFO] PDF extracted for: 'Posttraumatic stress disorder in the World Mental Health Sur'
+2026-06-16 14:07:34,237 [INFO] PDF extracted for: 'Cognitive Flexibility Predicts PTSD Symptoms: Observational '
+2026-06-16 14:07:36,646 [INFO] PDF extracted for: 'Shared trauma reality in war: Mental health therapists’ expe'
+2026-06-16 14:07:37,553 [INFO] PDF extracted for: 'ICD-11 complex post-traumatic stress disorder: simplifying d'
+2026-06-16 14:07:39,110 [INFO] Fetched 43 candidates → reranked → keeping top 15
+2026-06-16 14:07:40,122 [INFO] PDF extracted for: 'Traumatic Events and PTSD Among Palestinian Children and Ado'
+2026-06-16 14:07:42,442 [INFO] PDF extracted for: 'Posttraumatic stress disorder in the World Mental Health Sur'
+2026-06-16 14:07:46,070 [INFO] PDF extracted for: 'Shared trauma reality in war: Mental health therapists’ expe'
+2026-06-16 14:07:46,925 [INFO] PDF extracted for: 'ICD-11 complex post-traumatic stress disorder: simplifying d'
+2026-06-16 14:07:48,502 [INFO] PDF extracted for: 'MDMA-assisted therapy for moderate to severe PTSD: a randomi'
+2026-06-16 14:07:48,506 [INFO] Upserted: 15, Modified: 0
+2026-06-16 14:08:00,550 [INFO] PDF extracted for: 'MDMA-assisted therapy for moderate to severe PTSD: a randomi'
+2026-06-16 14:08:00,553 [INFO] Upserted: 0, Modified: 0
+2026-06-16 14:08:20,263 [ERROR] article-chat error: 'NoneType' object is not subscriptable
+2026-06-16 14:11:31,363 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 14:11:34,384 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 14:13:00,952 [ERROR] article-chat error: 'NoneType' object is not subscriptable
+2026-06-16 14:13:05,035 [INFO] Loading sentence-transformer model 'all-MiniLM-L6-v2' (first call: ~90 MB download if not cached)
+2026-06-16 14:13:14,419 [WARNING] Embedding scoring failed, using BM25 only: [WinError 10038] An operation was attempted on something that is not a socket
+2026-06-16 14:13:14,419 [INFO] Loading sentence-transformer model 'all-MiniLM-L6-v2' (first call: ~90 MB download if not cached)
+2026-06-16 14:13:30,254 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 14:13:33,357 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 14:14:03,618 [INFO] Loading sentence-transformer model 'all-MiniLM-L6-v2' (first call: ~90 MB download if not cached)
+2026-06-16 14:14:16,528 [INFO] Sentence-transformer model ready.
+2026-06-16 14:14:19,199 [INFO] Fetched 43 candidates → reranked → keeping top 15
+2026-06-16 14:14:19,201 [INFO] Fetched 43 candidates → reranked → keeping top 15
+2026-06-16 14:14:20,512 [INFO] PDF extracted for: 'Traumatic Events and PTSD Among Palestinian Children and Ado'
+2026-06-16 14:14:20,618 [INFO] PDF extracted for: 'Traumatic Events and PTSD Among Palestinian Children and Ado'
+2026-06-16 14:14:23,354 [INFO] PDF extracted for: 'Posttraumatic stress disorder in the World Mental Health Sur'
+2026-06-16 14:14:23,497 [INFO] PDF extracted for: 'Posttraumatic stress disorder in the World Mental Health Sur'
+2026-06-16 14:14:26,634 [INFO] PDF extracted for: 'Shared trauma reality in war: Mental health therapists’ expe'
+2026-06-16 14:14:26,773 [INFO] PDF extracted for: 'Shared trauma reality in war: Mental health therapists’ expe'
+2026-06-16 14:14:27,802 [INFO] PDF extracted for: 'ICD-11 complex post-traumatic stress disorder: simplifying d'
+2026-06-16 14:14:27,866 [INFO] PDF extracted for: 'ICD-11 complex post-traumatic stress disorder: simplifying d'
+2026-06-16 14:14:40,095 [INFO] PDF extracted for: 'MDMA-assisted therapy for moderate to severe PTSD: a randomi'
+2026-06-16 14:14:40,099 [INFO] Upserted: 15, Modified: 0
+2026-06-16 14:14:42,712 [INFO] PDF extracted for: 'MDMA-assisted therapy for moderate to severe PTSD: a randomi'
+2026-06-16 14:14:42,714 [INFO] Upserted: 0, Modified: 0
+2026-06-16 14:14:46,703 [ERROR] article-chat error: 'NoneType' object is not subscriptable
+2026-06-16 14:15:56,121 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 14:17:50,685 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 14:17:53,746 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 14:18:55,391 [INFO] Loading sentence-transformer model 'all-MiniLM-L6-v2' (first call: ~90 MB download if not cached)
+2026-06-16 14:19:08,871 [INFO] Sentence-transformer model ready.
+2026-06-16 14:19:11,410 [INFO] Fetched 43 candidates → reranked → keeping top 15
+2026-06-16 14:19:11,429 [INFO] Fetched 43 candidates → reranked → keeping top 15
+2026-06-16 14:19:12,616 [INFO] PDF extracted for: 'Traumatic Events and PTSD Among Palestinian Children and Ado'
+2026-06-16 14:19:12,881 [INFO] PDF extracted for: 'Traumatic Events and PTSD Among Palestinian Children and Ado'
+2026-06-16 14:19:15,335 [INFO] PDF extracted for: 'Posttraumatic stress disorder in the World Mental Health Sur'
+2026-06-16 14:19:15,473 [INFO] PDF extracted for: 'Posttraumatic stress disorder in the World Mental Health Sur'
+2026-06-16 14:19:16,870 [INFO] PDF extracted for: 'Cognitive Flexibility Predicts PTSD Symptoms: Observational '
+2026-06-16 14:19:17,965 [INFO] Fetched 43 candidates → reranked → keeping top 15
+2026-06-16 14:19:19,046 [INFO] PDF extracted for: 'Shared trauma reality in war: Mental health therapists’ expe'
+2026-06-16 14:19:19,414 [INFO] PDF extracted for: 'Shared trauma reality in war: Mental health therapists’ expe'
+2026-06-16 14:19:20,187 [INFO] PDF extracted for: 'ICD-11 complex post-traumatic stress disorder: simplifying d'
+2026-06-16 14:19:20,334 [INFO] PDF extracted for: 'ICD-11 complex post-traumatic stress disorder: simplifying d'
+2026-06-16 14:19:21,196 [INFO] PDF extracted for: 'Posttraumatic stress disorder in the World Mental Health Sur'
+2026-06-16 14:19:24,157 [INFO] PDF extracted for: 'Shared trauma reality in war: Mental health therapists’ expe'
+2026-06-16 14:19:25,012 [INFO] PDF extracted for: 'ICD-11 complex post-traumatic stress disorder: simplifying d'
+2026-06-16 14:19:28,700 [INFO] PDF extracted for: 'MDMA-assisted therapy for moderate to severe PTSD: a randomi'
+2026-06-16 14:19:28,705 [INFO] Upserted: 15, Modified: 0
+2026-06-16 14:19:29,509 [INFO] PDF extracted for: 'MDMA-assisted therapy for moderate to severe PTSD: a randomi'
+2026-06-16 14:19:29,512 [INFO] Upserted: 0, Modified: 0
+2026-06-16 14:19:36,803 [INFO] PDF extracted for: 'MDMA-assisted therapy for moderate to severe PTSD: a randomi'
+2026-06-16 14:19:36,806 [INFO] Upserted: 0, Modified: 0
+2026-06-16 14:22:49,628 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 14:22:57,645 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 14:23:13,586 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 14:23:20,469 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 14:26:22,521 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 14:28:53,074 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 14:34:20,308 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 14:34:26,388 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 14:34:34,941 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 14:34:44,802 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 14:34:50,796 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 14:35:00,718 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 14:35:09,224 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 14:35:16,276 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 14:35:29,671 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 14:47:49,136 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 14:47:52,530 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 14:48:19,041 [INFO] New session created for user_id: cb2d00ce-afca-42f3-bb18-375e71b5baef
+2026-06-16 14:48:32,368 [INFO] Session deleted for quiz user_id: cb2d00ce-afca-42f3-bb18-375e71b5baef
+2026-06-16 14:48:32,380 [INFO] Deleted 15 articles for user: ce143198-954d-49a4-bbcf-93ab900d1652
+2026-06-16 14:48:32,692 [INFO] New session created for user_id: cb2d00ce-afca-42f3-bb18-375e71b5baef
+2026-06-16 14:48:36,278 [INFO] Session deleted for quiz user_id: cb2d00ce-afca-42f3-bb18-375e71b5baef
+2026-06-16 14:48:36,279 [INFO] Deleted 0 articles for user: ce143198-954d-49a4-bbcf-93ab900d1652
+2026-06-16 14:48:36,598 [INFO] New session created for user_id: cb2d00ce-afca-42f3-bb18-375e71b5baef
+2026-06-16 14:48:39,352 [INFO] Loading sentence-transformer model 'all-MiniLM-L6-v2' (first call: ~90 MB download if not cached)
+2026-06-16 14:48:48,000 [INFO] Session deleted for quiz user_id: cb2d00ce-afca-42f3-bb18-375e71b5baef
+2026-06-16 14:48:48,001 [INFO] Deleted 0 articles for user: ce143198-954d-49a4-bbcf-93ab900d1652
+2026-06-16 14:48:48,622 [INFO] New session created for user_id: cb2d00ce-afca-42f3-bb18-375e71b5baef
+2026-06-16 14:48:49,269 [INFO] Session deleted for quiz user_id: cb2d00ce-afca-42f3-bb18-375e71b5baef
+2026-06-16 14:48:49,270 [INFO] Deleted 0 articles for user: ce143198-954d-49a4-bbcf-93ab900d1652
+2026-06-16 14:48:49,577 [INFO] New session created for user_id: cb2d00ce-afca-42f3-bb18-375e71b5baef
+2026-06-16 14:48:52,033 [INFO] Sentence-transformer model ready.
+2026-06-16 14:48:54,425 [INFO] Fetched 40 candidates → reranked → keeping top 15
+2026-06-16 14:48:54,484 [INFO] Fetched 40 candidates → reranked → keeping top 15
+2026-06-16 14:48:56,798 [INFO] PDF extracted for: 'The epidemiology of traumatic event exposure worldwide: resu'
+2026-06-16 14:48:56,952 [INFO] PDF extracted for: 'Posttraumatic stress disorder in the World Mental Health Sur'
+2026-06-16 14:48:57,163 [INFO] PDF extracted for: 'Mental health and psychosocial wellbeing of Syrians affected'
+2026-06-16 14:48:57,492 [INFO] Fetched 40 candidates → reranked → keeping top 15
+2026-06-16 14:48:57,510 [INFO] PDF extracted for: 'Mental health and psychosocial wellbeing of Syrians affected'
+2026-06-16 14:48:57,722 [INFO] PDF extracted for: 'Posttraumatic stress disorder in the World Mental Health Sur'
+2026-06-16 14:48:57,743 [INFO] PDF extracted for: 'The epidemiology of traumatic event exposure worldwide: resu'
+2026-06-16 14:48:59,237 [INFO] PDF extracted for: 'Post-traumatic growth in mental health recovery: qualitative'
+2026-06-16 14:48:59,683 [INFO] PDF extracted for: 'IMPACT OF HUMAN DISASTERS AND COVID-19 PANDEMIC ON MENTAL HE'
+2026-06-16 14:48:59,820 [INFO] PDF extracted for: 'IMPACT OF HUMAN DISASTERS AND COVID-19 PANDEMIC ON MENTAL HE'
+2026-06-16 14:49:00,315 [INFO] PDF extracted for: 'Posttraumatic stress disorder in the World Mental Health Sur'
+2026-06-16 14:49:00,490 [INFO] PDF extracted for: 'The epidemiology of traumatic event exposure worldwide: resu'
+2026-06-16 14:49:00,600 [INFO] PDF extracted for: 'Mental health and psychosocial wellbeing of Syrians affected'
+2026-06-16 14:49:00,992 [INFO] PDF extracted for: 'Anxiety, depression, traumatic stress and COVID-19-related a'
+2026-06-16 14:49:01,023 [INFO] PDF extracted for: 'Post-traumatic growth in mental health recovery: qualitative'
+2026-06-16 14:49:01,219 [INFO] PDF extracted for: 'Anxiety, depression, traumatic stress and COVID-19-related a'
+2026-06-16 14:49:01,322 [INFO] PDF extracted for: 'Post-traumatic growth in mental health recovery: qualitative'
+2026-06-16 14:49:01,581 [INFO] PDF extracted for: 'Mental health in elite athletes: International Olympic Commi'
+2026-06-16 14:49:02,186 [INFO] PDF extracted for: 'Anxiety, depression, traumatic stress and COVID-19-related a'
+2026-06-16 14:49:02,239 [INFO] PDF extracted for: 'IMPACT OF HUMAN DISASTERS AND COVID-19 PANDEMIC ON MENTAL HE'
+2026-06-16 14:49:02,379 [INFO] PDF extracted for: 'Empirical evidence about recovery and mental health'
+2026-06-16 14:49:02,693 [INFO] PDF extracted for: 'Mental health in elite athletes: International Olympic Commi'
+2026-06-16 14:49:02,939 [INFO] PDF extracted for: 'Impact of COVID-19 lockdown on mental health in Germany: lon'
+2026-06-16 14:49:02,946 [INFO] Upserted: 15, Modified: 0
+2026-06-16 14:49:03,240 [INFO] PDF extracted for: 'Impact of COVID-19 lockdown on mental health in Germany: lon'
+2026-06-16 14:49:03,454 [INFO] PDF extracted for: 'Empirical evidence about recovery and mental health'
+2026-06-16 14:49:03,459 [INFO] Upserted: 0, Modified: 0
+2026-06-16 14:49:04,293 [INFO] PDF extracted for: 'Empirical evidence about recovery and mental health'
+2026-06-16 14:49:04,634 [INFO] PDF extracted for: 'Mental health in elite athletes: International Olympic Commi'
+2026-06-16 14:49:11,276 [INFO] PDF extracted for: 'Impact of COVID-19 lockdown on mental health in Germany: lon'
+2026-06-16 14:49:11,281 [INFO] Upserted: 0, Modified: 0
+2026-06-16 14:49:20,076 [INFO] Generated dynamic question successfully
+2026-06-16 14:49:22,505 [INFO] Extracting persona for user_id: cb2d00ce-afca-42f3-bb18-375e71b5baef
+2026-06-16 14:49:23,326 [INFO] User cb2d00ce-afca-42f3-bb18-375e71b5baef persona: beginner → score 1
+2026-06-16 14:49:29,032 [INFO] Fetched 35 candidates → reranked → keeping top 15
+2026-06-16 14:49:30,628 [INFO] PDF extracted for: 'Posttraumatic stress disorder in the World Mental Health Sur'
+2026-06-16 14:49:30,737 [INFO] PDF extracted for: 'ICD-11 complex post-traumatic stress disorder: simplifying d'
+2026-06-16 14:49:31,564 [INFO] PDF extracted for: 'Cognitive Flexibility Predicts PTSD Symptoms: Observational '
+2026-06-16 14:49:31,833 [INFO] PDF extracted for: 'Shared trauma reality in war: Mental health therapists’ expe'
+2026-06-16 14:49:33,938 [INFO] Fetched 35 candidates → reranked → keeping top 15
+2026-06-16 14:49:35,249 [INFO] PDF extracted for: 'ICD-11 complex post-traumatic stress disorder: simplifying d'
+2026-06-16 14:49:35,894 [INFO] PDF extracted for: 'Posttraumatic stress disorder in the World Mental Health Sur'
+2026-06-16 14:49:36,500 [INFO] PDF extracted for: 'MDMA-assisted therapy for severe PTSD: a randomized, double-'
+2026-06-16 14:49:36,691 [INFO] PDF extracted for: 'Shared trauma reality in war: Mental health therapists’ expe'
+2026-06-16 14:49:36,774 [INFO] PDF extracted for: 'Cognitive Flexibility Predicts PTSD Symptoms: Observational '
+2026-06-16 14:49:40,767 [INFO] PDF extracted for: 'MDMA-assisted therapy for severe PTSD: a randomized, double-'
+2026-06-16 14:49:44,292 [INFO] PDF extracted for: 'MDMA-assisted therapy for moderate to severe PTSD: a randomi'
+2026-06-16 14:49:44,298 [INFO] Upserted: 15, Modified: 0
+2026-06-16 14:49:55,738 [INFO] PDF extracted for: 'MDMA-assisted therapy for moderate to severe PTSD: a randomi'
+2026-06-16 14:49:55,742 [INFO] Upserted: 0, Modified: 0
+2026-06-16 14:56:29,049 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 14:56:36,708 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 14:56:50,661 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-16 14:58:02,604 [INFO] MongoDB Atlas: connection established successfully.

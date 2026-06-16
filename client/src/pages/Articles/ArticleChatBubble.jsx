@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { getApiBase } from "../../config/api.js";
-import { AUTH_TOKEN_KEY } from "../../config/storageKeys.js";
+import { AUTH_TOKEN_KEY, USER_ID_KEY } from "../../config/storageKeys.js";
 import "./ArticleChatBubble.css";
 
 export default function ArticleChatBubble() {
@@ -11,18 +11,20 @@ export default function ArticleChatBubble() {
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
+  const token = localStorage.getItem(AUTH_TOKEN_KEY);
+  const quizUserId = localStorage.getItem(USER_ID_KEY);
+
   useEffect(() => {
-    if (open) {
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-      inputRef.current?.focus();
-    }
-  }, [messages, open]);
+    if (!token || !open) return;
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    inputRef.current?.focus();
+  }, [messages, open, token]);
+
+  if (!token) return null;
 
   const send = async () => {
     const q = input.trim();
     if (!q || loading) return;
-
-    const token = localStorage.getItem(AUTH_TOKEN_KEY);
     const next = [...messages, { role: "user", content: q }];
     setMessages(next);
     setInput("");
@@ -35,7 +37,7 @@ export default function ArticleChatBubble() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ question: q, history: messages }),
+        body: JSON.stringify({ question: q, history: messages, quiz_user_id: quizUserId }),
       });
       const data = await res.json();
       setMessages((prev) => [

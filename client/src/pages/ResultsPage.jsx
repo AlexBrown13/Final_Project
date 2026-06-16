@@ -202,12 +202,14 @@ export default function ResultsPage() {
 
   const onRetake = async () => {
     setRetakeBusy(true)
+    const userId = localStorage.getItem(USER_ID_KEY)
+    const token = localStorage.getItem(AUTH_TOKEN_KEY)
     try {
-      const userId = localStorage.getItem(USER_ID_KEY)
-      const token = localStorage.getItem(AUTH_TOKEN_KEY)
       if (userId) await deleteSession(userId, token)
     } catch {
       /* ignore */
+    } finally {
+      try { sessionStorage.removeItem(`articles_cache_${userId}`) } catch { /* ignore */ }
     }
     clearQuizLocalState()
     setRetakeBusy(false)

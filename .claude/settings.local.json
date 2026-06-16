@@ -8,7 +8,11 @@
       "Bash(pip install *)",
       "Bash(cat vite.config.js)",
       "Bash(cat vite.config.ts)",
-      "Bash(grep -r \"trends\" --include=\"*.jsx\" --include=\"*.js\" client/src/pages --head_limit 5)"
+      "Bash(grep -r \"trends\" --include=\"*.jsx\" --include=\"*.js\" client/src/pages --head_limit 5)",
+      "Skill(code-review)",
+      "Skill(code-review:*)",
+      "Bash(tail -30 status.log)",
+      "Bash(tail -30 server/status.log)"
     ]
   }
 }

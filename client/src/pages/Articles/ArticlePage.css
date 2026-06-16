@@ -555,3 +555,38 @@ html[data-persona="researcher"] .article-card {
     font-size: 1.55rem;
   }
 }
+
+/* ── Skeleton loading cards ──────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+.article-skeleton {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 18px 18px 22px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skeleton-line {
+  height: 13px;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--color-border) 25%,
+    var(--color-bg)     50%,
+    var(--color-border) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.skeleton-line--title  { height: 20px; width: 70%; }
+.skeleton-line--author { width: 40%; }
+.skeleton-line--text   { width: 92%; }
+.skeleton-line--text-short { width: 60%; }

@@ -1,0 +1,376 @@
+# System Architecture — Trauma Education Platform
+
+---
+
+## How the Full System Works (End-to-End)
+
+```
+User takes quiz
+      ↓
+LLM generates a persona profile:
+  { persona, interest_tags, preferred_content, primary_topic, search_query }
+      ↓
+Per-tag queries sent to OpenAlex academic API
+  → 20 candidates fetched per tag, deduplicated
+  → Hybrid BM25 + embedding ranker scores all candidates
+  → content_score stored on each article, top 15 written to MongoDB
+      ↓
+On articles page load:
+  Articles read from MongoDB (no ML at read time)
+  Final score = 0.6 × stored content_score
+             + 0.25 × live click_count (normalised)
+             + 0.15 × recency (publication year)
+  Articles returned in ranked order
+      ↓
+User clicks article → click_count incremented in DB
+  → Article ranks higher on next load (feedback loop, no re-ranking needed)
+```
+
+---
+
+## 1. Adaptive Quiz with LLM Persona Extraction
+
+**Files:** `server/routes/chat_route.py`, `server/utils/chat_prompts.py`
+
+The quiz is a dynamic conversation powered by Groq/LLaMA. Two LLM calls drive it:
+
+**Call 1 — Dynamic question generation:** After each user answer the LLM reads the full conversation history and generates a follow-up question. It probes for knowledge level, specific interest area, and professional background — including the user's primary topic (e.g. children, veterans, October 7 survivors).
+
+**Call 2 — Persona extraction:** When all questions are answered the LLM returns a structured JSON profile:
+```json
+{
+  "persona": "informed learner",
+  "interest_tags": ["PTSD", "children", "October 7"],
+  "preferred_content": "research data and practical support",
+  "primary_topic": "children",
+  "search_query": "trauma AND Israel AND children AND (PTSD OR anxiety OR treatment)"
+}
+```
+The `persona` field determines the visual theme. The `interest_tags` and `search_query` drive the article pipeline.
+
+**Score derivation:** Derived deterministically from persona — `beginner` → 1, `informed learner` → 2, `researcher` → 3. No separate scoring call.
+
+---
+
+## 2. Article Fetching — Per-Tag Query Strategy
+
+**File:** `server/services/openalex_articles.py`
+
+Articles come from **OpenAlex** (200M+ academic works, free API).
+
+**Problem with a single combined query:**
+```
+trauma AND Israel AND (PTSD OR resilience OR depression)
+```
+OpenAlex ranks by its own relevance. The dominant tag takes 13 of 15 slots; other topics are starved.
+
+**Solution — query expansion:** One query per tag:
+```
+trauma AND Israel AND PTSD        → 20 candidates
+trauma AND Israel AND resilience  → 20 candidates
+trauma AND Israel AND depression  → 20 candidates
+```
+The AI-generated `search_query` adds 15 more cross-topic candidates. All results are merged with a `seen` set (O(1) dedup by OpenAlex ID) producing a pool of 40–80 candidates.
+
+**Date filter:** `.filter(publication_year=">2014")` keeps only post-2015 research.
+
+**"Israel" stripped from tags:** Prevents redundant `trauma AND Israel AND Israel` queries.
+
+---
+
+## 3. Candidate Generation + Hybrid BM25 + Embedding Ranking Pipeline
+
+**Files:** `server/services/ranker.py`, `server/services/openalex_articles.py`, `server/routes/articles_route.py`
+
+TF-IDF was replaced because it is purely keyword-based: "soldiers" and "veterans" score zero similarity, "PTSD" and "post-traumatic stress" are completely unrelated to it.
+
+### How BM25 works
+
+BM25 (Best Match 25) improves on TF-IDF in two ways:
+
+**Term saturation:** Extra repetitions of a term barely increase the score after a few mentions — one focused mention is almost as strong as many.
+
+**Document length normalisation:** Shorter, more focused abstracts are not penalised relative to long ones.
+
+BM25 is still keyword-based — "soldiers" and "veterans" still score zero. Embeddings fix that.
+
+### How sentence embeddings work
+
+`all-MiniLM-L6-v2` (~90 MB) encodes the full text of each article into a 384-dimension dense vector capturing semantic meaning:
+
+- "soldiers traumatized by combat" → vector A
+- "veterans with PTSD from war" → vector B  
+- A · B ≈ 1 (near-identical direction) → high cosine similarity
+
+"October 7 survivors" matches "Nova festival victims". "children" matches "youth and adolescents". "EMDR" matches "eye movement desensitization" — without any synonym appearing in the text.
+
+### Hybrid score
+
+```
+content_score = 0.5 × BM25_normalised + 0.5 × embedding_cosine
+```
+
+When BM25 finds no keyword matches (all scores zero), the embedding score is used at full weight so the output stays in [0, 1]. BM25 covers exact acronyms ("EMDR", "CBT", "IDF"); embeddings cover semantic relationships BM25 misses.
+
+### Where the ranker runs
+
+**At ingestion only.** `_rerank()` in `openalex_articles.py` runs the hybrid ranker once on the 40–80 candidate pool, stores `content_score` on each document, and writes only the top 15 to MongoDB.
+
+`GET /api/articles` never runs the ML model. It reads stored `content_score` from MongoDB and applies the final formula purely arithmetically:
+
+```
+final_score = 0.60 × content_score   (stored at ingestion)
+            + 0.25 × click_score     (click_count / 10, capped at 1.0)
+            + 0.15 × recency_score   (publication year, normalised 2000–2026)
+```
+
+This means the articles page loads in milliseconds regardless of model size.
+
+### Thread safety
+
+The `SentenceTransformer` model is loaded lazily on first call and protected by a `threading.Lock` with double-checked locking — only one thread ever loads it.
+
+---
+
+## 4. Click Feedback Loop
+
+**Files:** `server/routes/articles_route.py`, `client/src/pages/Articles/ArticlePage.jsx`
+
+When a user clicks an article link the frontend fires a silent POST to `/api/articles/:id/click`. The server increments `click_count` on that MongoDB document by 1.
+
+On the next page load, the final score formula picks up the updated `click_count`. An article with 4 clicks contributes +0.10; 10+ clicks contributes the maximum +0.25. No ML re-ranking is needed — only the arithmetic changes.
+
+This is the **implicit feedback** pattern from recommender systems: user behaviour (clicks) becomes a relevance signal without any explicit rating.
+
+---
+
+## 5. Article Chat
+
+**Files:** `server/routes/ai_assistant_route.py`, `client/src/pages/Articles/ArticleChatBubble.jsx`
+
+A floating chat bubble on the articles page lets users ask questions about their personalised article set. Powered by Groq/LLaMA.
+
+**How it works:**
+1. All of the user's stored articles (up to 15, abstracts truncated to 400 chars each) are placed in the **system message**, which is static across turns — sent once per API call, not repeated in the user turn.
+2. The AI's tone is calibrated to the user's persona: academic for researchers, simple and warm for beginners.
+3. The last 4 conversation turns are sent as properly structured `user`/`assistant` messages.
+4. The article list is cached server-side per user for 5 minutes — no DB round-trip on every chat message.
+5. `max_tokens` is set to 800, giving the model room to reference multiple articles in a single response.
+
+**Persona lookup:** The server looks up the user's persona using the JWT identity first, then falls back to the `quiz_user_id` supplied in the request body (needed while quiz sessions are stored under a separate UUID).
+
+**Guard:** If the Groq API returns `choices = None` or empty content, the endpoint returns 503 with a clean message instead of crashing.
+
+---
+
+## 6. Session Storage Cache (Articles Page)
+
+**File:** `client/src/pages/Articles/ArticlePage.jsx`
+
+When articles load successfully they are written to `sessionStorage` under `articles_cache_<userId>` with a 5-minute timestamp. Subsequent page visits within that window return immediately from cache — no network request.
+
+The cache is explicitly busted (removed + `bustCache: true` flag) after:
+- Saving a changed topic profile
+- Quiz retake (cleared in `ResultsPage` on the retake flow)
+
+---
+
+## 7. Skeleton Loading Cards
+
+**Files:** `client/src/pages/Articles/ArticlePage.jsx`, `client/src/pages/Articles/ArticlePage.css`
+
+While the articles fetch is in-flight the page renders four shimmer skeleton cards instead of a blank white area. The shimmer is a CSS `linear-gradient` animated with `background-position` — no JavaScript, no layout shift.
+
+---
+
+## 8. Crisis Distress Detection
+
+**Files:** `server/utils/distress.py`, `server/routes/chat_route.py`
+
+Every quiz message is scanned for distress signals before being passed to the AI.
+
+**Weighted keyword scoring:**
+```
+"suicide"     → 10   "want to die"  → 10
+"hopeless"    → 5    "can't go on"  → 5
+"can't cope"  → 3    "overwhelmed"  → 2
+```
+Score ≥ 8 → Severe, ≥ 4 → Moderate, ≥ 2 → Mild. Level 2+ interrupts the quiz and returns Israeli crisis hotlines (ERAN 1201, NATAL 1800-363-363, SAHAR online chat).
+
+Zero false-negatives by design — better to show a hotline to someone who doesn't need it than to miss someone who does.
+
+---
+
+## 9. Tag Quality Filtering
+
+**Files:** `server/routes/chat_route.py`, `server/utils/chat_prompts.py`
+
+Two-layer defence against generic tags:
+
+**Layer 1 — Prompt:** The persona extraction prompt forbids generic tags (`"trauma"`, `"Israel"`, `"mental health"`, etc.) and lists good examples (`"PTSD"`, `"children"`, `"veterans"`, `"October 7"`, `"EMDR"`, `"CBT"`).
+
+**Layer 2 — `_clean_tags()` filter:** Post-processing strips any tag matching a hardcoded generic set, deduplicates case-insensitively, and caps at 5 tags. Falls back to `primary_topic` if all tags are filtered.
+
+---
+
+## 10. Persona-Based UI Theming
+
+**File:** `client/src/index.css`
+
+Three visual themes applied via CSS custom properties on the `<html>` element:
+
+| Persona | Background | Primary | Font | Radius |
+|---|---|---|---|---|
+| Beginner | `#fdf6ef` warm cream | `#c07840` terracotta | 17px | 14px |
+| Informed Learner | `#f4f7f6` neutral | `#41645a` teal | 15px | 10px |
+| Researcher | `#0f1a18` dark | `#4fc3a1` cyan | 15px | 4px |
+
+All spacing, padding, and font sizes use `rem` — changing `html font-size` scales everything automatically. `PersonaProvider` sets `data-persona` on `<html>` and persists the persona to `localStorage` so the theme survives page refresh.
+
+---
+
+## 11. Persona-Based Animation System
+
+**Files:** `client/src/pages/Articles/ArticlePage.css`, `client/src/index.css`
+
+Animations are tiered by persona:
+
+| Feature | Beginner | Informed Learner | Researcher |
+|---|---|---|---|
+| Article cards | Staggered slide-up, 50ms apart | Simple fade | None |
+| Chat bubbles | Slide in from side | Fade in | None |
+| Typing indicator | Breathing pulse | Breathing pulse | Static |
+| Results hero | Scale + rise, children cascade | Fade in | None |
+
+All animations use `cubic-bezier(0.22, 1, 0.36, 1)` (easeOutQuint). A `prefers-reduced-motion` media query in `index.css` neutralises every animation app-wide — critical for a trauma platform where motion can be distressing.
+
+---
+
+## 12. Infrastructure
+
+### Groq Client Singleton
+`client_groq()` previously instantiated a new Groq HTTP client (with its own connection pool) on every request. Now a module-level singleton: `_groq_client = Groq(api_key=...)`. All routes import and reuse the same instance.
+
+### Parallel PDF Fetching
+PDF extraction for up to 15 articles now runs concurrently via `ThreadPoolExecutor(max_workers=8)`. Worst-case time drops from ~150 s (sequential, 10 s timeout each) to ~10 s.
+
+### MongoDB Indexes
+- `chat_collection`: `user_id` (unique), `completed`
+- `token_blocklist_collection`: `revoked_at` (TTL 1 day), `jti` (unique)
+- `articles_collection`: compound `{user_id, openalex_id}` (unique) — makes every article query and upsert use the index instead of a full collection scan
+
+### Ollama Health Check Cache
+`check_ollama()` made a blocking HTTP round-trip (5 s timeout) on every `/ai/assistant` request. Now cached with a 60-second TTL using `time.monotonic()`.
+
+### Rate Limiter
+`Flask-Limiter` was instantiated inside `chat_route.py` without being bound to the Flask app object. Fixed by moving it to `extensions.py` and calling `limiter.init_app(app)` in `app.py`. Chat endpoint now enforces 30 requests/hour/IP.
+
+### MongoDB Startup Crash
+`None` was passed to `MongoClient` when pool-size env vars were missing, crashing silently and leaving `mongo_client` undefined. Fixed with `_int_env()` helper that only passes parameters when present.
+
+### OpenAlex Journal Field Crash
+`work.get("primary_location", {}).get("source", {})` crashed when `primary_location` was `None`. Fixed with `or {}` guards:
+```python
+((work.get("primary_location") or {}).get("source") or {}).get("display_name")
+```
+
+---
+
+## 13. Bug Fixes
+
+### Articles Never Deleted on Quiz Reset
+The delete route called `ObjectId(auth_user_id_str)` on a UUID string — always raised `InvalidId`, silently caught, articles never deleted. Fixed by querying with the string directly.
+
+### Server Crash on Malformed Auth Requests
+`request.get_json()` returns `None` on a missing body. `.get()` on `None` crashed the server. Fixed with `request.get_json() or {}` on register and login routes.
+
+### Article Fetch: POST Failure Fell Through to GET
+If the POST to trigger article ingestion returned a 500, `postRes.ok` was unchecked — the GET ran anyway, returned empty, user saw nothing with no error. Fixed by throwing on `!postRes.ok`.
+
+### Wrong Login Redirect URL
+Articles page redirected to `/login` (doesn't exist) instead of `/auth/login`. React Router fell through to the wildcard and sent users to the quiz.
+
+### Persona Restored on Login (any device)
+Quiz sessions are stored under a device-local UUID (`quiz_user_id`). On first login, the client sends this UUID; the server finds the completed session and returns `score` and `persona_profile`. It also writes `auth_user_id` onto that document. On every subsequent login — from any device — the server looks up by `auth_user_id` first, so no `quiz_user_id` is needed.
+
+If the user retakes the quiz while already logged in, `postChat` sends the JWT; the server extracts the auth identity from it and stores `auth_user_id` on the new session at completion, so the link is established immediately rather than waiting for the next login.
+
+A sparse index on `auth_user_id` in the chat collection keeps both lookups fast.
+
+### OpenAlex Abstract Missing
+`abstract_inverted_index` was not in the default pyalex field set. All articles stored with `abstract: null`. Fixed with an explicit `.select(_SELECT_FIELDS)` on every fetch.
+
+### Article Chat: Abstract `None` Crash (second 500 error)
+`a.get('abstract', 'No abstract.')[:400]` raised `TypeError: 'NoneType' object is not subscriptable` when MongoDB stores `{"abstract": null}` explicitly. `.get(key, default)` returns `None` (not the default) when the key exists but its value is `None` — it only falls back when the key is completely absent. Fixed with `(a.get('abstract') or 'No abstract.')[:400]`.
+
+### Animation Scoping in Vite CSS Modules
+`@keyframes` defined inside a CSS Module get locally hashed names. Global persona-selector overrides cannot target them reliably. Fixed by moving all quiz animations to `index.css` (global) and adding plain global class names alongside module classes.
+
+---
+
+## 14. All Changes Made (by file)
+
+A flat reference of every file changed and exactly what was changed.
+
+### Server
+
+**`server/Requirements.txt`**
+Restored deleted packages: `pyalex`, `pypdf`, `rank-bm25`, `sentence-transformers`, `scikit-learn`, `numpy`, `pandas`, `pytrends`, `semanticscholar`, `requests`. These are required by the ranking and article fetching pipeline and their absence caused import errors at startup.
+
+**`server/services/openalex_articles.py`**
+- Removed hardcoded debug PDF URL that overwrote the parameter on every call (was on line 18)
+- `_rerank()` now stores `doc['content_score'] = float(score)` on each document at ingestion so the ranking result survives into MongoDB and the read path never needs to re-run the model
+- Sequential PDF fetch loop replaced with `ThreadPoolExecutor(max_workers=8)` — worst-case time drops from ~150 s to ~10 s
+- Removed `persona_query` and `cited_by_count` from stored documents (written but never read)
+
+**`server/services/ranker.py`**
+- Added `threading.Lock` with double-checked locking around the `SentenceTransformer` model load — prevents multiple threads from each loading the ~90 MB model simultaneously
+- Fixed hybrid score range: when BM25 finds no keyword matches (all scores zero), returns embedding scores at full weight instead of `0.5 × 0 + 0.5 × emb`
+
+**`server/services/groq.py`**
+- `client_groq()` changed from a factory (new `Groq()` instance per call) to a module-level singleton — eliminates a new HTTP connection pool per request
+
+**`server/services/ai_assistant.py`**
+- `check_ollama()` now caches its result for 60 seconds — previously made a blocking HTTP call (5 s timeout) on every `/ai/assistant` request
+
+**`server/services/mongo.py`**
+- Added compound unique index `{user_id, openalex_id}` on `articles_collection`
+- Added sparse index on `chat_collection.auth_user_id` — supports cross-device persona lookup without indexing documents that predate the feature
+- `MongoClient` pool-size parameters now only passed when env vars are present (`_int_env()` helper) — previously passed `None`, crashing silently on startup
+
+**`server/routes/articles_route.py`**
+- Removed `import numpy as np` and `from services.ranker import hybrid_rank` — ML no longer runs on the read path
+- `rank_articles()` rewritten: reads `content_score` stored at ingestion, applies the weighted formula arithmetically — page load no longer blocks on the embedding model
+- Added `"content_score": 1` to the MongoDB projection in `get_articles()` so the field is actually returned to the sort function
+
+**`server/routes/ai_assistant_route.py`**
+- Added `return jsonify({"error": "Assistant unavailable."}), 500` to the bare `except` in `ai_assistant()` (was silently swallowing errors)
+- Fixed crash when Groq returns `choices = None`: `choices = response.choices or []` before indexing
+- Fixed IDOR: `quiz_user_id` from the request body was used directly to look up persona without verifying the caller's identity — now uses JWT identity first, body value only as fallback
+- Fixed `TypeError: 'NoneType' is not subscriptable`: replaced `a.get('abstract', 'No abstract.')[:400]` with `(a.get('abstract') or 'No abstract.')[:400]`
+- Added 5-minute in-process TTL cache for article DB reads (`_articles_cache`) — no DB round-trip on every chat message
+- Moved articles context and tone into the system message (static per call); conversation history sent as structured `user`/`assistant` turns
+- Removed arbitrary `[:10]` cap — AI now sees all stored articles (up to 15)
+- Increased `max_tokens` from 600 to 800
+
+**`server/routes/auth_route.py`**
+- Login now queries by `auth_user_id` first (works from any device), falls back to `quiz_user_id` from the request body
+- When session is found via `quiz_user_id`, writes `auth_user_id` to that document so future logins skip the fallback
+
+**`server/routes/chat_route.py`**
+- At quiz completion, if `Authorization: Bearer` header is present (user is already logged in), extracts `auth_user_id` from the JWT and stores it on the session document immediately — covers the retake-from-new-device case
+
+### Client
+
+**`client/src/utils/api.js`**
+- `postChat()` now includes `Authorization: Bearer <token>` when the user is logged in, so the server can link the quiz session to the auth identity at completion
+
+**`client/src/pages/Articles/ArticleChatBubble.jsx`**
+- Fixed React Rules of Hooks violation: `useEffect` was declared after a conditional `return null`, crashing in React strict mode
+- Added `quiz_user_id` to the POST body so the persona fallback lookup in `article-chat` works
+
+**`client/src/pages/ResultsPage.jsx`**
+- Session storage cache clear moved to a `finally` block so it runs even when the session-delete API call fails
+
+**`client/src/index.css`**
+- Researcher persona base font size changed from 13 px to 15 px

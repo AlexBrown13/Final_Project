@@ -289,17 +289,33 @@ def chat():
     score = PERSONA_SCORE.get(persona_profile.get("persona", "beginner"), 1)
     logger.info(f"User {user_id} persona: {persona_profile.get('persona')} → score {score}")
 
+    # If the request carries a valid JWT (logged-in user retaking quiz),
+    # link this session to their auth identity so any future device can restore it.
+    auth_user_id = None
+    try:
+        from flask_jwt_extended import decode_token
+        auth_header = request.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            decoded = decode_token(auth_header.split(" ", 1)[1])
+            auth_user_id = decoded.get("sub")
+    except Exception:
+        pass
+
+    completion_fields = {
+        "step": step,
+        "conversation": conversation,
+        "score": score,
+        "persona_profile": persona_profile,
+        "completed": True,
+    }
+    if auth_user_id:
+        completion_fields["auth_user_id"] = auth_user_id
+
     try:
         # Single write to DB — full conversation stored only at completion
         chat_collection.update_one(
             {"user_id": user_id},
-            {"$set": {
-                "step": step,
-                "conversation": conversation,
-                "score": score,
-                "persona_profile": persona_profile,
-                "completed": True
-            }}
+            {"$set": completion_fields}
         )
     except Exception as e:
         logger.error(f"Failed to save final score: {e}")

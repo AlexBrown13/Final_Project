@@ -3,14 +3,13 @@ from groq import Groq
 from utils.logger import logger
 
 # ──────────────────────────────────────────────
-# GROQ CLIENT
+# GROQ CLIENT — singleton, one connection pool per process
 # ──────────────────────────────────────────────
 
 def client_groq():
-    api_key = os.environ["GROQ_API_KEY"]
-    if not api_key:
-        raise ValueError("Missing api_key")
-    return Groq(api_key=api_key)
+    return _groq_client
+
+_groq_client = Groq(api_key=os.environ["GROQ_API_KEY"])
 
 
 # ──────────────────────────────────────────────

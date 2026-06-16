@@ -23,7 +23,7 @@
 /* Typography scaling — all rem values in the app scale automatically */
 html { font-size: 17px; }
 html[data-persona="informed-learner"] { font-size: 15px; }
-html[data-persona="researcher"] { font-size: 13px; }
+html[data-persona="researcher"] { font-size: 15px; }
 
 /* Informed learner: Granite — more serious, denser */
 html[data-persona="informed-learner"] {

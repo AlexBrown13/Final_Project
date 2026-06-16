@@ -105,9 +105,27 @@ export default function ArticlePage() {
 
   const getArticleUrlValue = (article) => article?.url ?? article?.doi ?? null;
 
-  const fetchArticles = useCallback(async () => {
+  const cacheKey = userId ? `articles_cache_${userId}` : null;
+  const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+  const fetchArticles = useCallback(async ({ bustCache = false } = {}) => {
     const ui = getUiStrings(locale);
     if (!token || !userId) { setError(ui.articlesErrorAuth); return; }
+
+    // Serve from sessionStorage if fresh and not explicitly busting
+    if (!bustCache && cacheKey) {
+      try {
+        const raw = sessionStorage.getItem(cacheKey);
+        if (raw) {
+          const { articles: cached, personaProfile: cachedProfile, ts } = JSON.parse(raw);
+          if (Date.now() - ts < CACHE_TTL) {
+            setArticles(cached);
+            setPersonaProfile(cachedProfile ?? null);
+            return;
+          }
+        }
+      } catch { /* ignore */ }
+    }
 
     setLoading(true);
     setError("");
@@ -151,18 +169,27 @@ export default function ArticlePage() {
         if (res2.status === 401) { redirectToLogin(); return; }
 
         const data2 = await res2.json();
-        setArticles(Array.isArray(data2.articles) ? data2.articles : []);
-        setPersonaProfile(data2.persona_profile ?? null);
+        const freshArticles = Array.isArray(data2.articles) ? data2.articles : [];
+        const freshProfile = data2.persona_profile ?? null;
+        setArticles(freshArticles);
+        setPersonaProfile(freshProfile);
+        if (cacheKey && freshProfile?.interest_tags?.length) {
+          try { sessionStorage.setItem(cacheKey, JSON.stringify({ articles: freshArticles, personaProfile: freshProfile, ts: Date.now() })); } catch { /* ignore */ }
+        }
       } else {
+        const profile = data.persona_profile ?? null;
         setArticles(normalizedArticles);
-        setPersonaProfile(data.persona_profile ?? null);
+        setPersonaProfile(profile);
+        if (cacheKey && profile?.interest_tags?.length) {
+          try { sessionStorage.setItem(cacheKey, JSON.stringify({ articles: normalizedArticles, personaProfile: profile, ts: Date.now() })); } catch { /* ignore */ }
+        }
       }
     } catch (err) {
       setError(err.message || ui.articlesErrorFetch);
     } finally {
       setLoading(false);
     }
-  }, [token, userId, locale, redirectToLogin]);
+  }, [token, userId, locale, redirectToLogin, cacheKey]);
 
   useEffect(() => {
     if (token && userId) fetchArticles();
@@ -191,7 +218,8 @@ export default function ArticlePage() {
         throw new Error(data?.error || s.profileSaveError);
       }
 
-      await fetchArticles();
+      if (cacheKey) { try { sessionStorage.removeItem(cacheKey); } catch { /* ignore */ } }
+      await fetchArticles({ bustCache: true });
       setActiveTab("articles");
     } catch (err) {
       setProfileError(err.message || s.profileSaveError);
@@ -231,6 +259,19 @@ export default function ArticlePage() {
 
         {activeTab === "articles" && (
           <>
+            {loading && (
+              <section className="article-list">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="article-skeleton">
+                    <div className="skeleton-line skeleton-line--title" />
+                    <div className="skeleton-line skeleton-line--author" />
+                    <div className="skeleton-line skeleton-line--text" />
+                    <div className="skeleton-line skeleton-line--text-short" />
+                    <div className="skeleton-line skeleton-line--text" />
+                  </div>
+                ))}
+              </section>
+            )}
             {!loading && articles.length === 0 && !error && (
               <p className="empty-state">{s.articlesEmpty}</p>
             )}

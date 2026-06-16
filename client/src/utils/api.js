@@ -102,9 +102,12 @@ export async function logoutUser(token) {
  */
 export async function postChat(userId, message, messages = [], locale = "en") {
   const base = getApiBase();
+  const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
+  const headers = { "Content-Type": "application/json" };
+  if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
   const res = await fetch(`${base}/chat`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify({ user_id: userId, message, messages, locale }),
   });
   const data = await parseJsonSafe(res);

@@ -47,14 +47,15 @@ Persona definitions — read carefully before choosing:
 - Motivated by personal experience, emotional connection, or general curiosity
 - Asks "what is trauma" level questions; unfamiliar with clinical terminology
 - Wants accessible explanations, personal stories, and practical support resources
-- Signals: "I went through something", "I want to understand", "for myself", "a family member"
+- Signals: "I went through something", "I want to understand", "for myself", "a family member",
+  "I'm new to this", "I don't know much", "I'm just curious", "I heard about it", "I want to learn"
 
 "informed learner"
 - Some background: student, educator, social worker, journalist, or engaged layperson
 - Knows basic concepts (trauma, PTSD, resilience) but lacks clinical or research depth
 - Interested in BOTH human stories and some data or research
 - Wants to apply knowledge — to help others, complete coursework, or inform their work
-- Signals: "I study", "I work with people", "I teach", "for my job", "I want to learn more"
+- Signals: "I study", "I work with people", "I teach", "for my job", "I work in mental health"
 
 "researcher"
 - Strong academic or clinical background: psychologist, researcher, doctor, policy analyst
@@ -64,10 +65,12 @@ Persona definitions — read carefully before choosing:
 - Signals: "I'm researching", "for my thesis", "clinical data", "epidemiological", "October 7 prevalence"
 
 Edge-case rules:
+- If the user says they are new, unfamiliar, or just curious with no professional context → always "beginner"
 - A social worker or educator who knows some terms but focuses on human stories → "informed learner"
-- Someone who uses academic words they cannot define or explain → "beginner" or "informed learner"
+- Someone who uses academic words they cannot define or explain → "beginner"
 - A professional writing casually → judge by WHAT they want (depth + data = researcher), not style
-- When in doubt between "beginner" and "informed learner" → choose "informed learner"
+- When in doubt between "beginner" and "informed learner" → choose "beginner" unless the user
+  clearly demonstrated prior knowledge or a professional/academic context
 - When in doubt between "informed learner" and "researcher" → choose "informed learner" unless
   the user clearly stated research, clinical, or academic goals
 
