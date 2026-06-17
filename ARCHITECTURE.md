@@ -2,28 +2,120 @@
 
 ---
 
-## How the Full System Works (End-to-End)
+## Full System Pipeline (End-to-End)
 
 ```
-User takes quiz
+┌──────────────────────────────────────────────────────────────────────────┐
+│  USER VISITS APP                                                         │
+└──────────────────────────────────────────────────────────────────────────┘
       ↓
-LLM generates a persona profile:
-  { persona, interest_tags, preferred_content, primary_topic, search_query }
+┌──────────────────────────────────────────────────────────────────────────┐
+│  AUTH LAYER  [auth_route.py]                                             │
+│                                                                          │
+│  Register / Login → JWT issued                                           │
+│  On login: look up quiz session by auth_user_id  (any device)           │
+│            fallback to quiz_user_id from request body (first login)      │
+│            write auth_user_id onto session for future cross-device use   │
+│  → If session found: persona + score returned immediately                │
+│  → New user: continue to quiz ↓                                         │
+└──────────────────────────────────────────────────────────────────────────┘
       ↓
-Per-tag queries sent to OpenAlex academic API
-  → 20 candidates fetched per tag, deduplicated
-  → Hybrid BM25 + embedding ranker scores all candidates
-  → content_score stored on each article, top 15 written to MongoDB
+┌──────────────────────────────────────────────────────────────────────────┐
+│  QUIZ  [chat_route.py + chat_prompts.py]                                 │
+│                                                                          │
+│  Every message → distress.py BEFORE reaching LLM                        │
+│    weighted keyword score ≥ 4 → interrupt quiz immediately               │
+│    return Israeli crisis hotlines (ERAN 1201, NATAL, SAHAR)             │
+│                                                                          │
+│  LLM Call 1 (per turn, Groq/LLaMA)                                      │
+│    reads full conversation history                                       │
+│    generates next question probing: knowledge level, interest area,      │
+│    professional background, primary topic                                │
+│                                                                          │
+│  LLM Call 2 (once, at completion)                                        │
+│    extracts structured persona profile:                                  │
+│    {                                                                     │
+│      persona:           "beginner" | "informed learner" | "researcher"  │
+│      interest_tags:     ["PTSD", "children", "October 7"]               │
+│      preferred_content: "research data and practical support"            │
+│      primary_topic:     "children"                                       │
+│      search_query:      "trauma AND Israel AND children AND ..."         │
+│    }                                                                     │
+│    _clean_tags() strips generic tags, deduplicates, caps at 5           │
+│    score derived: beginner→1  informed learner→2  researcher→3          │
+│    if user is logged in: auth_user_id written to session immediately     │
+└──────────────────────────────────────────────────────────────────────────┘
+      ↓                                          ↓ (runs in parallel)
+┌──────────────────────────────────┐  ┌─────────────────────────────────────┐
+│  ARTICLE PIPELINE                │  │  UI THEMING  [index.css +           │
+│                                  │  │  PersonaProvider]                   │
+│  FETCH  [openalex_articles.py]   │  │                                     │
+│  One query per interest_tag:     │  │  PersonaProvider sets data-persona  │
+│    "trauma AND Israel AND PTSD"  │  │  on <html>, persists to localStorage│
+│      → 20 candidates             │  │                                     │
+│    "trauma AND Israel AND        │  │  CSS custom properties apply theme: │
+│      children"  → 20 candidates  │  │  beginner       → warm cream,       │
+│    (repeat per tag)              │  │                    terracotta, 17px  │
+│  + AI search_query → 15 more     │  │  informed learner → neutral,        │
+│  Deduplicated by OpenAlex ID     │  │                    teal, 15px        │
+│  Filtered: pub year > 2014       │  │  researcher     → dark, cyan, 15px  │
+│  Pool: 40–80 candidates          │  │                                     │
+│      ↓                           │  │  Animations tiered by persona:      │
+│  RANK  [ranker.py]               │  │  beginner       → staggered slide-up│
+│  Runs ONCE at ingestion          │  │  informed learner → fade            │
+│  BM25: keyword match,            │  │  researcher     → none              │
+│    term saturation,              │  │  prefers-reduced-motion disables    │
+│    length normalisation          │  │  all animations app-wide            │
+│  Embeddings: all-MiniLM-L6-v2   │  └─────────────────────────────────────┘
+│    384-dim cosine similarity     │
+│    "veterans" ↔ "soldiers"       │
+│    "October 7" ↔ "Nova victims"  │
+│  content_score =                 │
+│    0.5 × BM25 + 0.5 × embedding │
+│  Top 15 written to MongoDB       │
+│  with content_score stored       │
+│  (model behind threading.Lock)   │
+└──────────────────────────────────┘
       ↓
-On articles page load:
-  Articles read from MongoDB (no ML at read time)
-  Final score = 0.6 × stored content_score
-             + 0.25 × live click_count (normalised)
-             + 0.15 × recency (publication year)
-  Articles returned in ranked order
-      ↓
-User clicks article → click_count incremented in DB
-  → Article ranks higher on next load (feedback loop, no re-ranking needed)
+┌──────────────────────────────────────────────────────────────────────────┐
+│  ARTICLES PAGE  [ArticlePage.jsx + articles_route.py]                    │
+│                                                                          │
+│  Client checks sessionStorage cache (articles_cache_<userId>)            │
+│    HIT (< 5 min) → return immediately, no network request               │
+│    MISS → render skeleton shimmer cards → fetch from server              │
+│                                                                          │
+│  GET /api/articles                                                       │
+│    reads content_score from MongoDB  (no ML at read time)               │
+│    final_score = 0.60 × content_score      (stored at ingestion)        │
+│               + 0.25 × click_count/10      (capped at 1.0)              │
+│               + 0.15 × recency_score       (pub year, 2000–2026)        │
+│    returns articles sorted by final_score                                │
+│                                                                          │
+│  Cache written to sessionStorage with 5-min timestamp                    │
+│  Cache busted on: topic profile save, quiz retake                        │
+└──────────────────────────────────────────────────────────────────────────┘
+      ↓                                          ↓
+┌──────────────────────────────────┐  ┌─────────────────────────────────────┐
+│  CLICK FEEDBACK LOOP             │  │  ARTICLE CHAT                       │
+│  [articles_route.py +            │  │  [ai_assistant_route.py +           │
+│   ArticlePage.jsx]               │  │   ArticleChatBubble.jsx]            │
+│                                  │  │                                     │
+│  User clicks article link        │  │  Floating chat bubble on page       │
+│  → silent POST                   │  │                                     │
+│    /api/articles/:id/click       │  │  System message (static per call):  │
+│  → MongoDB click_count += 1      │  │    all 15 stored articles           │
+│                                  │  │    abstracts truncated to 400 chars │
+│  Next page load:                 │  │    tone set by persona:             │
+│    updated click_count raises    │  │    researcher → academic            │
+│    that article's final_score    │  │    beginner   → warm + simple       │
+│  No ML re-ranking — arithmetic   │  │                                     │
+│  only (implicit feedback loop)   │  │  Last 4 turns as user/assistant     │
+│                                  │  │  Articles cached server-side 5 min  │
+│                                  │  │  Persona: JWT identity first,       │
+│                                  │  │    quiz_user_id fallback            │
+│                                  │  │  max_tokens: 800                    │
+│                                  │  │  Guard: choices=None → 503          │
+└──────────────────────────────────┘  └─────────────────────────────────────┘
 ```
 
 ---
