@@ -116,6 +116,36 @@
 │                                  │  │  max_tokens: 800                    │
 │                                  │  │  Guard: choices=None → 503          │
 └──────────────────────────────────┘  └─────────────────────────────────────┘
+      ↓
+┌──────────────────────────────────────────────────────────────────────────┐
+│  DATA EXPLORATION PAGES  (all behind Navbar, no auth required)           │
+│                                                                          │
+│  /map              → CallsMapPage.jsx                                    │
+│    Animated choropleth — ERAN/NATAL crisis call records from MongoDB     │
+│    Filters: date range, gender, age group (5 buckets)                   │
+│    Two API endpoints:                                                    │
+│      GET /api/v1/calls-map          — static count per city             │
+│      GET /api/v1/calls-map-aggregated — month-by-month time series       │
+│    Playback mode: steps through timeline snapshots automatically         │
+│    MapContext holds shared filter state across map + filter drawer       │
+│                                                                          │
+│  /graphs/israel    → IsraelWarPage.jsx      GET /graphs/israel          │
+│  /graphs/addictions → AddictionsPage.jsx    GET /graphs/addictions       │
+│  /graphs/health    → HealthPage.jsx         GET /graphs/health           │
+│  /graphs/sleep     → SleepPage.jsx          GET /graphs/sleep            │
+│  /graphs/traffic   → TrafficAccidentsPage.jsx  GET /graphs/traffic       │
+│  /graphs/domestic-violence → DomesticViolencePage.jsx                   │
+│    All backed by graph_data.py — static JSON datasets compiled from      │
+│    State Comptroller, Ministry of Health, academic sources               │
+│    Rendered by EmbeddedChart.jsx (bar / donut / stacked-area / etc.)    │
+│                                                                          │
+│  /trends           → ExploreSearchPage.jsx  GET /api/trends             │
+│    Area + line charts (Recharts) of Google Trends data stored in MongoDB │
+│    google_trends.py runs as a standalone script (cron/manual) to        │
+│    refresh the trends_collection with pytrends (IL geo, 1-month window) │
+│    Retry on 429: tenacity exponential back-off, 3 attempts              │
+│    Bulk-upsert by date keeps collection idempotent                       │
+└──────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -466,3 +496,155 @@ Restored deleted packages: `pyalex`, `pypdf`, `rank-bm25`, `sentence-transformer
 
 **`client/src/index.css`**
 - Researcher persona base font size changed from 13 px to 15 px
+
+---
+
+## 15. Calls Map System
+
+**Files:** `server/routes/map_route.py`, `server/services/mongo.py` (`calls_collection`), `client/src/pages/CallsMapPage.jsx`, `client/src/components/map/MapView.jsx`, `client/src/components/map/InputsFilter.jsx`, `client/src/context/MapContext.jsx`
+
+The calls map visualises historical ERAN/NATAL crisis-line call records stored in `calls_collection`. Each document holds `city`, `date`, `datetime`, `latitude`, `longitude`, `gender`, `age`.
+
+**Two API endpoints:**
+
+`GET /api/v1/calls-map?from=YYYY-MM-DD&to=YYYY-MM-DD&gender=male&gender=female`
+— Returns one point per city with a total `count`. Accepts repeated or comma-separated `gender` params; normalises English aliases (`male`/`m`) to Hebrew DB values (`זכר`/`נקבה`).
+
+`GET /api/v1/calls-map-aggregated?from=…&to=…&gender=…&ages=1,2,3`
+— Groups by `(city, year, month)` using a MongoDB aggregation pipeline. Age groups are bucketed into 5 ranges (0–12, 13–17, 18–24, 25–40, 40+). Date strings are parsed into `dateObj` via `$dateFromString` inside the pipeline so string-stored dates can be range-queried. Returns month-by-month time series for timeline playback.
+
+`GET /api/calls-map-dates` — returns `minDate`/`maxDate` to bound the date-range slider.
+
+**Client timeline playback:** `CallsMapPage` builds a sorted array of `(year, month)` steps from the aggregated response, then steps through them on an interval when play is active. `MapContext` holds all shared filter state (gender, age groups, date range, step index, aggregated cache) so the filter drawer and map view stay in sync without prop-drilling.
+
+---
+
+## 16. Data Visualisation Graph Pages
+
+**Files:** `server/routes/graphs_route.py`, `server/utils/graph_data.py`, `client/src/components/EmbeddedChart.jsx`, `client/src/components/YouTubePlaceholder.jsx`, `client/src/pages/IsraelWarPage.jsx`, `AddictionsPage.jsx`, `HealthPage.jsx`, `SleepPage.jsx`, `TrafficAccidentsPage.jsx`, `DomesticViolencePage.jsx`
+
+Six static data pages serve pre-compiled datasets via `graphs_route.py`. Each endpoint (`/graphs/israel`, `/graphs/addictions`, etc.) imports and returns the matching constant from `graph_data.py` as JSON.
+
+`graph_data.py` contains Python dicts for six topic areas (Israel war mental health, addictions, health system, sleep, traffic accidents, domestic violence). Each entry carries bilingual labels (`labels_he`/`labels_en`), `chart_type` (`bar`, `donut`, `stacked_area`, `stacked_bar`, etc.), numeric `values`, a `source` citation, and bilingual `explain_he`/`explain_en` paragraphs.
+
+`EmbeddedChart.jsx` reads the `chart_type` field and selects the appropriate Recharts component. `YouTubePlaceholder.jsx` renders lazy-loaded YouTube iframes in the score content pages.
+
+The data is static by design — sourced from the 2025 State Comptroller Report, Ministry of Health estimates, and peer-reviewed literature. No DB queries are needed at read time.
+
+---
+
+## 17. Google Trends Ingestion
+
+**File:** `server/services/google_trends.py`
+
+A standalone script (run manually or on a cron schedule) that pulls Google Trends data for Israeli trauma-related search terms into MongoDB.
+
+**Flow:**
+1. Connects to Google Trends via `pytrends` (`TrendReq(hl='en-US', tz=180)`).
+2. Iterates over `GROUPS` dict — each group is a list of Hebrew search terms (currently `Trauma_Index: ["טראומה"]`). Fetches `today 1-m` window, `geo=IL`.
+3. Retries on `ResponseError` (429/503) using `tenacity` exponential back-off (2× multiplier, 10–60 s, 3 attempts).
+4. Averages keyword scores within each group into a single index column.
+5. Bulk-upserts into `trends_collection` by `date` — idempotent, so re-running never duplicates rows.
+
+`GET /api/trends` returns all rows with `_id` stripped. The client reads `features` (all non-date keys) from the first row to know which series to render.
+
+---
+
+## 18. Results Page
+
+**Files:** `client/src/pages/ResultsPage.jsx`, `client/src/components/results/BeginnerHero.jsx`, `InformedHero.jsx`, `ResearcherHero.jsx`, `BeginnerPersonaCard.jsx`, `InformedPersonaCard.jsx`, `ResearcherPersonaCard.jsx`, `client/src/components/content/Score1Content.jsx`, `Score2Content.jsx`, `Score3Content.jsx`
+
+`ResultsPage` is the landing page after quiz completion or login redirect. It resolves the score from three sources in priority order:
+1. React Router `location.state.score` — passed directly from the quiz on completion.
+2. `localStorage` (`SCORE_CACHE_KEY`) — survives a hard refresh mid-session.
+3. `GET /result/<user_id>` — fetched from MongoDB when neither of the above is available (e.g. direct URL navigation).
+
+The score (1/2/3) determines which **Hero** component renders at the top and which **PersonaCard** explains the user's profile. These are separate components so each persona can have entirely different markup and copy.
+
+Below the hero, the matching **Score1/2/3Content** component renders the full educational content for that level — bilingual (he/en), with embedded charts (`EmbeddedChart`) and lazy YouTube videos (`YouTubePlaceholder`).
+
+**Retake flow:** The retake button calls `DELETE /session/<user_id>` (which removes the quiz session and associated articles), clears `sessionStorage` article cache in a `finally` block, then navigates to `/`.
+
+---
+
+## 19. Session Score Recovery
+
+**File:** `server/routes/chat_score_route.py`
+
+`GET /result/<user_id>` fetches the final score and `persona_profile` for a completed quiz session identified by its UUID. Returns 400 if the session exists but the quiz is not yet finished. Used by `ResultsPage` to recover state after a hard page refresh when the in-memory score is gone.
+
+---
+
+## 20. Session Delete
+
+**File:** `server/routes/delete_session.py`
+
+`DELETE /session/<user_id>` — JWT optional. Deletes the quiz session document by UUID (`user_id`). If a valid JWT is present, also deletes all articles stored under that `auth_user_id`. Articles are only cleaned up when auth is present because they are keyed by the MongoDB ObjectId, not the quiz UUID.
+
+---
+
+## 21. JWT Blocklist
+
+**File:** `server/jwt_blocklist.py`
+
+Revoked JWTs are persisted to `token_blocklist_collection` so they remain invalid across server restarts. An in-memory `set` acts as a fast-path cache: `is_jti_revoked` checks the cache first and only queries MongoDB on a miss, then populates the cache. `revoke_jti` writes to both. The MongoDB TTL index on `revoked_at` auto-expires entries after 1 day, bounding collection growth.
+
+---
+
+## 22. Direction / Locale System
+
+**Files:** `client/src/context/DirectionProvider.jsx`, `client/src/context/directionContext.js`, `client/src/context/useDirection.js`, `client/src/config/storageKeys.js`, `client/src/config/uiStrings.js`
+
+The app is fully bilingual (Hebrew / English). `DirectionProvider` reads the preferred locale from `localStorage` on mount (with a legacy key migration from `TEXT_DIR_KEY` to `UI_LOCALE_KEY`). On locale change it sets `dir` and `lang` attributes on `<html>` so all CSS RTL/LTR rules apply automatically and the browser spell-checker uses the right language.
+
+`getUiStrings(locale)` returns the full string table for the selected locale. Components call `useDirection()` to get `{ dir, locale, setLocale, toggleLocale }` — the Navbar toggle calls `toggleLocale`.
+
+---
+
+## 23. Application Routing
+
+**File:** `client/src/App.jsx`
+
+React Router v6 `<Routes>` tree. All routes are flat (no nested layouts). `GuestRoute` wraps `/auth/login` and `/auth/register` — redirects authenticated users away. All unknown paths fall through to `<Navigate to="/" replace />`.
+
+Three React context providers wrap the entire tree: `PersonaProvider` (outermost), `DirectionProvider`, `MapProvider`.
+
+**Route map:**
+
+| Path | Component |
+|---|---|
+| `/` | `QuizPage` |
+| `/results` | `ResultsPage` |
+| `/articles` | `ArticlePage` |
+| `/map` | `CallsMapPage` |
+| `/graphs/israel` | `IsraelWarPage` |
+| `/graphs/addictions` | `AddictionsPage` |
+| `/graphs/health` | `HealthPage` |
+| `/graphs/sleep` | `SleepPage` |
+| `/graphs/traffic` | `TrafficAccidentsPage` |
+| `/graphs/domestic-violence` | `DomesticViolencePage` |
+| `/trends` | `ExploreSearchPage` |
+| `/auth/login` | `Login` (GuestRoute) |
+| `/auth/register` | `Register` (GuestRoute) |
+
+---
+
+## 24. MongoDB Collections
+
+| Collection | Purpose | Key indexes |
+|---|---|---|
+| `conversation` | Quiz sessions (one per user UUID) | `user_id` (unique), `completed`, `auth_user_id` (sparse) |
+| `users` | Auth accounts | — |
+| `articles` | Ranked articles per user | `{user_id, openalex_id}` compound unique |
+| `calls` | Crisis-line call records for the map | queried by `date` / `dateObj`, `gender`, `age` |
+| `trends` | Google Trends time series | `date` (unique) |
+| `token_blocklist` | Revoked JWT JTIs | `revoked_at` (TTL 1 day), `jti` (unique) |
+| `ai_assistant` | (reserved) | — |
+
+---
+
+## 25. Health Check
+
+**File:** `server/routes/keep_alive.py`
+
+`GET /health` returns `{"status": "ok"}`. Used by uptime monitors and deployment health checks to confirm the Flask server is accepting connections.
