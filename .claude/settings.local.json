@@ -12,7 +12,11 @@
       "Skill(code-review)",
       "Skill(code-review:*)",
       "Bash(tail -30 status.log)",
-      "Bash(tail -30 server/status.log)"
+      "Bash(tail -30 server/status.log)",
+      "Bash(graphify query *)",
+      "Bash(git restore *)",
+      "Bash(graphify merge-graphs *)",
+      "Bash(rm -rf graphify_temp/)"
     ]
   }
 }
