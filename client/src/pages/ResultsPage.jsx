@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import BackendDown from '../components/BackendDown.jsx'
 import BeginnerResults from '../components/results/BeginnerResults.jsx'
+import InformedResults from '../components/results/InformedResults.jsx'
 import '../components/results/results-components.css'
 import {
   USER_ID_KEY,
@@ -58,10 +59,6 @@ function scoreToPersona(s) {
   return 'beginner'
 }
 
-
-function InformedResults() {
-  return null
-}
 
 function ResearcherResults() {
   return null

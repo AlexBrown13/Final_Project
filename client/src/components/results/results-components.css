@@ -623,3 +623,92 @@
   color: #9aa090;
   text-align: end;
 }
+
+/* ─── Persona 2 — Informed Learner ─────────────────────────────────────────── */
+
+@keyframes p2shimmer {
+  0%   { background-position: -360px 0; }
+  100% { background-position:  360px 0; }
+}
+@keyframes p2fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes p2rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.p2-skel {
+  background: linear-gradient(90deg, #e3e7e4 0%, #eef1ee 50%, #e3e7e4 100%);
+  background-size: 720px 100%;
+  animation: p2shimmer 1.6s infinite linear;
+  border-radius: 5px;
+}
+
+.p2-stripe {
+  background-image: repeating-linear-gradient(135deg, #d6ddd9 0 10px, #dfe5e1 10px 20px);
+  position: relative;
+}
+
+.p2-card {
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+.p2-card:hover {
+  border-color: #4b645f;
+  box-shadow: 0 10px 30px -24px rgba(35, 42, 40, .5);
+}
+
+.p2-link:hover { color: #4b645f; }
+
+/* Nav */
+.p2-nav {
+  animation: p2fade .5s ease both;
+}
+
+/* Hero children stagger */
+.p2-hero > * {
+  opacity: 0;
+  animation: p2rise .6s cubic-bezier(.2, .6, .3, 1) both;
+}
+.p2-hero > *:nth-child(1) { animation-delay: .1s; }
+.p2-hero > *:nth-child(2) { animation-delay: .24s; }
+.p2-hero > *:nth-child(3) { animation-delay: .38s; }
+.p2-hero > *:nth-child(4) { animation-delay: .5s; }
+
+/* Reveal (main sections) */
+.p2-reveal > * {
+  opacity: 0;
+  animation: p2rise .6s cubic-bezier(.2, .6, .3, 1) both;
+}
+.p2-reveal > *:nth-child(1) { animation: none; opacity: 1; transform: none; }
+.p2-reveal > *:nth-child(2) { animation-delay: .78s; }
+.p2-reveal > *:nth-child(3) { animation-delay: .92s; }
+.p2-reveal > *:nth-child(4) { animation-delay: 1.04s; }
+
+/* Feed column headers */
+.p2-feed-head {
+  opacity: 0;
+  animation: p2rise .55s cubic-bezier(.2, .6, .3, 1) both;
+  animation-delay: .34s;
+}
+
+/* Feed article cards */
+.p2-feedcol > article {
+  opacity: 0;
+  animation: p2rise .55s cubic-bezier(.2, .6, .3, 1) both;
+}
+.p2-feedcol > article:nth-child(1) { animation-delay: .46s; }
+.p2-feedcol > article:nth-child(2) { animation-delay: .6s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .p2-nav,
+  .p2-hero > *,
+  .p2-reveal > *,
+  .p2-feed-head,
+  .p2-feedcol > article {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
