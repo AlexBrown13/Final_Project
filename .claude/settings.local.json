@@ -35,7 +35,9 @@
       "Bash(git commit *)",
       "Bash(/plugin install *)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "PowerShell(Get-Content \"$env:USERPROFILE\\\\.claude\\\\settings.local.json\")"
+      "PowerShell(Get-Content \"$env:USERPROFILE\\\\.claude\\\\settings.local.json\")",
+      "Bash(cmd /c \"dir /aL \\\\\"d:\\\\Program Files \\(x86\\)\\\\Final_Project\\\\.claude\\\\\" 2>nul\")",
+      "Bash(cmd /c \"dir /aL \\\\\"d:\\\\Program Files \\(x86\\)\\\\Final_Project\\\\.agents\\\\\" 2>nul\")"
     ]
   }
 }
