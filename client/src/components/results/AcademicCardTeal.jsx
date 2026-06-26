@@ -19,7 +19,7 @@ export default function AcademicCardTeal({ article }) {
       }}>
         Journal article
       </span>
-      <h3 style={{
+      <h3 dir="auto" style={{
         fontFamily: "'Source Serif 4', serif",
         fontSize: 19,
         fontWeight: 600,
@@ -32,7 +32,7 @@ export default function AcademicCardTeal({ article }) {
       <p style={{ fontSize: 12.5, color: '#7a847f', margin: '0 0 11px', fontWeight: 500 }}>
         {firstAuthor} &middot; {journal} &middot; {year}
       </p>
-      <p style={{ fontSize: 14, color: '#5c6561', lineHeight: 1.5, margin: '0 0 14px' }}>
+      <p dir="auto" style={{ fontSize: 14, color: '#5c6561', lineHeight: 1.5, margin: '0 0 14px' }}>
         {abstract}
       </p>
       {matchedTags.length > 0 && (

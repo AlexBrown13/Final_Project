@@ -70,7 +70,6 @@ export default function InformedResults({ profile, guardianStories = [], academi
   const showSecondResearch = pref !== 'stories'
   const showThirdResearch  = pref === 'research'
 
-  const [dir, setDir] = useState('ltr')
   const [topicsOpen, setTopicsOpen] = useState(false)
   const [topics, setTopics] = useState(profile.interestTags || [])
   const [addVal, setAddVal] = useState('')
@@ -117,23 +116,6 @@ export default function InformedResults({ profile, guardianStories = [], academi
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
           <span style={{ fontSize: 13, color: '#b9c6c2', fontWeight: 500 }}>Results</span>
-          <button
-            type="button"
-            onClick={() => setDir(d => d === 'ltr' ? 'rtl' : 'ltr')}
-            style={{
-              fontFamily: 'inherit',
-              fontSize: 13,
-              fontWeight: 600,
-              color: '#fff',
-              background: 'rgba(255,255,255,.12)',
-              border: '1px solid rgba(255,255,255,.25)',
-              borderRadius: 6,
-              padding: '6px 14px',
-              cursor: 'pointer',
-            }}
-          >
-            {dir === 'ltr' ? 'עברית' : 'English'}
-          </button>
         </div>
       </nav>
 
