@@ -16,5 +16,6 @@ rank-bm25
 sentence-transformers
 requests
 pypdf
+graphifyy
 #python -m pip install -r Requirements.txt
 #python.exe -m pip install --upgrade pip
