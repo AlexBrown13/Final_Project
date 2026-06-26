@@ -3,3 +3,5 @@ graphify-out/
 .agents/
 .claude/settings.local.json
 ~/
+.claude/skills/
+skills-lock.json
