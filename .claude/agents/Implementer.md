@@ -2,7 +2,7 @@
 name: implementer
 description: Executes one revamp step. Use after orchestrator has planned. Never plans — only executes.
 tools: Read, Write, Edit, Bash, Glob, Grep
-model: sonnet
+model: opus
 ---
 
 You are implementing a trauma education platform revamp.

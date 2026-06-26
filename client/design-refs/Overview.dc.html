@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@500;600&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box;}body{margin:0;}</style>
+</helmet>
+
+<div style="position:absolute;left:80px;top:64px;width:1280px;">
+  <div data-drags-parent="1" style="display:flex;align-items:baseline;gap:12px;margin-bottom:16px;font-family:'IBM Plex Sans',sans-serif;cursor:grab;">
+    <span style="font-size:22px;font-weight:600;color:#1c2722;">Persona 1 &mdash; Beginner</span>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#7d8a76;">warm &middot; serif &middot; stories-heavy &middot; #e1ebe2</span>
+  </div>
+  <div style="border-radius:6px;overflow:hidden;box-shadow:0 8px 40px -12px rgba(40,40,30,.28);border:1px solid rgba(0,0,0,.06);">
+    <dc-import name="Persona1" hint-size="1280px,2700px"></dc-import>
+  </div>
+</div>
+
+<div style="position:absolute;left:1480px;top:64px;width:1280px;">
+  <div data-drags-parent="1" style="display:flex;align-items:baseline;gap:12px;margin-bottom:16px;font-family:'IBM Plex Sans',sans-serif;cursor:grab;">
+    <span style="font-size:22px;font-weight:600;color:#1c2722;">Persona 2 &mdash; Informed Learner</span>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#5a6b64;">balanced &middot; structured &middot; stories + research &middot; #4b645f</span>
+  </div>
+  <div style="border-radius:6px;overflow:hidden;box-shadow:0 8px 40px -12px rgba(40,40,30,.28);border:1px solid rgba(0,0,0,.06);">
+    <dc-import name="Persona2" hint-size="1280px,2300px"></dc-import>
+  </div>
+</div>
+
+<div style="position:absolute;left:2880px;top:64px;width:1080px;">
+  <div data-drags-parent="1" style="display:flex;align-items:baseline;gap:12px;margin-bottom:16px;font-family:'IBM Plex Sans',sans-serif;cursor:grab;">
+    <span style="font-size:22px;font-weight:600;color:#1c2722;">Persona 3 &mdash; Researcher</span>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#5a6b64;">light &middot; dense tool &middot; research-only &middot; #9ec4d0</span>
+  </div>
+  <div style="border-radius:6px;overflow:hidden;box-shadow:0 8px 40px -12px rgba(40,40,30,.28);border:1px solid rgba(0,0,0,.06);">
+    <dc-import name="Persona3" hint-size="1080px,2000px"></dc-import>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

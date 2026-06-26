@@ -103,7 +103,7 @@ The `PERSONA_PROFILE_SYSTEM_PROMPT` (currently lines 38-107) needs these additio
 **File:** `server/routes/chat_route.py`
 
 Update `parse_persona_profile()` (currently lines 111-135):
-- Add parsing for `emotional_state` with fallback to `"curious"`
+- Add parsing for `emotional_state` with fallback to `"neutral"`
 - Add parsing for `content_preference` with fallback to `"mixed"`
 - Remove parsing for `preferred_content`
 - Keep all other parsing logic
@@ -468,14 +468,15 @@ All extracted fields shown as a clean data display:
 5. Text link CTA to articles
 6. "Also explore" — text links only
 
-**Visual direction (to be finalized in Claude Design):**
-- Dark theme (dark background, cyan/teal accents)
+**Visual direction (from approved design):**
+- Light tool aesthetic — background `#eef3f5`, IBM Plex Mono + IBM Plex Sans
+- Blue-teal accent `#2f6675` (NOT green — green is P1/P2 only)
 - Dense, information-first
-- Sharp corners (4px border radius maximum)
+- Sharp corners (4–8px border radius maximum)
 - No illustrations, no decorative elements
 - No animations
 - Immediate display of everything
-- Feels like an academic database or terminal UI
+- Feels like an academic database or research tool
 - Credibility over beauty
 
 ### Fallback States (All Personas)
@@ -625,12 +626,13 @@ Design direction: This person wants a tool, not an experience. Think about what 
 
 ## PART 9 — IMPLEMENTATION ORDER
 
-**Revised priority based on review:** Implement backend (Parts 1–5) first and validate data flows before committing to full frontend redesign. Design session happens in parallel — frontend built last against approved mockups.
+**Revised priority:** Design is approved (see `client/design-refs/`). Frontend goes first — build all three persona layouts against the approved mockups. Backend wiring comes after.
 
-### Phase A — Design Session (You do this, in parallel with Phase B)
-Go to Claude Design, paste the brief from Part 8, get 3 mockups. Review together. Adjust if needed. Approve before any frontend work starts.
+### Phase C — Frontend (NOW — design approved)
 
-### Phase B — Backend (in this order)
+Build order: Persona 1 → Persona 2 → Persona 3 → wire to real data.
+
+### Phase B — Backend (after frontend is built)
 All backend changes are independent of the visual design. Implement in priority order:
 
 1. **`server/utils/chat_prompts.py`**
@@ -661,25 +663,14 @@ All backend changes are independent of the visual design. Implement in priority 
    - Graceful fallback to empty array on any failure
    - Register blueprint in `server/app.py`
 
-### Phase C — Frontend (After design approved)
+### Phase C steps (frontend — do these first)
 
-New components to build:
-- `client/src/components/results/GuardianCard.jsx` — Guardian story card
-- `client/src/components/results/AcademicPreviewCard.jsx` — academic article preview with matched tag pills
-- `client/src/components/results/OwidChart.jsx` — iframe with skeleton + fallback
-- `client/src/components/results/AdjustTopics.jsx` — inline topic editor panel
-- `client/src/components/results/AlsoExplore.jsx` — bottom discovery links
+- **C-1**: Persona 1 (Beginner) — `ResultsPage.jsx` shell + `BeginnerResults.jsx` + `GuardianCard.jsx` (horizontal) + `AcademicCard.jsx` (warm) + `results-components.css`
+- **C-2**: Persona 2 (Informed Learner) — `InformedResults.jsx` + `GuardianCardVertical.jsx` + `AcademicCardTeal.jsx` + P2 CSS
+- **C-3**: Persona 3 (Researcher) — `ResearcherResults.jsx` + `ArticleRow.jsx` + P3 CSS
+- **C-4**: Wire ResultsPage to real data (Guardian fetch, articles fetch, session profile)
 
-Existing components to rewrite:
-- `client/src/components/results/BeginnerHero.jsx` — new warm layout per design mockup
-- `client/src/components/results/InformedHero.jsx` — new structured balanced layout
-- `client/src/components/results/ResearcherHero.jsx` — new dense dark profile card layout
-
-Page to rewrite:
-- `client/src/pages/ResultsPage.jsx` — orchestrates all components, fetches Guardian stories + OWID selection, passes all persona_profile fields down, handles all fallback states
-
-CSS:
-- `client/src/index.css` — existing persona color palettes are kept as-is, may need small enrichments based on design output
+No existing results components to preserve — full rewrite.
 
 ---
 

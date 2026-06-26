@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0;}
+  @keyframes p3shimmer{0%{background-position:-360px 0;}100%{background-position:360px 0;}}
+  .p3-skel{background:linear-gradient(90deg,#e4ecee 0%,#f0f5f6 50%,#e4ecee 100%);background-size:720px 100%;animation:p3shimmer 1.6s infinite linear;}
+  .p3-row{transition:background .12s ease;}
+  .p3-row:hover{background:#f0f6f7;}
+  .p3-row:nth-of-type(even){background:#f5f8f9;}
+  .p3-row:nth-of-type(even):hover{background:#eef5f6;}
+  .p3-copy{transition:color .12s ease,border-color .12s ease;}
+  .p3-copy:hover{color:#2f6675;border-color:#9ec4d0;}
+  .p3-tlink:hover{color:#1d4c59;}
+  .p3-x:hover{color:#2f6675;}
+</style>
+</helmet>
+<div dir="{{ dir }}" style="font-family:'IBM Plex Sans',-apple-system,sans-serif;background:#eef3f5;color:#1b2a31;min-height:100vh;font-size:15px;line-height:1.5;">
+
+  <!-- NAV -->
+  <nav style="display:flex;align-items:center;justify-content:space-between;padding:13px 32px;border-bottom:1px solid #dce5e8;position:sticky;top:0;background:rgba(238,243,245,.92);backdrop-filter:blur(8px);z-index:20;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:18px;height:18px;border:2px solid #2f6675;border-radius:3px;"></div>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:500;letter-spacing:.02em;color:#1b2a31;">trauma_education</span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#90a2a9;margin-left:6px;">/ results</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:18px;">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#90a2a9;">researcher mode</span>
+      <button onClick="{{ onToggleLang }}" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#2f6675;background:transparent;border:1px solid #c6d6da;border-radius:4px;padding:5px 12px;cursor:pointer;">{{ langLabel }}</button>
+    </div>
+  </nav>
+
+  <main style="max-width:1080px;margin:0 auto;padding:30px 32px 70px;">
+
+    <!-- EXTRACTED PROFILE -->
+    <section style="border:1px solid #d7e1e4;border-radius:8px;background:#fff;margin-bottom:26px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid #e7eef0;">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#2f6675;">Extracted profile</span>
+        <button onClick="{{ openTopics }}" class="p3-copy" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5f747c;background:transparent;border:1px solid #c6d6da;border-radius:4px;padding:4px 10px;cursor:pointer;">edit tags</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;">
+        <div style="padding:16px 20px;border-right:1px solid #e7eef0;border-bottom:1px solid #e7eef0;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#90a2a9;margin-bottom:5px;">persona</div>
+          <div style="font-size:15px;font-weight:600;">Researcher</div>
+        </div>
+        <div style="padding:16px 20px;border-bottom:1px solid #e7eef0;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#90a2a9;margin-bottom:5px;">primary topic</div>
+          <div style="font-size:15px;font-weight:600;">PTSD prevalence in conflict zones</div>
+        </div>
+        <div style="padding:16px 20px;border-right:1px solid #e7eef0;border-bottom:1px solid #e7eef0;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#90a2a9;margin-bottom:5px;">content preference</div>
+          <div style="font-size:15px;font-weight:600;">Research &amp; data only</div>
+        </div>
+        <div style="padding:16px 20px;border-bottom:1px solid #e7eef0;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#90a2a9;margin-bottom:8px;">interest tags</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            <sc-for list="{{ topics }}" as="t" hint-placeholder-count="4">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;background:#e7f0f3;border:1px solid #b9d6de;color:#2f6675;border-radius:4px;padding:3px 9px;">{{ t }}</span>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      <!-- OpenAlex query -->
+      <div style="padding:16px 20px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#90a2a9;">OpenAlex boolean query</span>
+          <button onClick="{{ onCopyQuery }}" class="p3-copy" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5f747c;background:transparent;border:1px solid #c6d6da;border-radius:4px;padding:4px 10px;cursor:pointer;">{{ queryCopyLabel }}</button>
+        </div>
+        <pre style="margin:0;font-family:'IBM Plex Mono',monospace;font-size:12.5px;line-height:1.7;color:#2a4750;background:#f3f7f8;border:1px solid #dce5e8;border-radius:6px;padding:13px 15px;overflow-x:auto;white-space:pre-wrap;word-break:break-word;">(PTSD OR "post-traumatic stress") AND ("armed conflict" OR "war exposure" OR civilian) AND (prevalence OR epidemiology)</pre>
+      </div>
+
+      <!-- ADJUST PANEL (minimal) -->
+      <sc-if value="{{ topicsOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:16px 20px;border-top:1px solid #e7eef0;background:#f7fafb;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#2f6675;">edit interest tags</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#90a2a9;">{{ topicCount }}/5</span>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">
+            <sc-for list="{{ editTopics }}" as="t" hint-placeholder-count="4">
+              <span style="display:inline-flex;align-items:center;gap:7px;font-family:'IBM Plex Mono',monospace;font-size:12px;background:#e7f0f3;border:1px solid #b9d6de;color:#2f6675;border-radius:4px;padding:3px 6px 3px 9px;">
+                {{ t.label }}
+                <button onClick="{{ t.onRemove }}" class="p3-x" aria-label="remove" style="background:transparent;border:none;color:#7c919a;font-size:13px;cursor:pointer;line-height:1;padding:0;">&times;</button>
+              </span>
+            </sc-for>
+          </div>
+          <sc-if value="{{ canAdd }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;gap:7px;max-width:420px;">
+              <input value="{{ addVal }}" onChange="{{ onAddChange }}" onKeyDown="{{ onAddKey }}" placeholder="add tag&hellip;" style="flex:1;font-family:'IBM Plex Mono',monospace;font-size:12px;background:#fff;border:1px solid #c6d6da;border-radius:5px;padding:8px 11px;color:#1b2a31;outline:none;" />
+              <button onClick="{{ onAddTopic }}" style="font-family:'IBM Plex Mono',monospace;font-size:12px;background:#2f6675;border:1px solid #2f6675;color:#fff;border-radius:5px;padding:8px 16px;cursor:pointer;">add</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ atMax }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:0;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#90a2a9;">max 5 tags</p>
+          </sc-if>
+          <button onClick="{{ closeTopics }}" style="margin-top:11px;background:transparent;border:none;color:#90a2a9;font-family:'IBM Plex Mono',monospace;font-size:11px;cursor:pointer;padding:0;">[ close ]</button>
+        </div>
+      </sc-if>
+    </section>
+
+    <!-- OWID -->
+    <section style="border:1px solid #d7e1e4;border-radius:8px;background:#fff;margin-bottom:26px;overflow:hidden;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid #e7eef0;">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#2f6675;">Epidemiology &middot; OWID</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#90a2a9;">3 series &middot; GBD / IHME</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#e7eef0;">
+
+        <!-- chart A -->
+        <div style="background:#fff;">
+          <div style="padding:11px 16px;border-bottom:1px solid #eef3f4;">
+            <span style="display:block;font-family:'IBM Plex Sans',sans-serif;font-size:13px;font-weight:600;color:#1b2a31;">Depressive disorders &mdash; prevalence</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#90a2a9;">share of population, by country</span>
+          </div>
+          <div style="position:relative;min-height:380px;">
+            <sc-if value="{{ owidALoading }}" hint-placeholder-val="{{ true }}">
+              <div style="position:absolute;inset:0;background:#fff;padding:18px;">
+                <div class="p3-skel" style="height:14px;width:46%;border-radius:4px;margin-bottom:16px;"></div>
+                <div class="p3-skel" style="height:288px;width:100%;border-radius:6px;"></div>
+                <p style="text-align:center;font-family:'IBM Plex Mono',monospace;color:#90a2a9;font-size:11px;margin-top:12px;">fetching grapher&hellip;</p>
+              </div>
+            </sc-if>
+            <sc-if value="{{ owidAFailed }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:center;justify-content:center;min-height:380px;background:#f7fafb;text-align:center;padding:28px;">
+                <p style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5f747c;max-width:34ch;margin:0;">[ series unavailable ]</p>
+              </div>
+            </sc-if>
+            <iframe src="https://ourworldindata.org/grapher/depressive-disorders-prevalence-ihme" loading="lazy" onLoad="{{ onOwidALoad }}" onError="{{ onOwidAError }}" style="width:100%;height:380px;border:none;display:block;{{ owidAFrameVis }}"></iframe>
+          </div>
+          <div style="padding:8px 16px;border-top:1px solid #eef3f4;"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#90a2a9;">ourworldindata.org &middot; IHME GBD 2021</span></div>
+        </div>
+
+        <!-- chart B -->
+        <div style="background:#fff;">
+          <div style="padding:11px 16px;border-bottom:1px solid #eef3f4;">
+            <span style="display:block;font-family:'IBM Plex Sans',sans-serif;font-size:13px;font-weight:600;color:#1b2a31;">Anxiety disorders &mdash; prevalence</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#90a2a9;">share of population, by country</span>
+          </div>
+          <div style="position:relative;min-height:380px;">
+            <sc-if value="{{ owidBLoading }}" hint-placeholder-val="{{ true }}">
+              <div style="position:absolute;inset:0;background:#fff;padding:18px;">
+                <div class="p3-skel" style="height:14px;width:46%;border-radius:4px;margin-bottom:16px;"></div>
+                <div class="p3-skel" style="height:288px;width:100%;border-radius:6px;"></div>
+                <p style="text-align:center;font-family:'IBM Plex Mono',monospace;color:#90a2a9;font-size:11px;margin-top:12px;">fetching grapher&hellip;</p>
+              </div>
+            </sc-if>
+            <sc-if value="{{ owidBFailed }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:center;justify-content:center;min-height:380px;background:#f7fafb;text-align:center;padding:28px;">
+                <p style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5f747c;max-width:34ch;margin:0;">[ series unavailable ]</p>
+              </div>
+            </sc-if>
+            <iframe src="https://ourworldindata.org/grapher/anxiety-disorders-prevalence" loading="lazy" onLoad="{{ onOwidBLoad }}" onError="{{ onOwidBError }}" style="width:100%;height:380px;border:none;display:block;{{ owidBFrameVis }}"></iframe>
+          </div>
+          <div style="padding:8px 16px;border-top:1px solid #eef3f4;"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#90a2a9;">ourworldindata.org &middot; IHME GBD 2021</span></div>
+        </div>
+
+        <!-- chart C (full width) -->
+        <div style="background:#fff;grid-column:1 / -1;">
+          <div style="padding:11px 16px;border-bottom:1px solid #eef3f4;">
+            <span style="display:block;font-family:'IBM Plex Sans',sans-serif;font-size:13px;font-weight:600;color:#1b2a31;">Disease burden from mental &amp; substance-use disorders</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#90a2a9;">share of total DALYs, global &mdash; long-run series</span>
+          </div>
+          <div style="position:relative;min-height:460px;">
+            <sc-if value="{{ owidCLoading }}" hint-placeholder-val="{{ true }}">
+              <div style="position:absolute;inset:0;background:#fff;padding:20px;">
+                <div class="p3-skel" style="height:16px;width:38%;border-radius:4px;margin-bottom:18px;"></div>
+                <div class="p3-skel" style="height:360px;width:100%;border-radius:6px;"></div>
+                <p style="text-align:center;font-family:'IBM Plex Mono',monospace;color:#90a2a9;font-size:11px;margin-top:12px;">fetching grapher&hellip;</p>
+              </div>
+            </sc-if>
+            <sc-if value="{{ owidCFailed }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:center;justify-content:center;min-height:460px;background:#f7fafb;text-align:center;padding:36px;">
+                <p style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#5f747c;max-width:48ch;margin:0;">[ series unavailable ] &mdash; this grapher could not be reached. Other series and article results are unaffected.</p>
+              </div>
+            </sc-if>
+            <iframe src="https://ourworldindata.org/grapher/share-with-mental-and-substance-disorders" loading="lazy" onLoad="{{ onOwidCLoad }}" onError="{{ onOwidCError }}" style="width:100%;height:460px;border:none;display:block;{{ owidCFrameVis }}"></iframe>
+          </div>
+          <div style="padding:8px 16px;border-top:1px solid #eef3f4;"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#90a2a9;">ourworldindata.org &middot; IHME Global Burden of Disease 2021</span></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ARTICLE RESULTS -->
+    <section style="border:1px solid #d7e1e4;border-radius:8px;background:#fff;overflow:hidden;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid #e7eef0;">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#2f6675;">Articles &middot; {{ articleCount }} matched</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#90a2a9;">sorted: relevance &darr;</span>
+      </div>
+      <sc-for list="{{ articles }}" as="a" hint-placeholder-count="4">
+        <article class="p3-row" style="padding:16px 20px;border-bottom:1px solid #e7eef0;">
+          <div style="display:flex;gap:16px;">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#b3c3c9;flex-shrink:0;padding-top:3px;width:22px;">{{ a.num }}</span>
+            <div style="flex:1;min-width:0;">
+              <button onClick="{{ a.onToggle }}" class="p3-tlink" style="display:block;text-align:start;background:transparent;border:none;padding:0;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;font-size:16px;font-weight:600;color:#1b2a31;line-height:1.35;margin-bottom:7px;">{{ a.title }}</button>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5f747c;line-height:1.6;margin-bottom:9px;">
+                <span style="color:#2f6675;">{{ a.year }}</span> &nbsp;&middot;&nbsp; {{ a.journal }} &nbsp;&middot;&nbsp; {{ a.authors }}
+              </div>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:2px;">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#90a2a9;">DOI</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#42565d;">{{ a.doi }}</span>
+                <button onClick="{{ a.onCopyDoi }}" class="p3-copy" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#5f747c;background:transparent;border:1px solid #c6d6da;border-radius:3px;padding:2px 8px;cursor:pointer;">{{ a.doiLabel }}</button>
+                <span style="flex:1;"></span>
+                <sc-for list="{{ a.tags }}" as="tg" hint-placeholder-count="2">
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;background:#e7f0f3;border:1px solid #b9d6de;color:#2f6675;border-radius:3px;padding:2px 8px;">{{ tg }}</span>
+                </sc-for>
+              </div>
+              <sc-if value="{{ a.expanded }}" hint-placeholder-val="{{ false }}">
+                <p style="margin:12px 0 4px;font-size:14px;line-height:1.6;color:#3f5158;border-left:2px solid #b9d6de;padding-left:14px;">{{ a.abstract }}</p>
+              </sc-if>
+              <sc-if value="{{ a.collapsed }}" hint-placeholder-val="{{ true }}">
+                <button onClick="{{ a.onToggle }}" class="p3-copy" style="margin-top:4px;background:transparent;border:none;color:#90a2a9;font-family:'IBM Plex Mono',monospace;font-size:11px;cursor:pointer;padding:0;">+ abstract</button>
+              </sc-if>
+            </div>
+          </div>
+        </article>
+      </sc-for>
+      <div style="padding:14px 20px;">
+        <a href="#" class="p3-tlink" style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#2f6675;text-decoration:none;">&rarr; open full result set ({{ fullCount }} articles)</a>
+      </div>
+    </section>
+
+    <!-- ALSO EXPLORE (text-only) -->
+    <section style="margin-top:24px;display:flex;flex-wrap:wrap;gap:6px 22px;align-items:center;">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#90a2a9;">also:</span>
+      <a href="#" class="p3-tlink" style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#42565d;text-decoration:none;">interactive_map</a>
+      <a href="#" class="p3-tlink" style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#42565d;text-decoration:none;">trends</a>
+      <a href="#" class="p3-tlink" style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#42565d;text-decoration:none;">data_graphs</a>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state = {
+    dir: 'ltr',
+    owidA: 'loading',
+    owidB: 'loading',
+    owidC: 'loading',
+    topicsOpen: false,
+    topics: ['PTSD', 'prevalence', 'October 7', 'civilians', 'epidemiology'],
+    addVal: '',
+    queryCopied: false,
+    expanded: {},
+    doiCopied: {}
+  };
+  data = [
+    { title: 'Prevalence of PTSD in populations exposed to armed conflict: a systematic review and meta-analysis', year: 2024, journal: 'Lancet Psychiatry', authors: 'Charlson F, van Ommeren M, et al.', doi: '10.1016/S2215-0366(24)00112-9', tags: ['PTSD', 'prevalence'], abstract: 'Pooled estimates across 129 studies (N = 1.7M) place the prevalence of PTSD among conflict-exposed populations at 22.3% (95% CI 18.1\u201327.0), with substantial heterogeneity attributable to exposure intensity and time since event.' },
+    { title: 'Trajectories of post-traumatic stress following mass-casualty events', year: 2023, journal: 'JAMA Psychiatry', authors: 'Galatzer-Levy I, Bonanno G.', doi: '10.1001/jamapsychiatry.2023.0455', tags: ['PTSD', 'trajectories'], abstract: 'Latent growth-mixture modeling identifies four stable response trajectories \u2014 resilient, recovering, chronic, and delayed-onset \u2014 with resilience the modal outcome even at high exposure levels.' },
+    { title: 'Civilian PTSD in protracted conflict zones: a systematic review of risk and protective factors', year: 2025, journal: 'World Psychiatry', authors: 'Hoppen T, Morina N.', doi: '10.1002/wps.21188', tags: ['PTSD', 'civilians'], abstract: 'Ongoing threat, displacement, and loss of social capital emerge as the strongest predictors of chronic course; perceived social support and collective efficacy are the most consistent protective factors.' },
+    { title: 'Estimating the population mental-health burden of the October 2023 events in Israel', year: 2024, journal: 'Israel Journal of Psychiatry', authors: 'Levav I, Bleich A.', doi: '10.1234/ijp.2024.0917', tags: ['October 7', 'prevalence'], abstract: 'Early modeling projects a marked increase in incident PTSD and prolonged-grief disorder, concentrated in directly exposed communities and first-responder cohorts, with implications for service capacity planning.' },
+    { title: 'Sleep disturbance and nightmares as predictors of chronic PTSD in displaced civilians', year: 2023, journal: 'Sleep Medicine Reviews', authors: 'Ben-Zur H, Gilboa-Schechtman E.', doi: '10.1016/j.smrv.2023.101802', tags: ['PTSD', 'civilians'], abstract: 'Polysomnographic and self-report data converge on disrupted REM continuity as an early marker of chronic course, suggesting sleep-targeted intervention windows in the first months after displacement.' },
+    { title: 'Intergenerational transmission of trauma in families of conflict survivors', year: 2022, journal: 'Development and Psychopathology', authors: 'Dekel R, Solomon Z.', doi: '10.1017/S0954579422000451', tags: ['epidemiology'], abstract: 'A three-generation cohort finds attenuated but measurable transmission of post-traumatic symptomatology, mediated more strongly by parental emotional availability than by direct disclosure of events.' },
+    { title: 'Neuroimaging correlates of PTSD symptom severity: a coordinate-based meta-analysis', year: 2024, journal: 'Biological Psychiatry', authors: 'Admon R, Hendler T.', doi: '10.1016/j.biopsych.2024.02.011', tags: ['PTSD'], abstract: 'Hyperactivation of the amygdala alongside hypoactivation of the ventromedial prefrontal cortex scales with symptom severity across 64 studies, supporting a dysregulated threat-appraisal model.' },
+    { title: 'Cost-effectiveness of scaled-up trauma interventions in conflict-affected health systems', year: 2023, journal: 'Health Policy and Planning', authors: 'Chisholm D, et al.', doi: '10.1093/heapol/czad055', tags: ['prevalence', 'epidemiology'], abstract: 'Task-shifted, group-delivered interventions achieve acceptable cost-per-DALY-averted thresholds even under constrained budgets, strengthening the economic case for population-level scale-up.' },
+    { title: 'Resilience and post-traumatic growth among first responders after mass-casualty deployment', year: 2024, journal: 'Journal of Anxiety Disorders', authors: 'Palgi Y, Shrira A.', doi: '10.1016/j.janxdis.2024.102788', tags: ['civilians'], abstract: 'Longitudinal tracking of emergency personnel identifies peer cohesion and perceived organizational support as the strongest modifiable predictors of post-traumatic growth at twelve months.' }
+  ];
+  removeTopic(t) { this.setState(s => ({ topics: s.topics.filter(x => x !== t) })); }
+  addTopic() {
+    const v = (this.state.addVal || '').trim();
+    if (!v) return;
+    this.setState(s => (s.topics.length >= 5 || s.topics.includes(v)) ? { addVal: '' } : { topics: [...s.topics, v], addVal: '' });
+  }
+  copy(text, mark) {
+    try { navigator.clipboard && navigator.clipboard.writeText(text); } catch (e) {}
+    if (mark === 'query') {
+      this.setState({ queryCopied: true });
+      setTimeout(() => this.setState({ queryCopied: false }), 1500);
+    } else {
+      this.setState(s => ({ doiCopied: { ...s.doiCopied, [mark]: true } }));
+      setTimeout(() => this.setState(s => ({ doiCopied: { ...s.doiCopied, [mark]: false } })), 1500);
+    }
+  }
+  renderVals() {
+    const topics = this.state.topics;
+    const exp = this.state.expanded, dc = this.state.doiCopied;
+    return {
+      dir: this.state.dir,
+      langLabel: this.state.dir === 'ltr' ? '\u05e2\u05d1\u05e8\u05d9\u05ea' : 'EN',
+      onToggleLang: () => this.setState(s => ({ dir: s.dir === 'ltr' ? 'rtl' : 'ltr' })),
+      topics,
+      topicCount: topics.length,
+      editTopics: topics.map(t => ({ label: t, onRemove: () => this.removeTopic(t) })),
+      topicsOpen: this.state.topicsOpen,
+      openTopics: () => this.setState({ topicsOpen: true }),
+      closeTopics: () => this.setState({ topicsOpen: false }),
+      canAdd: topics.length < 5,
+      atMax: topics.length >= 5,
+      addVal: this.state.addVal,
+      onAddChange: (e) => this.setState({ addVal: e.target.value }),
+      onAddKey: (e) => { if (e.key === 'Enter') { e.preventDefault(); this.addTopic(); } },
+      onAddTopic: () => this.addTopic(),
+      queryCopyLabel: this.state.queryCopied ? 'copied \u2713' : 'copy',
+      onCopyQuery: () => this.copy('(PTSD OR "post-traumatic stress") AND ("armed conflict" OR "war exposure" OR civilian) AND (prevalence OR epidemiology)', 'query'),
+      owidALoading: this.state.owidA === 'loading',
+      owidAFailed: this.state.owidA === 'failed',
+      owidAFrameVis: this.state.owidA === 'ready' ? '' : 'opacity:0;position:absolute;inset:0;',
+      onOwidALoad: () => this.setState({ owidA: 'ready' }),
+      onOwidAError: () => this.setState({ owidA: 'failed' }),
+      owidBLoading: this.state.owidB === 'loading',
+      owidBFailed: this.state.owidB === 'failed',
+      owidBFrameVis: this.state.owidB === 'ready' ? '' : 'opacity:0;position:absolute;inset:0;',
+      onOwidBLoad: () => this.setState({ owidB: 'ready' }),
+      onOwidBError: () => this.setState({ owidB: 'failed' }),
+      owidCLoading: this.state.owidC === 'loading',
+      owidCFailed: this.state.owidC === 'failed',
+      owidCFrameVis: this.state.owidC === 'ready' ? '' : 'opacity:0;position:absolute;inset:0;',
+      onOwidCLoad: () => this.setState({ owidC: 'ready' }),
+      onOwidCError: () => this.setState({ owidC: 'failed' }),
+      articleCount: this.data.length,
+      fullCount: 47,
+      articles: this.data.map((a, i) => ({
+        num: String(i + 1).padStart(2, '0'),
+        title: a.title, year: a.year, journal: a.journal, authors: a.authors,
+        doi: a.doi, tags: a.tags, abstract: a.abstract,
+        expanded: !!exp[i], collapsed: !exp[i],
+        onToggle: () => this.setState(s => ({ expanded: { ...s.expanded, [i]: !s.expanded[i] } })),
+        doiLabel: dc[i] ? 'copied \u2713' : 'copy',
+        onCopyDoi: () => this.copy(a.doi, i)
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>
