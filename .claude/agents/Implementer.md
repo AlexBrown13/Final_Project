@@ -14,7 +14,8 @@ When invoked:
 2. Read all files mentioned in the plan before touching anything
 3. Execute the step exactly as described
 4. Run tests after each file change — fix failures before continuing
-5. Commit with message: revamp: <one-line description of what changed>
+5. Run: graphify update .
+   Then commit with message: revamp: <one-line description of what changed>
 6. Update .claude/revamp-progress.md status to: DONE — awaiting review
 
 
