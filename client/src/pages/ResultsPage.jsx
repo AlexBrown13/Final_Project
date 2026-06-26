@@ -1,16 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import Navbar from '../components/Navbar.jsx'
 import BackendDown from '../components/BackendDown.jsx'
-import Score1Content from '../components/content/Score1Content.jsx'
-import Score2Content from '../components/content/Score2Content.jsx'
-import Score3Content from '../components/content/Score3Content.jsx'
-import BeginnerHero from '../components/results/BeginnerHero.jsx'
-import InformedHero from '../components/results/InformedHero.jsx'
-import ResearcherHero from '../components/results/ResearcherHero.jsx'
-import BeginnerPersonaCard from '../components/results/BeginnerPersonaCard.jsx'
-import InformedPersonaCard from '../components/results/InformedPersonaCard.jsx'
-import ResearcherPersonaCard from '../components/results/ResearcherPersonaCard.jsx'
+import BeginnerResults from '../components/results/BeginnerResults.jsx'
 import '../components/results/results-components.css'
 import {
   USER_ID_KEY,
@@ -19,11 +10,41 @@ import {
   SCORE_CACHE_KEY,
   AUTH_TOKEN_KEY,
 } from '../config/storageKeys.js'
-import { useDirection } from '../context/useDirection.js'
 import { usePersona } from '../context/usePersona.js'
-import { fetchHealth, getResult, deleteSession } from '../utils/api.js'
+import { fetchHealth, getResult } from '../utils/api.js'
 import { getApiBase } from '../config/api.js'
 import styles from './ResultsPage.module.css'
+
+const MOCK_PROFILE = {
+  persona: 'beginner',
+  emotionalState: 'grieving',
+  contentPreference: 'stories',
+  interestTags: ['October 7', 'grief', 'PTSD', 'soldiers', 'memory'],
+  primaryTopic: 'grief',
+  headline: null,
+}
+
+const MOCK_STORIES = [
+  {
+    thumbnailUrl: null,
+    headline: 'The families of fallen soldiers who are learning to grieve together',
+    summary: 'Around shared tables and quiet rooms, bereaved parents are finding that the weight feels a little more bearable when it is carried alongside others.',
+    date: '2 Mar 2025',
+    url: '#',
+  },
+]
+
+const MOCK_ARTICLES = [
+  {
+    title: 'Post-traumatic stress and prolonged grief in bereaved parents',
+    year: 2023,
+    journal: 'Journal of Traumatic Stress',
+    firstAuthor: 'R. Cohen',
+    abstract: 'Parents who lose a child to sudden violence often experience grief and trauma at the same time. This review describes what that looks like and what tends to help.',
+    url: '#',
+    matchedTags: ['grief', 'PTSD'],
+  },
+]
 
 function normalizeScore(n) {
   const s = Number(n)
@@ -33,38 +54,33 @@ function normalizeScore(n) {
 
 function scoreToPersona(s) {
   if (s === 3) return 'researcher'
-  if (s === 2) return 'informed learner'
+  if (s === 2) return 'informed'
   return 'beginner'
 }
 
-function clearQuizLocalState() {
-  try {
-    localStorage.removeItem(QUIZ_MESSAGES_KEY)
-    localStorage.removeItem(QUIZ_META_KEY)
-    localStorage.removeItem(SCORE_CACHE_KEY)
-  } catch {
-    /* ignore */
-  }
+
+function InformedResults() {
+  return null
+}
+
+function ResearcherResults() {
+  return null
 }
 
 export default function ResultsPage() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { dir, locale } = useDirection()
   const { setPersona } = usePersona()
-  const rtl = dir === 'rtl'
 
   const routeScore =
     location.state?.score != null ? normalizeScore(location.state.score) : null
   const routePersona = location.state?.persona_profile ?? null
-  // true only when navigating from a freshly completed quiz — not from login redirect
   const routeFromQuiz = location.state?.fromQuiz === true
 
   const [health, setHealth] = useState(null)
   const [fetchedScore, setFetchedScore] = useState(null)
   const [personaProfile, setPersonaProfile] = useState(null)
   const [loadError, setLoadError] = useState(null)
-  const [retakeBusy, setRetakeBusy] = useState(false)
 
   const score = routeScore ?? fetchedScore
   const effectiveLoadError = routeScore != null ? null : loadError
@@ -75,9 +91,7 @@ export default function ResultsPage() {
       const { ok } = await fetchHealth()
       if (!cancelled) setHealth(ok)
     })()
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [])
 
   const recheckHealth = () => {
@@ -87,16 +101,11 @@ export default function ResultsPage() {
     })()
   }
 
-  // Fetch articles from OpenAlex only when the quiz was JUST completed.
-  // On login the user already has articles in the DB — no need to re-query OpenAlex.
   useEffect(() => {
     if (!routeFromQuiz || !score) return
-
     const token = localStorage.getItem(AUTH_TOKEN_KEY)
     if (!token) return
-
     const quizUserId = localStorage.getItem(USER_ID_KEY)
-
     ;(async () => {
       try {
         const base = getApiBase()
@@ -128,18 +137,11 @@ export default function ResultsPage() {
   }, [routeScore, routePersona])
 
   useEffect(() => {
-    if (routeScore != null) {
-      return
-    }
-
+    if (routeScore != null) return
     let cancelled = false
     const run = async () => {
       let userId
-      try {
-        userId = localStorage.getItem(USER_ID_KEY)
-      } catch {
-        userId = null
-      }
+      try { userId = localStorage.getItem(USER_ID_KEY) } catch { userId = null }
 
       if (!userId) {
         if (!cancelled) setLoadError('no-user')
@@ -155,25 +157,13 @@ export default function ResultsPage() {
         setFetchedScore(s)
         setPersonaProfile(data.persona_profile ?? null)
         setPersona(data.persona_profile?.persona || scoreToPersona(s))
-        try {
-          localStorage.setItem(SCORE_CACHE_KEY, String(s))
-        } catch {
-          /* ignore */
-        }
+        try { localStorage.setItem(SCORE_CACHE_KEY, String(s)) } catch { /* ignore */ }
         return
       }
 
-      if (res.status === 400 && data?.completed === false) {
-        setLoadError('incomplete')
-        return
-      }
-
+      if (res.status === 400 && data?.completed === false) { setLoadError('incomplete'); return }
       if (res.status === 404) {
-        try {
-          localStorage.removeItem(SCORE_CACHE_KEY)
-        } catch {
-          /* ignore */
-        }
+        try { localStorage.removeItem(SCORE_CACHE_KEY) } catch { /* ignore */ }
         setLoadError('incomplete')
         return
       }
@@ -187,40 +177,18 @@ export default function ResultsPage() {
           setPersona(scoreToPersona(s))
           return
         }
-      } catch {
-        /* ignore */
-      }
+      } catch { /* ignore */ }
 
       setLoadError('unknown')
     }
-
     run()
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [routeScore])
-
-  const onRetake = async () => {
-    setRetakeBusy(true)
-    const userId = localStorage.getItem(USER_ID_KEY)
-    const token = localStorage.getItem(AUTH_TOKEN_KEY)
-    try {
-      if (userId) await deleteSession(userId, token)
-    } catch {
-      /* ignore */
-    } finally {
-      try { sessionStorage.removeItem(`articles_cache_${userId}`) } catch { /* ignore */ }
-    }
-    clearQuizLocalState()
-    setRetakeBusy(false)
-    navigate('/', { replace: true })
-  }
 
   if (health === null) {
     return (
       <div className={styles.page}>
-        <Navbar />
-        <main className={styles.main} lang={locale}>
+        <main className={styles.main}>
           <p className={styles.muted}>בודקים חיבור לשרת… / Checking server…</p>
         </main>
       </div>
@@ -230,35 +198,25 @@ export default function ResultsPage() {
   if (health === false) {
     return (
       <div className={styles.page}>
-        <Navbar />
-        <BackendDown onRetry={recheckHealth} dir={dir} />
+        <BackendDown onRetry={recheckHealth} />
       </div>
     )
   }
 
-  if (
-    effectiveLoadError === 'incomplete' ||
-    effectiveLoadError === 'no-user'
-  ) {
+  if (effectiveLoadError === 'incomplete' || effectiveLoadError === 'no-user') {
     return (
-      <div className={styles.page} data-score="2">
-        <Navbar />
-        <main className={styles.main} lang={locale}>
+      <div className={styles.page}>
+        <main className={styles.main}>
           <div className={styles.notice}>
             <h1 className={styles.noticeTitle}>נתוני שאלון חסרים</h1>
             <p className={styles.noticeBody} lang="en">
-              Complete the guided quiz first so we can tailor this page for
-              you.
+              Complete the guided quiz first so we can tailor this page for you.
             </p>
             <p className={styles.noticeBody}>
               יש להשלים תחילה את השאלון המודרך כדי שנוכל להתאים את התוכן.
             </p>
-            <button
-              type="button"
-              className={styles.primaryBtn}
-              onClick={() => navigate('/')}
-            >
-              {rtl ? 'לשאלון' : 'Go to quiz'}
+            <button type="button" className={styles.primaryBtn} onClick={() => navigate('/')}>
+              Go to quiz
             </button>
           </div>
         </main>
@@ -268,28 +226,17 @@ export default function ResultsPage() {
 
   if (score == null && effectiveLoadError === 'unknown') {
     return (
-      <div className={styles.page} data-score="2">
-        <Navbar />
-        <main className={styles.main} lang={locale}>
+      <div className={styles.page}>
+        <main className={styles.main}>
           <div className={styles.notice}>
             <h1 className={styles.noticeTitle}>לא הצלחנו לטעון את התוצאה</h1>
-            <p className={styles.noticeBody} lang="en">
-              Please try again, or return to the quiz.
-            </p>
+            <p className={styles.noticeBody} lang="en">Please try again, or return to the quiz.</p>
             <p className={styles.noticeBody}>אפשר לנסות שוב או לחזור לשאלון.</p>
-            <button
-              type="button"
-              className={styles.primaryBtn}
-              onClick={() => window.location.reload()}
-            >
-              {rtl ? 'רענון' : 'Refresh'}
+            <button type="button" className={styles.primaryBtn} onClick={() => window.location.reload()}>
+              Refresh
             </button>
-            <button
-              type="button"
-              className={styles.secondaryBtn}
-              onClick={() => navigate('/')}
-            >
-              {rtl ? 'לשאלון' : 'Quiz'}
+            <button type="button" className={styles.secondaryBtn} onClick={() => navigate('/')}>
+              Quiz
             </button>
           </div>
         </main>
@@ -300,36 +247,29 @@ export default function ResultsPage() {
   if (score == null) {
     return (
       <div className={styles.page}>
-        <Navbar />
-        <main className={styles.main} lang={locale}>
+        <main className={styles.main}>
           <p className={styles.muted}>טוענים תוכן מותאם… / Loading…</p>
         </main>
       </div>
     )
   }
 
-  const Content =
-    score === 1 ? Score1Content : score === 2 ? Score2Content : Score3Content
-  const Hero =
-    score === 1 ? BeginnerHero : score === 2 ? InformedHero : ResearcherHero
-  const PersonaCard =
-    score === 1 ? BeginnerPersonaCard : score === 2 ? InformedPersonaCard : ResearcherPersonaCard
+  const profile = personaProfile ?? MOCK_PROFILE
+  const persona = profile.persona || scoreToPersona(score)
 
-  return (
-    <div className={styles.page} data-score={String(score)}>
-      <Navbar />
-      <main className={styles.main} lang={locale}>
-        <Hero
-          onRetake={onRetake}
-          retakeBusy={retakeBusy}
-          rtl={rtl}
-          personaProfile={personaProfile}
-        />
-        {personaProfile && (
-          <PersonaCard profile={personaProfile} rtl={rtl} />
-        )}
-        <Content dir={dir} />
-      </main>
-    </div>
-  )
+  if (persona === 'beginner') {
+    return (
+      <BeginnerResults
+        profile={profile}
+        guardianStories={MOCK_STORIES}
+        academicArticles={MOCK_ARTICLES}
+      />
+    )
+  }
+
+  if (persona === 'informed') {
+    return <InformedResults profile={profile} guardianStories={[]} academicArticles={[]} />
+  }
+
+  return <ResearcherResults profile={profile} academicArticles={[]} />
 }
