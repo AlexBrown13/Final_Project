@@ -9,6 +9,7 @@ You are implementing a trauma education platform revamp.
 Execute exactly what the plan says — no extras, no improvements.
 
 When invoked:
+0. Read graphify-out/GRAPH_REPORT.md before doing anything
 1. Read .claude/revamp-progress.md to get the current planned step
 2. Read all files mentioned in the plan before touching anything
 3. Execute the step exactly as described

@@ -16,7 +16,26 @@
       "Bash(graphify query *)",
       "Bash(git restore *)",
       "Bash(graphify merge-graphs *)",
-      "Bash(rm -rf graphify_temp/)"
+      "Bash(rm -rf graphify_temp/)",
+      "Bash(where superpowers *)",
+      "Bash(where grill-me *)",
+      "Bash(grill-me --version)",
+      "Bash(superpowers --version)",
+      "Bash(cd \"d:/Program Files \\(x86\\)/Final_Project\" && ls .claude/agents/ 2>/dev/null && ls .claude/skills/ 2>/dev/null && ls ~/.claude/skills/ 2>/dev/null)",
+      "Read(//c/Users/HyDoX/.claude/skills/**)",
+      "Read(//c/Users/HyDoX/.claude/**)",
+      "PowerShell(Write-Host \"=== ~/.claude/plugins/ ===\" ; if \\(Test-Path \"$env:USERPROFILE\\\\.claude\\\\plugins\"\\) { Get-ChildItem \"$env:USERPROFILE\\\\.claude\\\\plugins\" -Recurse | Select-Object FullName } else { Write-Host \"\\(not found\\)\" } ; Write-Host \"\" ; Write-Host \"=== ~/.claude/skills/ ===\" ; if \\(Test-Path \"$env:USERPROFILE\\\\.claude\\\\skills\"\\) { Get-ChildItem \"$env:USERPROFILE\\\\.claude\\\\skills\" -Recurse | Select-Object FullName } else { Write-Host \"\\(not found\\)\" })",
+      "PowerShell(Get-ChildItem \"$env:USERPROFILE\\\\.claude\\\\skills\\\\grill-me\" -Recurse | Select-Object FullName)",
+      "PowerShell(Get-ChildItem \"$env:USERPROFILE\\\\.claude\\\\skills\\\\grill-me\" -Force | Select-Object Name, Length, LastWriteTime)",
+      "WebFetch(domain:github.com)",
+      "Bash(npx skills@latest add mattpocock/skills)",
+      "PowerShell(Get-ChildItem \"$env:USERPROFILE\\\\.claude\\\\skills\\\\\" -Recurse -Force | Select-Object FullName)",
+      "PowerShell(Get-ChildItem \"$env:USERPROFILE\\\\.claude\\\\\" -Recurse -Force -Name | Select-Object -First 50)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(/plugin install *)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "PowerShell(Get-Content \"$env:USERPROFILE\\\\.claude\\\\settings.local.json\")"
     ]
   }
 }

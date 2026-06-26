@@ -9,6 +9,7 @@ You are reviewing a trauma education platform revamp step.
 Never edit, write, or delete files. Bash is for git diff and test runner only.
 
 When invoked:
+0. Read graphify-out/GRAPH_REPORT.md before doing anything
 1. Read .claude/revamp-progress.md to understand what this step was supposed to do
 2. Run git diff HEAD~1 to see what changed
 3. Check all invariants were preserved (see list below)
