@@ -351,4 +351,12 @@ except Exception as e:
   failure branch; item dict has all 6 keys with `source: "The Guardian"`.
 - After coding: `graphify update .` to refresh the graph.
 
-**Status: IN PROGRESS**
+**Status: DONE — awaiting review**
+Commit: `9bace53`. 3 files: NEW `server/routes/external_content_route.py`
+(blueprint `external_content_bp`, PUBLIC `GET /external/stories`, top-level JSON array,
+`[]` on every failure path, 0-results not cached), `server/app.py` (import + register
+with `url_prefix="/api"` → `/api/external/stories`), `server/services/mongo.py`
+(`guardian_cache_collection` + TTL index `fetched_at`/3600s + unique index `topic`).
+Verification: AST parse OK; test gate `Ran 5 tests ... OK` (non-regression); `import app`
+OK with route registered exactly once at `/api/external/stories`; no `@jwt_required` on
+the route; graphify updated (106 files). No client/test files touched.
