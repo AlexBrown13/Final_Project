@@ -37,7 +37,15 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "PowerShell(Get-Content \"$env:USERPROFILE\\\\.claude\\\\settings.local.json\")",
       "Bash(cmd /c \"dir /aL \\\\\"d:\\\\Program Files \\(x86\\)\\\\Final_Project\\\\.claude\\\\\" 2>nul\")",
-      "Bash(cmd /c \"dir /aL \\\\\"d:\\\\Program Files \\(x86\\)\\\\Final_Project\\\\.agents\\\\\" 2>nul\")"
+      "Bash(cmd /c \"dir /aL \\\\\"d:\\\\Program Files \\(x86\\)\\\\Final_Project\\\\.agents\\\\\" 2>nul\")",
+      "Bash(git stash *)",
+      "Bash(graphify update *)",
+      "Bash(git -C \"d:/Program Files \\(x86\\)/Final_Project\" rev-parse --show-toplevel)",
+      "Bash(cat \"$\\(git -C \"d:/Program Files \\(x86\\)/Final_Project\" rev-parse --show-toplevel\\)/.superpowers/sdd/progress.md\")",
+      "Bash(npm run *)",
+      "Bash(bash \"C:/Users/HyDoX/.claude/skills/subagent-driven-development/scripts/review-package\" a902660 62c3b1a)",
+      "Bash(bash \"C:/Users/HyDoX/.claude/skills/subagent-driven-development/scripts/review-package\" a902660 0475a19)",
+      "Bash(python -c \"from utils.chat_prompts import PERSONA_PROFILE_SYSTEM_PROMPT; print\\('OK'\\)\")"
     ]
   }
 }
