@@ -712,18 +712,3 @@
     transform: none !important;
   }
 }
-
-/* ── Persona 3 — Researcher ──────────────────────────────── */
-@keyframes p3shimmer { 0%{background-position:-360px 0} 100%{background-position:360px 0} }
-.p3-skel { background:linear-gradient(90deg,#e4ecee 0%,#f0f5f6 50%,#e4ecee 100%); background-size:720px 100%; animation:p3shimmer 1.6s infinite linear; }
-.p3-row { transition:background .12s ease; }
-.p3-row:hover { background:#f0f6f7; }
-.p3-row:nth-of-type(even) { background:#f5f8f9; }
-.p3-row:nth-of-type(even):hover { background:#eef5f6; }
-.p3-copy { transition:color .12s ease,border-color .12s ease; }
-.p3-copy:hover { color:#2f6675; border-color:#9ec4d0; }
-.p3-tlink:hover { color:#1d4c59; }
-.p3-x:hover { color:#2f6675; }
-@media (prefers-reduced-motion:reduce) {
-  .p3-skel { animation:none; background:#e4ecee; }
-}

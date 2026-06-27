@@ -15,144 +15,147 @@ Fix applied: removed dead `dir` state, added `dir="auto"` to AcademicCardTeal h3
 
 ---
 
-## Current Step — DONE — awaiting review
+## Current Step — awaiting implementer
 
 **Step C-3: Build Persona 3 (Researcher) Results Page**
 
-Status: DONE — awaiting review
-Files created: ResearcherResults.jsx, ArticleRow.jsx
-Files modified: results-components.css (P3 block appended), ResultsPage.jsx (import + stub removed), index.html (IBM Plex fonts added)
-Lint: 24 problems (unchanged baseline — zero new problems in C-3 files)
-Note: `npm run build` fails on a PRE-EXISTING syntax error in C-1's BeginnerResults.jsx (unescaped apostrophes, lines 17-19) — NOT touched in this step and outside C-3 scope.
-
 ### Context
-Design reference: `client/design-refs/Persona3.dc.html`
-Dense, tool-like layout. Max-width 1080px. Blue color family only — no green. IBM Plex Mono + IBM Plex Sans throughout. No Guardian content anywhere.
+Full rewrite of the results page. No existing code to preserve — delete or ignore old results components.
+Design reference: `client/design-refs/Persona1.dc.html` and `client/design-refs/README.md`
 
-### Files to create/modify (5 files)
+### Files to create/rewrite (5 files)
 
-**1. `client/src/components/results/ResearcherResults.jsx`** (NEW)
+**1. `client/src/pages/ResultsPage.jsx`**
+Top-level shell. Reads `persona_profile` from the existing session context (same way the current ResultsPage reads it). Switches on `profile.persona` to render the right layout. For now only Beginner is implemented — `InformedResults` and `ResearcherResults` are stubs (render `null` or a placeholder). Passes `profile`, `guardianStories`, and `academicArticles` as props down to the persona component. Use mock data for now — real fetch wiring comes in C-4 after backend is built.
 
-Full Persona 3 layout per `client/design-refs/Persona3.dc.html`. Sections top to bottom:
+**2. `client/src/components/results/BeginnerResults.jsx`**
+Full Persona 1 layout per `client/design-refs/Persona1.dc.html`. Single column, max-width 860px, centered. Sections top to bottom:
+- Sticky navbar: sage dot + "trauma education" (Newsreader 20px) left; pill lang toggle right. Background `rgba(250,248,244,.88)` + `backdrop-filter:blur(8px)`.
+- Hero: eyebrow badge (dot + uppercase label) → H1 (Newsreader 46px) → subcopy (19px, muted) → interest tag pills + "adjust your topics" underlined button. All staggered `p1-rise` animation.
+- Support card (ERAN 1201): rendered ONLY when `emotionalState === 'grieving' || emotionalState === 'distressed'`. Soft sage card (`#eef3ee` bg, `#d8e3d9` border, `#7da984` left accent bar, 16px radius). Copy: "If today feels heavy, you don't have to sit with it alone." + "ERAN's emotional first-aid line is open any hour. Call **1201**." NOT a red banner.
+- Inline Adjust Topics panel: collapsible, opens below hero. Tag pills with × remove, add-input + Add button, max 5. On hitting max show text, hide input.
+- `<hr>` divider.
+- Guardian stories section: heading "Stories from people who understand" + subtitle. 2 `<GuardianCard>` components (horizontal layout).
+- OWID chart section: `#e1ebe2` rounded container (`border-radius:20px`), heading "You are not alone in this", subtitle, then `<OwidFrame>` with URL `https://ourworldindata.org/grapher/anxiety-disorders-prevalence`.
+- Academic previews section: heading "Reading, made approachable" + subtitle. 2–3 `<AcademicCard>` components.
+- CTA block: full `#7da984` background, `border-radius:22px`, white text, white pill button "See your full reading list" → links to articles page.
+- Also explore: 3 quiet list rows (Interactive Map / Trends / Data Graphs) with hover underline, border-bottom dividers.
 
-**Sticky nav** — `position:sticky; top:0; background:rgba(238,243,245,.92); backdrop-filter:blur(8px); border-bottom:1px solid #dce5e8; z-index:20; padding:13px 32px`.
-Left: 18×18 box (`border:2px solid #2f6675; border-radius:3px`) + `trauma_education` (IBM Plex Mono 14px/500) + `/ results` (mono 11px `#90a2a9`).
-Right: "researcher mode" (mono 11px `#90a2a9`) + lang toggle button (`border:1px solid #c6d6da; border-radius:4px; padding:5px 12px`). Shows `עברית` when ltr, `EN` when rtl.
-
-**Extracted profile card** — `border:1px solid #d7e1e4; border-radius:8px; background:#fff; margin-bottom:26px`.
-- Header row: "Extracted profile" (mono 11px uppercase letter-spacing .14em `#2f6675`) + "edit tags" button (`p3-copy`, mono 11px).
-- 2×2 grid (`grid-template-columns:1fr 1fr`) with internal 1px `#e7eef0` borders: **persona** / **primary topic** / **content preference** / **interest tags**. Each cell: mono 10px uppercase label `#90a2a9` + value 15px/600. Interest tags cell renders `profile.interestTags` as mono pills (`background:#e7f0f3; border:1px solid #b9d6de; color:#2f6675; border-radius:4px; padding:3px 9px; font-size:12px`). **emotionalState intentionally absent** (privacy rule).
-- OpenAlex query section (`padding:16px 20px`): "OpenAlex boolean query" label (mono 10px uppercase `#90a2a9`) + "copy" button (`p3-copy`, mono 11px) → flips to "copied ✓" for 1500ms via `queryCopied` state. `<pre>` block: `background:#f3f7f8; border:1px solid #dce5e8; border-radius:6px; padding:13px 15px; font-size:12.5px; line-height:1.7; white-space:pre-wrap; word-break:break-word`. Renders `profile.openAlexQuery`.
-- **Edit tags panel** (collapsible below query, inside card): shown when `topicsOpen`. `background:#f7fafb; border-top:1px solid #e7eef0; padding:16px 20px`. Header: "edit interest tags" mono + `{n}/5` count right. Removable pills (class `p3-x` on ×). Add input + "add" button (`background:#2f6675; color:#fff; border-radius:5px`). At max 5: hide input, show "max 5 tags" mono 11px `#90a2a9`. `[ close ]` button at bottom (mono 11px `#90a2a9`). Topics seeded from `profile.interestTags`.
-
-**OWID section** — `border:1px solid #d7e1e4; border-radius:8px; background:#fff; margin-bottom:26px; overflow:hidden`.
-Header: "Epidemiology · OWID" (mono 11px uppercase `#2f6675`) + "3 series · GBD / IHME" (mono 11px `#90a2a9`).
-Inner grid: `display:grid; grid-template-columns:1fr 1fr; gap:1px; background:#e7eef0`.
-- **Chart A** (`depressive-disorders-prevalence-ihme`, `min-height:380px`): title "Depressive disorders — prevalence" (IBM Plex Sans 13px/600) / subtitle "share of population, by country" (mono 11px `#90a2a9`). Skeleton shimmer (`p3-skel`, `position:absolute; inset:0`). Fallback: `[ series unavailable ]` (mono 12px `#5f747c`). Footer: "ourworldindata.org · IHME GBD 2021" (mono 10.5px `#90a2a9`).
-- **Chart B** (`anxiety-disorders-prevalence`, `min-height:380px`): same structure, title "Anxiety disorders — prevalence".
-- **Chart C** (`share-with-mental-and-substance-disorders`, `grid-column:1/-1`, `min-height:460px`): title "Disease burden from mental & substance-use disorders" / subtitle "share of total DALYs, global — long-run series". Fallback includes: "[ series unavailable ] — this grapher could not be reached. Other series and article results are unaffected."
-Each chart tracks its own `owidA`/`owidB`/`owidC` state (`'loading'|'ready'|'failed'`). Iframe kept at `opacity:0; position:absolute; inset:0` until `onLoad` flips to ready.
-
-**Article results section** — `border:1px solid #d7e1e4; border-radius:8px; background:#fff; overflow:hidden`.
-Header: "Articles · {n} matched" (mono 11px uppercase `#2f6675`) + "sorted: relevance ↓" (mono 11px `#90a2a9`).
-Renders `<ArticleRow>` for each article. `expanded{}` dict keyed by index. `doiCopied{}` dict keyed by index.
-Footer link: "→ open full result set (47 articles)" (mono 13px `color:#2f6675`, class `p3-tlink`).
-
-**Also explore** — `margin-top:24px; display:flex; flex-wrap:wrap; gap:6px 22px; align-items:center`.
-`also:` label (mono 11px uppercase `#90a2a9`) + `interactive_map` / `trends` / `data_graphs` links (mono 13px `color:#42565d`, class `p3-tlink`).
-
-Component props:
+Component accepts props:
 ```js
-{ profile, academicArticles = [] }
+{ profile, guardianStories = [], academicArticles = [] }
 ```
 
-State: `dir`, `topicsOpen`, `topics[]`, `addVal`, `owidA`, `owidB`, `owidC`, `queryCopied`, `expanded{}`, `doiCopied{}`.
+Mood-aware copy (used when `profile.headline` is absent):
+- `grieving`: eyebrow "A gentle place to understand", H1 "Understanding what your loved one carried — at your own pace.", subcopy gentle/acknowledging
+- `curious`: eyebrow "A place to explore, at your pace", H1 "Making sense of this — one story at a time.", subcopy inviting
+- `distressed`: eyebrow "You're in a safe place", H1 "Take a breath. We'll go gently, together.", subcopy reassuring, no rush
 
-**2. `client/src/components/results/ArticleRow.jsx`** (NEW)
+Lang toggle: `dir` state, `ltr` ↔ `rtl`. Shows `עברית` when ltr, `English` when rtl.
 
-Props: `{ num, title, year, journal, authors, doi, matchedTags, abstract, expanded, doiCopied, onToggle, onCopyDoi }`.
+**3. `client/src/components/results/GuardianCard.jsx`**
+Horizontal layout: 230px image column left, text column right. `border-radius:18px`, `border:1px solid #ece4d6`, white bg.
+- Image: `<img src={thumbnailUrl} style={{objectFit:'cover',width:'100%',height:'100%'}}`. On `onError` → hide img, show diagonal stripe `repeating-linear-gradient(135deg,#e6ddcf 0 10px,#efe8db 10px 20px)`.
+- Source row: 16×16px `#052962` square + "The Guardian" (13px, `#052962`, bold) + date (13px, muted).
+- Headline: `dir="auto"`, Newsreader 22px/1.4, `font-weight:500`.
+- Summary: `dir="auto"`, 15px, muted `#6b6457`, 1.6 line-height.
+- "Read at The Guardian →" link, `color:#3f5a45`, 14px bold.
 
-- Outer: `<article className="p3-row">` with `padding:16px 20px; border-bottom:1px solid #e7eef0`.
-- Row: flex with `gap:16px`. Left: zero-padded index (mono 12px `#b3c3c9`, `flex-shrink:0`, `width:22px`).
-- Title: `<button>` block, IBM Plex Sans 16px/600, `color:#1b2a31`, `text-align:start`, `cursor:pointer`, class `p3-tlink`. Clicking calls `onToggle`.
-- Meta line: `year · journal · authors` (mono 12px `#5f747c`). Year in `color:#2f6675`.
-- DOI row: "DOI" label (mono 11px `#90a2a9`) + doi value (mono 12px `#42565d`) + copy button (class `p3-copy`, `border-radius:3px`, mono 10px) → label flips to "copied ✓" for 1500ms. Right: matched-tag pills (mono 11px, `background:#e7f0f3; border:1px solid #b9d6de; color:#2f6675; border-radius:3px; padding:2px 8px`).
-- When collapsed: "+ abstract" button (class `p3-copy`, mono 11px `#90a2a9`).
-- When expanded: `<p>` abstract (`font-size:14px; line-height:1.6; color:#3f5158; border-left:2px solid #b9d6de; padding-left:14px; margin:12px 0 4px`).
+Props: `{ thumbnailUrl, headline, summary, date, url }`
 
-**3. `client/src/components/results/results-components.css`** (MODIFY — append P3 block at end)
+**4. `client/src/components/results/AcademicCard.jsx`**
+Warm P1 card. `background:#f3efe6`, `border:1px solid #e6ddcf`, `border-left:4px solid #7da984`, `border-radius:0 14px 14px 0`, padding 22px 26px.
+- Kicker: "Research · peer-reviewed" in monospace, `#7da984`, uppercase, 11px.
+- Title: Newsreader 21px/1.32, `font-weight:500`.
+- Meta: `firstAuthor · journal · year`, 13.5px, `#8a826f`.
+- Abstract: 15px, `#6b6457`, 1.55 line-height, 2 lines visible.
+- Matched tags row (only if `matchedTags.length > 0`): "matched :" label in muted + outlined pills (`border:1px solid #b9cdbc`, `color:#3f5a45`, `border-radius:999px`, padding `3px 11px`, 12px).
+- "Read this, gently →" link: `color:#3f5a45`, 14px bold, right-aligned.
 
+Props: `{ title, year, journal, firstAuthor, abstract, url, matchedTags }`
+
+**5. `client/src/components/results/results-components.css`**
+All CSS for the above. Key rules:
 ```css
-/* ── Persona 3 — Researcher ──────────────────────────────── */
-@keyframes p3shimmer { 0%{background-position:-360px 0} 100%{background-position:360px 0} }
-.p3-skel { background:linear-gradient(90deg,#e4ecee 0%,#f0f5f6 50%,#e4ecee 100%); background-size:720px 100%; animation:p3shimmer 1.6s infinite linear; }
-.p3-row { transition:background .12s ease; }
-.p3-row:hover { background:#f0f6f7; }
-.p3-row:nth-of-type(even) { background:#f5f8f9; }
-.p3-row:nth-of-type(even):hover { background:#eef5f6; }
-.p3-copy { transition:color .12s ease,border-color .12s ease; }
-.p3-copy:hover { color:#2f6675; border-color:#9ec4d0; }
-.p3-tlink:hover { color:#1d4c59; }
-.p3-x:hover { color:#2f6675; }
-@media (prefers-reduced-motion:reduce) {
-  .p3-skel { animation:none; background:#e4ecee; }
+@keyframes p1shimmer { 0%{background-position:-360px 0} 100%{background-position:360px 0} }
+@keyframes p1fade { from{opacity:0} to{opacity:1} }
+@keyframes p1rise { from{opacity:0;transform:translateY(var(--rise,22px))} to{opacity:1;transform:none} }
+
+.p1-root { --dur:.85s; --st:.2s; --rise:22px; --rbase:.95s; --rstep:.14s; }
+.p1-root[data-mood="curious"] { --dur:.6s; --st:.12s; --rise:14px; --rbase:.6s; --rstep:.1s; }
+.p1-root[data-mood="distressed"] { --dur:.4s; --st:.06s; --rise:0px; --rbase:.32s; --rstep:.05s; }
+.p1-root[data-mood="distressed"] .p1-skel { animation:none; background:#ece6da; }
+
+.p1-skel { background:linear-gradient(90deg,#ece6da 0%,#f5f1e8 50%,#ece6da 100%); background-size:720px 100%; animation:p1shimmer 1.6s infinite linear; }
+.p1-card { transition:box-shadow .2s ease,transform .2s ease; }
+.p1-card:hover { box-shadow:0 14px 38px -22px rgba(60,50,35,.45); transform:translateY(-2px); }
+.p1-link { transition:color .15s ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  .p1-root * { animation:none !important; transition:none !important; opacity:1 !important; transform:none !important; }
 }
 ```
 
-**4. `client/src/pages/ResultsPage.jsx`** (MODIFY)
+Hero children animate via `.p1-hero > *` with nth-child delays using `--st`. Reveal sections (sections below hero) animate with `--rbase` + `--rstep` offsets. See `Persona1.dc.html` for exact pattern.
 
-Import `ResearcherResults` and replace the `null`/placeholder stub in the persona switch with `<ResearcherResults profile={profile} academicArticles={academicArticles} />`.
+### Design tokens (Persona 1)
+- Background: `#faf8f4` | Text: `#2c2823` | Muted: `#564f45`, `#6b6457` | Faint: `#9aa090`
+- Sage: `#7da984` | Deep green text: `#3f5a45`
+- Warm surface: `#f3efe6` | Pale green: `#e1ebe2`, `#eef3ee` | Borders: `#ece4d6`, `#e6ddcf`
+- Guardian blue: `#052962`
+- Fonts: Newsreader (serif, 500) for headlines; Source Sans 3 body. Load both in `client/index.html`.
 
-**5. `client/index.html`** (MODIFY)
-
-Add IBM Plex Mono + IBM Plex Sans Google Fonts. Check existing preconnects — do not duplicate. Add after the existing P2 font link:
-```html
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+### OwidFrame helper (inline in BeginnerResults or separate tiny component)
+```jsx
+function OwidFrame({ src, height = 480 }) {
+  const [state, setState] = useState('loading'); // 'loading' | 'ready' | 'failed'
+  return (
+    <div style={{ position:'relative', minHeight:height, background:'#fff', borderRadius:14, overflow:'hidden', border:'1px solid #d3e0d5' }}>
+      {state === 'loading' && <SkeletonShimmer />}
+      {state === 'failed' && <p style={{textAlign:'center',color:'#5d6b58',padding:40}}>Data visualization temporarily unavailable.</p>}
+      <iframe
+        src={src}
+        loading="lazy"
+        onLoad={() => setState('ready')}
+        onError={() => setState('failed')}
+        style={{ width:'100%', height, border:'none', display:'block', ...(state === 'ready' ? {} : { opacity:0, position:'absolute', inset:0 }) }}
+      />
+    </div>
+  );
+}
 ```
 
-### Mock data for development (use in ResearcherResults when `academicArticles` is empty)
+### Mock data for development
 ```js
 const MOCK_PROFILE = {
-  persona: 'researcher',
-  primaryTopic: 'PTSD prevalence in conflict zones',
-  contentPreference: 'research',
-  interestTags: ['PTSD', 'prevalence', 'October 7', 'civilians', 'epidemiology'],
-  openAlexQuery: '(PTSD OR "post-traumatic stress") AND ("armed conflict" OR "war exposure" OR civilian) AND (prevalence OR epidemiology)',
+  persona: 'beginner',
+  emotionalState: 'grieving',
+  contentPreference: 'stories',
+  interestTags: ['October 7', 'grief', 'PTSD', 'soldiers', 'memory'],
+  primaryTopic: 'grief',
+  headline: null,
 };
+const MOCK_STORIES = [
+  { thumbnailUrl: null, headline: 'The families of fallen soldiers who are learning to grieve together', summary: 'Around shared tables and quiet rooms, bereaved parents are finding that the weight feels a little more bearable when it is carried alongside others.', date: '2 Mar 2025', url: '#' },
+];
 const MOCK_ARTICLES = [
-  { title: 'Prevalence of PTSD in populations exposed to armed conflict: a systematic review and meta-analysis', year: 2024, journal: 'Lancet Psychiatry', authors: 'Charlson F, van Ommeren M, et al.', doi: '10.1016/S2215-0366(24)00112-9', matchedTags: ['PTSD', 'prevalence'], abstract: 'Pooled estimates across 129 studies (N = 1.7M) place the prevalence of PTSD among conflict-exposed populations at 22.3% (95% CI 18.1–27.0), with substantial heterogeneity attributable to exposure intensity and time since event.', url: '#' },
-  { title: 'Trajectories of post-traumatic stress following mass-casualty events', year: 2023, journal: 'JAMA Psychiatry', authors: 'Galatzer-Levy I, Bonanno G.', doi: '10.1001/jamapsychiatry.2023.0455', matchedTags: ['PTSD'], abstract: 'Latent growth-mixture modeling identifies four stable response trajectories — resilient, recovering, chronic, and delayed-onset — with resilience the modal outcome even at high exposure levels.', url: '#' },
-  { title: 'Civilian PTSD in protracted conflict zones: a systematic review of risk and protective factors', year: 2025, journal: 'World Psychiatry', authors: 'Hoppen T, Morina N.', doi: '10.1002/wps.21188', matchedTags: ['PTSD', 'civilians'], abstract: 'Ongoing threat, displacement, and loss of social capital emerge as the strongest predictors of chronic course; perceived social support and collective efficacy are the most consistent protective factors.', url: '#' },
-  { title: 'Estimating the population mental-health burden of the October 2023 events in Israel', year: 2024, journal: 'Israel Journal of Psychiatry', authors: 'Levav I, Bleich A.', doi: '10.1234/ijp.2024.0917', matchedTags: ['October 7', 'prevalence'], abstract: 'Early modeling projects a marked increase in incident PTSD and prolonged-grief disorder, concentrated in directly exposed communities and first-responder cohorts, with implications for service capacity planning.', url: '#' },
-  { title: 'Sleep disturbance and nightmares as predictors of chronic PTSD in displaced civilians', year: 2023, journal: 'Sleep Medicine Reviews', authors: 'Ben-Zur H, Gilboa-Schechtman E.', doi: '10.1016/j.smrv.2023.101802', matchedTags: ['PTSD', 'civilians'], abstract: 'Polysomnographic and self-report data converge on disrupted REM continuity as an early marker of chronic course, suggesting sleep-targeted intervention windows in the first months after displacement.', url: '#' },
-  { title: 'Intergenerational transmission of trauma in families of conflict survivors', year: 2022, journal: 'Development and Psychopathology', authors: 'Dekel R, Solomon Z.', doi: '10.1017/S0954579422000451', matchedTags: ['epidemiology'], abstract: 'A three-generation cohort finds attenuated but measurable transmission of post-traumatic symptomatology, mediated more strongly by parental emotional availability than by direct disclosure of events.', url: '#' },
-  { title: 'Neuroimaging correlates of PTSD symptom severity: a coordinate-based meta-analysis', year: 2024, journal: 'Biological Psychiatry', authors: 'Admon R, Hendler T.', doi: '10.1016/j.biopsych.2024.02.011', matchedTags: ['PTSD'], abstract: 'Hyperactivation of the amygdala alongside hypoactivation of the ventromedial prefrontal cortex scales with symptom severity across 64 studies, supporting a dysregulated threat-appraisal model.', url: '#' },
-  { title: 'Cost-effectiveness of scaled-up trauma interventions in conflict-affected health systems', year: 2023, journal: 'Health Policy and Planning', authors: 'Chisholm D, et al.', doi: '10.1093/heapol/czad055', matchedTags: ['prevalence', 'epidemiology'], abstract: 'Task-shifted, group-delivered interventions achieve acceptable cost-per-DALY-averted thresholds even under constrained budgets, strengthening the economic case for population-level scale-up.', url: '#' },
-  { title: 'Resilience and post-traumatic growth among first responders after mass-casualty deployment', year: 2024, journal: 'Journal of Anxiety Disorders', authors: 'Palgi Y, Shrira A.', doi: '10.1016/j.janxdis.2024.102788', matchedTags: ['civilians'], abstract: 'Longitudinal tracking of emergency personnel identifies peer cohesion and perceived organizational support as the strongest modifiable predictors of post-traumatic growth at twelve months.', url: '#' },
+  { title: 'Post-traumatic stress and prolonged grief in bereaved parents', year: 2023, journal: 'Journal of Traumatic Stress', firstAuthor: 'R. Cohen', abstract: 'Parents who lose a child to sudden violence often experience grief and trauma at the same time. This review describes what that looks like and what tends to help.', url: '#', matchedTags: ['grief', 'PTSD'] },
 ];
 ```
 
-### Design tokens (Persona 3)
-- Background: `#eef3f5` | Text: `#1b2a31` | Muted: `#5f747c` | Faint: `#90a2a9`
-- Surface: `#fff` | Panel tints: `#f3f7f8`, `#f7fafb` | Striped rows: `#f5f8f9`
-- Accent: `#2f6675` | Link hover: `#1d4c59` | Tag value: `#42565d`
-- Tag bg: `#e7f0f3` | Tag border: `#b9d6de` | Tag text: `#2f6675`
-- Borders: `#d7e1e4`, `#e7eef0`, `#c6d6da`
-- Radii: 8px panels, 3–4px tags/buttons
-- Fonts: IBM Plex Mono (metadata/labels/code, 400/500/600) + IBM Plex Sans (titles/body, 400/500/600/700). Base 15px/1.5.
-
 ### What NOT to do
-- Do not render `emotionalState` anywhere (privacy rule for researcher)
-- Do not use any green-family colors (`#7da984`, `#3f5a45`, etc.) — blue family only
-- Do not include Guardian stories or `GuardianCard` — researcher never sees them
+- Do not wire up real API calls (backend not built yet — use mock data)
+- Do not import or reference old BeginnerHero.jsx, BeginnerPersonaCard.jsx, etc.
 - Do not use Tailwind or any component library
 - Do not use CSS modules — all CSS goes in `results-components.css`
-- Do not wire up real API calls — use mock data
+- Do not preserve any existing logic from the current ResultsPage.jsx
 
 ---
 
 ## Upcoming Steps
 
+- **C-2**: Persona 2 (Informed Learner) — `InformedResults.jsx`, `GuardianCardVertical.jsx`, `AcademicCardTeal.jsx`, P2 CSS
+- **C-3**: Persona 3 (Researcher) — `ResearcherResults.jsx`, `ArticleRow.jsx`, P3 CSS
 - **C-4**: Wire all three personas to real data — Guardian fetch, articles fetch, session profile
 - **B-1**: `server/utils/chat_prompts.py` — new extraction schema (emotional_state, content_preference)
 - **B-2**: `server/routes/chat_route.py` — parse new fields, fallback emotional_state → "neutral"

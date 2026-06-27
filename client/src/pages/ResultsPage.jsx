@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import BackendDown from '../components/BackendDown.jsx'
 import BeginnerResults from '../components/results/BeginnerResults.jsx'
 import InformedResults from '../components/results/InformedResults.jsx'
-import ResearcherResults from '../components/results/ResearcherResults.jsx'
 import '../components/results/results-components.css'
 import {
   USER_ID_KEY,
@@ -58,6 +57,11 @@ function scoreToPersona(s) {
   if (s === 3) return 'researcher'
   if (s === 2) return 'informed'
   return 'beginner'
+}
+
+
+function ResearcherResults() {
+  return null
 }
 
 export default function ResultsPage() {
