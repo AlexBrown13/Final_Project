@@ -90,208 +90,263 @@ Commit context per prior review. Test gate is now REAL and is the gate for B-3/B
 
 ---
 
-## B-3: `server/routes/ai_assistant_route.py` — wire ALL profile fields into the article-chat (RAG) system prompt — DONE — awaiting review
+## B-3: `server/routes/ai_assistant_route.py` — wire ALL profile fields into the article-chat (RAG) system prompt — COMPLETE
+Commit: `1be5319`. One file (`article_chat()` handler only): Change A (6 profile locals),
+Change B (EMOTIONAL_GUIDANCE dict + persona×emotional_state tone), Change C (PART 3
+system_content template). Test gate green, file parses, graphify updated. (Full plan +
+review retained in git history of this file.)
 
-**Source of truth:** Revamp.md PART 3 (lines 132-192). ONE source file only.
+---
+
+## B-4: `server/routes/articles_route.py` — article ranking persona_boost + matched_tags (+ verify abstract projection) — IN PROGRESS
+
+**Source of truth:** Revamp.md PART 4 (lines 196-243). ONE source file only:
+`d:\Program Files (x86)\Final_Project\server\routes\articles_route.py` (205 lines total).
 
 **Test gate (must pass, no regressions):** `python -m unittest discover -s server/tests`
-(currently `Ran 5 tests in 0.001s OK`). Note: B-3 does not change tested code paths, so
-the gate is a non-regression guard, not new coverage.
+(currently `Ran 5 tests in 0.001s OK`). Note: `rank_articles()` is a pure function and is
+not currently covered. An OPTIONAL small unit test is noted below; the gate may stay at 5
+tests (orchestrator decision: tests may stay as-is, non-regression guard only).
 
-### INVESTIGATION FINDINGS (authoritative, from source + Revamp.md)
+### INVESTIGATION FINDINGS (authoritative — read from source + Revamp.md PART 4)
 
-**Graphify orientation:** GRAPH_REPORT god/community map — `ai_assistant()` lives in
-Community 265 (with ask_ollama/check_ollama/main/save_conversation_to_db); the
-`article_chat()` route lives in Community 12. Only the `article_chat()` handler is touched
-by B-3.
+Graphify orientation: GRAPH_REPORT Community 8 contains exactly the ranking surface —
+`articles()`, `build_query()`, `get_articles()`, `rank_articles()`, `sanitize_tags()`, plus
+the docstring nodes "Sort articles using the content_score..." and "Validate and sanitize a
+list of topic tags...". This confirms `articles_route.py` is the only file in scope and the
+only ranking function is `rank_articles()`. No other community references rank_articles.
 
-**Finding 1 — the file and the exact lines (`server/routes/ai_assistant_route.py`, 130 lines total).**
-- `article_chat()` is defined at L41-130 (route `'/article-chat'`, POST, `@jwt_required()`).
-- The OTHER route `ai_assistant()` (L17-38, `'/ai/assistant'`) is NOT touched.
-- Module-level 5-minute cache: `_articles_cache` (L10) + `_ARTICLES_CACHE_TTL = 5 * 60` (L11).
-  Cache read/populate logic is L57-66. **PRESERVE verbatim.**
-- Session/persona lookup block: L68-79. Currently:
-  - L72: `persona = "informed learner"` (default).
-  - L73-77: secure JWT-identity lookup of `chat_collection`, with fallback to
-    `quiz_user_id` from body (current data model). **PRESERVE this lookup logic.**
-  - L78-79: `if session:` then
-    `persona = (session.get("persona_profile") or {}).get("persona", "informed learner")`.
-    This is the ONLY-persona extraction that B-3 expands to all 6 fields.
-- Article context block: L81-88. Format is numbered `[{i+1}] {title} ({year})\n{abstract[:400]}`
-  (400-char abstract truncation, "Untitled"/"n/a"/"No abstract." fallbacks). **PRESERVE verbatim.**
-- Current 3-string tone map: L90-96 (researcher / beginner / else). **REPLACED** by the new
-  persona+emotional_state tone map.
-- Current `system_content`: L100-106. **REPLACED** by the PART 3 template.
-- History handling (L108-112: system msg + `history[-4:]` + final user turn) — **PRESERVE.**
-- `client.chat.completions.create(...)` at L114-120: `model="llama-3.3-70b-versatile"`,
-  `temperature=0.5`, **`max_tokens=800` (L118)** — **PRESERVE.**
-- Empty-response guard L121-123 (returns 503) and answer return L124-126 — **PRESERVE.**
-- Outer try/except (L44, L128-130) returning `{"error": "Assistant unavailable."}` 500 —
-  **PRESERVE** (this is the route's distress/failure handling).
+**Finding 1 — `rank_articles()` current state (L37-60).**
+- Signature L37: `def rank_articles(articles: list, user_tags: list) -> list:` —
+  `user_tags` is currently accepted but NOT USED (no tag matching today).
+- Per-article computation L52-56:
+  - L52: `content_score = float(article.get("content_score") or 0.0)`
+  - L53: `click_score = min(article.get("click_count", 0) / 10.0, 1.0)`  (capped at 10 clicks)
+  - L54-55: `year = article.get("year") or 2000`;
+    `recency_score = max(0.0, min((int(year) - 2000) / 26.0, 1.0))`  (2000–2026 range)
+  - L56 (THE FORMULA): `final = 0.6 * content_score + 0.25 * click_score + 0.15 * recency_score`
+  - L57: `scored.append((final, article))`
+- L59-60: `scored.sort(key=lambda x: x[0], reverse=True)` then return ranked list.
+- Empty-input guard L47-48 (`if not articles: return articles`) — PRESERVE.
+- Docstring L38-46 describes the OLD 0.6/0.25/0.15 weights — MUST be updated to the new
+  weights + persona_boost so it does not lie.
 
-**Finding 2 — session object shape & profile field names.**
-- `session = chat_collection.find_one({...}, {"persona_profile": 1})` → either `None` or a
-  doc with `persona_profile`. `session.get("persona_profile")` may be `None`, hence the
-  `or {}` guard. So `profile = session.get("persona_profile") or {}` is correct.
-- Field names produced by `parse_persona_profile` (chat_route.py L114-142, confirmed via
-  B-2a Finding 2) are snake_case: `persona`, `emotional_state`, `content_preference`,
-  `primary_topic`, `interest_tags` (plus `preferred_content`, `search_query` which B-3 does
-  not use). `interest_tags` is a LIST. **PART 3's `profile.get(...)` extraction matches.**
-- CRITICAL live `persona` values: `"beginner" | "informed learner" | "researcher"` — note
-  the SPACE in "informed learner". The new tone map MUST key off these exact strings.
-- Live enums (chat_route.py L78-79, post B-fix): emotional_state ∈ {grieving, distressed,
-  curious, professional, neutral}; content_preference ∈ {stories, research, mixed}. The five
-  emotional_guidance branches cover exactly the emotional_state enum.
+**Finding 2 — abstract projection (CRITICAL CHECK — Revamp.md line 226 is STALE).**
+- Revamp.md line 226 warns the `get_articles()` projection does NOT return `abstract` and
+  that persona_boost + matched_tags will silently be 0 unless `"abstract": 1` is added.
+- ACTUAL CODE: the projection at L87-99 ALREADY INCLUDES **`"abstract": 1` at L95**.
+  Full projected fields: `_id, openalex_id, title, year, journal, url, pdf_url, abstract,
+  authors, click_count, content_score`.
+- **CONCLUSION: the projection fix is ALREADY SATISFIED in the live code. The Revamp.md
+  warning predates a prior commit that added it.** B-4 must NOT re-add a duplicate key.
+  The implementer's job here is to VERIFY `"abstract": 1` is still present (do not remove
+  it) — it is required by both persona_boost and matched_tags. Reviewer: confirm L95 (or
+  wherever abstract lands) stays in the projection.
 
-**Finding 3 — the emotional_state default discrepancy (FLAGGED + DECISION).**
-- B-fix default for emotional_state is `"neutral"`; Revamp.md PART 3 line 154 uses
-  `profile.get("emotional_state", "curious")`.
-- This default ONLY fires when the `emotional_state` KEY is entirely ABSENT from the stored
-  doc (legacy/partial profile). Any profile created through the current quiz pipeline always
-  carries a valid enum value (parse defaults it to "neutral"), so for live data the `.get()`
-  default is effectively dead.
-- **DECISION (orchestrator):** FOLLOW Revamp.md PART 3 verbatim — use default `"curious"`
-  in `ai_assistant_route.py`. Rationale: PART 3 is the stated source of truth for THIS step,
-  the default is near-unreachable for real sessions, and the assistant context tolerates
-  either valid enum value. This is a deliberate, documented deviation from the B-fix parse
-  default (which stays "neutral" in chat_route.py — NOT changed by B-3).
+**Finding 3 — the `GET /api/articles` handler (`get_articles()`, L74-112).**
+- L78: `user_id = get_jwt_identity()` (auth identity, scopes the article query) — PRESERVE.
+- L80-83: persona/session read at request time:
+  - L80: `quiz_user_id = request.args.get("quiz_user_id")`
+  - L81: `session = chat_collection.find_one({"user_id": quiz_user_id}, {"persona_profile": 1}) if quiz_user_id else None`
+  - L82: `persona_profile = session.get("persona_profile", {}) if session else {}`
+  - L83: `user_tags = (persona_profile.get("interest_tags") or [])`
+- L85-100: the projected `articles_collection.find(...)` cursor (see Finding 2).
+- L102-105: cursor → list, stringify `_id`.
+- L107: `articles = rank_articles(articles, user_tags)`  ← call site to extend.
+- L109: `return jsonify({"articles": articles, "persona_profile": persona_profile}), 200`
+  — the response shape. matched_tags is added PER ARTICLE inside the `articles` list, so
+  the top-level shape is unchanged; the client (C-4 mapArticle) already defaults
+  `matchedTags → []`, so this is backward-compatible.
+- L110-112: outer try/except 500. PRESERVE.
+- The OTHER routes — `update_profile()` PUT (L115-158), `articles()` POST (L161-184),
+  `track_click()` POST (L187-204) — are OUT OF SCOPE and UNTOUCHED.
 
-### FILE TO CHANGE (exactly ONE)
-`d:\Program Files (x86)\Final_Project\server\routes\ai_assistant_route.py`
-(No other route, no chat_route.py, no articles_route.py, no tests, no client.)
+**Finding 4 — enums (post B-fix, confirmed).**
+- `emotional_state` ∈ {grieving, distressed, curious, professional, neutral}.
+- `content_preference` ∈ {stories, research, mixed}.
+- persona_boost keys off `content_preference` + `emotional_state` ONLY (per Revamp.md
+  PART 4) — `persona` (the "informed learner" string) is NOT used here. Do not branch on it.
 
-### EXACT CHANGES
+### EXACT CHANGES (single file: `server/routes/articles_route.py`)
 
-**Change A — expand session field extraction.** Replace L78-79:
+**Change 0 — VERIFY abstract projection (no edit expected).** Confirm `"abstract": 1`
+remains in the `get_articles()` projection (currently L95). Do not remove; do not duplicate.
+If, and only if, it were missing, add it — but per Finding 2 it is already present.
+
+**Change 1 — add a module-level `persona_boost` helper** (place it directly ABOVE
+`rank_articles()`, i.e. before current L37, after `sanitize_tags()`). Pure function, no I/O,
+case-insensitive substring matching on the abstract, returns a bounded float in [0.0, 1.0]:
+
 ```python
-        if session:
-            persona = (session.get("persona_profile") or {}).get("persona", "informed learner")
+# ── Persona boost keyword groups (Revamp.md PART 4, lines 220-224) ────────────
+_STORIES_KEYWORDS = ("case study", "narrative", "interview", "testimony",
+                     "survivor", "personal account", "qualitative")
+_RESEARCH_KEYWORDS = ("prevalence", "epidemiological", "randomized", "meta-analysis",
+                      "systematic review", "cohort", "longitudinal")
+_SUPPORT_KEYWORDS = ("support", "intervention", "treatment", "therapy",
+                     "recovery", "coping", "resilience")
+_PROFESSIONAL_KEYWORDS = ("clinical", "framework", "protocol", "evidence-based",
+                          "intervention", "efficacy")
+# Abstracts that are "purely epidemiological" get demoted for grieving/distressed users.
+_EPIDEMIOLOGICAL_KEYWORDS = ("prevalence", "epidemiological", "incidence",
+                             "meta-analysis", "systematic review", "cohort")
+
+
+def persona_boost(abstract: str, emotional_state: str, content_preference: str) -> float:
+    """
+    Bounded [0.0, 1.0] persona-fit score from case-insensitive keyword matching on the
+    article abstract (NO ML). Per Revamp.md PART 4 (lines 220-224). content_preference and
+    emotional_state independently contribute; the demote rule subtracts for grieving/
+    distressed users when the abstract is purely epidemiological.
+    """
+    text = (abstract or "").lower()
+    if not text:
+        return 0.0
+
+    boost = 0.0
+
+    # content_preference contribution (0.5 if any group keyword present)
+    if content_preference == "stories" and any(k in text for k in _STORIES_KEYWORDS):
+        boost += 0.5
+    elif content_preference == "research" and any(k in text for k in _RESEARCH_KEYWORDS):
+        boost += 0.5
+
+    # emotional_state contribution (0.5 if any group keyword present)
+    if emotional_state in ("grieving", "distressed"):
+        if any(k in text for k in _SUPPORT_KEYWORDS):
+            boost += 0.5
+        # demote purely epidemiological abstracts for vulnerable users
+        if any(k in text for k in _EPIDEMIOLOGICAL_KEYWORDS) \
+                and not any(k in text for k in _SUPPORT_KEYWORDS):
+            boost -= 0.5
+    elif emotional_state == "professional":
+        if any(k in text for k in _PROFESSIONAL_KEYWORDS):
+            boost += 0.5
+
+    # bound to [0.0, 1.0]
+    return max(0.0, min(boost, 1.0))
 ```
-with (keep the `persona = "informed learner"` pre-default at L72 and the lookup at L73-77
-unchanged; on `if session:` populate all 6 locals from the profile):
+
+Algorithm rationale (spelled out so the implementer has zero ambiguity):
+- Two independent contributions, each worth **0.5** when its keyword group matches:
+  one from `content_preference`, one from `emotional_state`. Max raw boost = 1.0 (matches
+  the 0.10 weight cleanly: a perfectly-fit article gets the full +0.10 term).
+- `content_preference == "mixed"` (the default) contributes 0 — neutral, no story/research
+  preference. `emotional_state` in {curious, neutral} contributes 0 — no boost group is
+  defined for them in PART 4 (only grieving/distressed and professional have groups).
+- **Demote rule** (PART 4 line 223): for grieving/distressed users, if the abstract is
+  "purely epidemiological" (contains an epidemiological keyword AND contains NO support
+  keyword) subtract 0.5. The `not any(support)` clause is what makes it "purely"
+  epidemiological — an abstract that has both stats AND support language is not demoted.
+- Final clamp `max(0.0, min(boost, 1.0))` keeps the term in [0,1] so the 0.10 weight behaves
+  predictably and a demote can never push final_score negative via this term.
+
+**Change 2 — extend `rank_articles()` signature** (L37):
 ```python
-        profile = (session.get("persona_profile") or {}) if session else {}
-        persona = profile.get("persona", "informed learner")
-        emotional_state = profile.get("emotional_state", "curious")
-        content_preference = profile.get("content_preference", "mixed")
-        primary_topic = profile.get("primary_topic", "")
-        interest_tags = profile.get("interest_tags", [])
+def rank_articles(articles: list, user_tags: list,
+                  emotional_state: str = "curious",
+                  content_preference: str = "mixed") -> list:
 ```
-(Implementation note: this collapses the `if session:` guard into a single `profile` assign
-so all five derived fields default cleanly when `session` is None. The pre-existing L72
-`persona = "informed learner"` default may be dropped if it becomes redundant, OR kept —
-implementer's choice as long as `persona` defaults to "informed learner" when no session.
-Net behavior: identical default for persona; four new locals.)
+(Defaults per Revamp.md line 209: `emotional_state="curious"`, `content_preference="mixed"`.)
 
-**Change B — replace the 3-string tone map (L90-96) with a persona+emotional_state map.**
-Build `emotional_guidance` first, then `tone`. EXACT strings from Revamp.md PART 3:
+**Change 3 — update the `rank_articles()` docstring (L38-46)** to state the NEW weights
+(0.60 content / 0.25 click / 0.05 recency / 0.10 persona_boost) and that persona_boost is
+keyword matching on the abstract, no ML. (Doc only — keep it honest.)
 
-`emotional_guidance` keyed on `emotional_state` (lines 161-165):
+**Change 4 — new formula inside the per-article loop (replace L56).** Keep L52-55
+(content_score, click_score, year, recency_score) VERBATIM — only the weighting line and a
+new persona term change:
 ```python
-        EMOTIONAL_GUIDANCE = {
-            "grieving": "This user may be processing personal loss. Be gentle and warm. Validate their emotional experience before presenting facts. Do not lead with statistics or clinical language. If they seem overwhelmed, it is appropriate to mention ERAN 1201 (crisis support line).",
-            "distressed": "This user may be struggling. Keep responses short, clear, and warm. Avoid overwhelming them with information. If crisis language appears, mention ERAN 1201.",
-            "curious": "This user is exploring intellectually. Be engaging, thorough, and willing to go deep on topics they ask about.",
-            "professional": "This user works with trauma survivors professionally. Focus on practical clinical frameworks, intervention strategies, and citable findings they can use with clients. Be direct and information-dense.",
-            "neutral": "This user has not expressed strong emotional signals. Be informative, clear, and balanced. Match their tone.",
-        }
-        emotional_guidance = EMOTIONAL_GUIDANCE.get(emotional_state, EMOTIONAL_GUIDANCE["neutral"])
+        boost = persona_boost(article.get("abstract"), emotional_state, content_preference)
+        final = (0.60 * content_score
+                 + 0.25 * click_score
+                 + 0.05 * recency_score
+                 + 0.10 * boost)
 ```
-(Default-to-"neutral" guidance for any out-of-enum value — "neutral" is the documented
-most-common case per line 165.)
+(Weights per Revamp.md lines 214-218: recency reduced 0.15→0.05, persona_boost weight 0.10.
+Sum of weights = 1.00.) Preserve L57 `scored.append((final, article))` and the L59-60 sort.
 
-`tone` keyed on `persona` AND `emotional_state` together (lines 167-173). Note persona key
-`"informed learner"` WITH the space, and `"informed learner" + any` is the catch-all:
+**Change 5 — compute matched_tags after ranking, inside `get_articles()`.** Per Revamp.md
+lines 232-241. Insert BETWEEN the current L107 (`articles = rank_articles(...)`) and the
+L109 return. Loop over the already-ranked list and attach `matched_tags` to each article
+dict (mutating in place is fine — they are plain dicts from the cursor):
 ```python
-        if persona == "researcher":
-            if emotional_state in ("grieving", "distressed"):
-                tone = "Be precise but compassionate. This researcher may have a personal connection to the topic."
-            else:  # professional / curious / neutral (and any other)
-                tone = "Use academic language. Be precise and data-focused. Reference specific articles by number."
-        elif persona == "beginner":
-            if emotional_state in ("grieving", "distressed"):
-                tone = "Use very simple, warm language. No jargon at all. Lead with empathy before information."
-            elif emotional_state == "curious":
-                tone = "Use simple, friendly language. Explain concepts clearly. Make it accessible and engaging."
-            else:  # neutral (and any other)
-                tone = "Use simple, clear language. Be welcoming and informative without being clinical."
-        else:  # "informed learner" + any (also the safe fallback for unknown personas)
-            tone = "Balance accessibility with depth. Reference articles when relevant. Match the user's tone."
-```
-Mapping coverage check vs Revamp.md lines 168-173:
-- researcher + professional/curious/neutral → academic string ✓ (else branch)
-- researcher + grieving/distressed → "precise but compassionate" ✓
-- beginner + grieving/distressed → "very simple, warm ... empathy before information" ✓
-- beginner + curious → "simple, friendly ... accessible and engaging" ✓
-- beginner + neutral → "simple, clear ... welcoming ... without being clinical" ✓
-- informed learner + any → "Balance accessibility with depth ..." ✓
-
-**Change C — rebuild `system_content` (replace L100-106) with the PART 3 template
-(lines 176-189), verbatim in substance:**
-```python
-        system_content = (
-            f"You are an assistant helping a user explore academic articles about trauma in Israel.\n\n"
-            f"User profile:\n"
-            f"- Persona: {persona}\n"
-            f"- Emotional state: {emotional_state}\n"
-            f"- Main topic of interest: {primary_topic}\n"
-            f"- Also interested in: {', '.join(interest_tags)}\n"
-            f"- Content preference: {content_preference}\n\n"
-            f"Tone: {tone}\n"
-            f"Emotional guidance: {emotional_guidance}\n\n"
-            f"Answer only based on the articles below. If the question is unrelated, say so briefly.\n\n"
-            f"Articles:\n{articles_context}"
+        articles = rank_articles(
+            articles, user_tags,
+            emotional_state=persona_profile.get("emotional_state", "curious"),
+            content_preference=persona_profile.get("content_preference", "mixed"),
         )
-```
-(Edge note: `', '.join(interest_tags)` requires `interest_tags` to be a list of strings —
-it is, per parse_persona_profile `_clean_tags`. Defensive `str()` coercion inside join is
-acceptable but not required; keep it simple unless a non-string slips through.)
 
-### WHAT TO PRESERVE (Revamp.md line 192 + route invariants)
-- The article context format (L81-88): numbered `[{i+1}]`, title + `(year)`, 400-char
-  abstract truncation, all `Untitled`/`n/a`/`No abstract.` fallbacks — UNCHANGED.
-- `max_tokens=800` (L118), `model="llama-3.3-70b-versatile"`, `temperature=0.5` — UNCHANGED.
-- The 5-minute server-side article cache (`_articles_cache`, `_ARTICLES_CACHE_TTL`, L57-66) —
-  UNCHANGED.
-- Auth: `@jwt_required()` + `get_jwt_identity()` + the secure JWT-identity-first session
-  lookup with `quiz_user_id` fallback (L68-77) — UNCHANGED.
-- Crisis/distress handling: ERAN 1201 mentions are now IN the guidance strings (grieving +
-  distressed) per spec; the outer try/except 500 "Assistant unavailable." and the 503
-  empty-response guard — UNCHANGED.
-- The OTHER route `ai_assistant()` (L17-38) — UNTOUCHED.
-- Do NOT change the articles fetch, history handling, or any other route/file.
+        for article in articles:
+            title = (article.get("title") or "").lower()
+            abstract = (article.get("abstract") or "").lower()
+            article["matched_tags"] = [
+                tag for tag in user_tags
+                if tag.lower() in title or tag.lower() in abstract
+            ]
+```
+Notes:
+- This REPLACES the current L107 call (which passes only `articles, user_tags`) with the
+  4-arg call that reads `emotional_state` + `content_preference` from `persona_profile`
+  (already loaded at L82). Defaults "curious"/"mixed" match rank_articles + Revamp.md.
+- `user_tags` is already `persona_profile.get("interest_tags") or []` (L83) — reuse it.
+- matched_tags is computed POST-rank per PART 4 ("After ranking, compute which of the user's
+  interest_tags appear in each article"). Ordering of articles is unchanged by this loop.
+- The default-empty `user_tags` → every article gets `matched_tags: []`, which the client
+  already tolerates (C-4 mapArticle defaults matchedTags → []). Backward-compatible.
+
+**Change 6 — response shape (L109).** UNCHANGED at the top level:
+`return jsonify({"articles": articles, "persona_profile": persona_profile}), 200`. Each
+article in `articles` now carries an extra `matched_tags` key. No new top-level field.
+
+### WHAT TO PRESERVE (Revamp.md PART 4 + route invariants)
+- `content_score` / `click_score` / `recency_score` computations and their data sources
+  (`content_score`, `click_count` capped at 10, `year` 2000–2026) — UNCHANGED (L52-55).
+- The empty-articles guard (L47-48) and the sort (L59-60) — UNCHANGED.
+- `"abstract": 1` in the projection (L95) — MUST REMAIN (persona_boost + matched_tags need it).
+- Auth: `@jwt_required()` + `get_jwt_identity()` scoping the article query (L75-78) — UNCHANGED.
+- The request-time session/persona read (L80-83) — reused, not changed (we now also read
+  emotional_state + content_preference from the same `persona_profile`).
+- Top-level response shape `{"articles": [...], "persona_profile": {...}}` (L109) — UNCHANGED.
+- The outer try/except 500 (L110-112) — UNCHANGED.
+- The OTHER routes: `update_profile()` PUT, `articles()` POST, `track_click()` POST —
+  UNTOUCHED. `sanitize_tags()`, `build_query()` — UNTOUCHED.
+- No ML / no network calls added; persona_boost is pure keyword matching.
 
 ### INVARIANTS
-- Exactly ONE file changed: `server/routes/ai_assistant_route.py` (only the `article_chat()`
-  handler body). No new files. No edits to chat_route.py / articles_route.py / tests / client.
-- `persona` key `"informed learner"` (WITH space) handled as a first-class branch / catch-all.
-- All five emotional_guidance branches present and verbatim-in-substance vs lines 161-165,
-  including ERAN 1201 in grieving + distressed.
-- All six tone combinations present and verbatim-in-substance vs lines 168-173.
-- system_content matches the lines 176-189 template field-for-field and order-for-order.
+- Exactly ONE file changed: `server/routes/articles_route.py`. No new files. No edits to
+  chat_route.py / ai_assistant_route.py / tests / client.
+- persona_boost branches ONLY on content_preference + emotional_state (never on `persona`).
+- New formula weights sum to 1.00 (0.60 + 0.25 + 0.05 + 0.10).
+- persona_boost return is clamped to [0.0, 1.0]; the demote can never make final negative.
+- matched_tags is a list on EVERY returned article (>=[]), computed post-rank, both title
+  and abstract checked, all comparisons lowercased.
+- abstract projection key present exactly once (Finding 2).
 
 ### VERIFICATION (post-coding)
 - Test gate: `python -m unittest discover -s server/tests` → still `Ran 5 tests ... OK`
-  (no regression; B-3 touches no tested function).
-- `python -c "import ast; ast.parse(open(r'server/routes/ai_assistant_route.py').read())"`
-  (or import the module) — file parses / imports clean.
-- Grep the new file: confirm `max_tokens=800` present; `_ARTICLES_CACHE_TTL` unchanged;
-  article-context f-string `[400]` slice present; both ERAN 1201 mentions present; persona
-  key `"informed learner"` present.
-- Confirm the old 3-string tone block and old system_content are fully gone.
-- After coding: `graphify update .` to refresh the graph.
+  (non-regression; B-4 touches no currently-tested function).
+- `python -c "import ast; ast.parse(open(r'server/routes/articles_route.py').read())"` —
+  file parses clean.
+- Grep the file: confirm `0.60 * content_score`, `0.05 * recency_score`, `0.10 * boost`
+  present; old `0.6 * content_score ... 0.15 * recency_score` line GONE; `"abstract": 1`
+  present exactly once; `matched_tags` assignment present; `def persona_boost(` present;
+  4-arg `rank_articles(` signature present.
+- Spot-check weight sum = 1.00 and recency dropped 0.15→0.05.
+- After coding: `graphify update .` to refresh the graph (Community 8 will gain persona_boost).
 
-**Status: DONE — awaiting review**
-Commit: `1be5319`. One file changed (`server/routes/ai_assistant_route.py`, `article_chat()`
-handler only): Change A (6 profile locals), Change B (EMOTIONAL_GUIDANCE dict + persona×
-emotional_state tone), Change C (PART 3 system_content template). Test gate green
-(`Ran 5 tests ... OK`), file parses, graphify updated. Preserved: article-context format,
-max_tokens=800, model/temp, 5-min cache, auth+lookup, history, 503/500 guards, ERAN 1201 in
-grieving+distressed, the other route `ai_assistant()`.
+### OPTIONAL (orchestrator decision — tests may stay as-is)
+A focused unit test for `persona_boost` / `rank_articles` would add real coverage of the new
+logic (e.g. stories-pref abstract with "narrative" → boost > 0; grieving + purely
+epidemiological abstract → demoted below a support-bearing one; mixed/curious → boost 0).
+If added, it lives in `server/tests/` and the gate count rises from 5. B-2a established the
+gate; this step does NOT require new tests to land. RECOMMENDATION: add the small test if
+cheap, otherwise keep the gate as a non-regression guard.
+
+**Status: IN PROGRESS**
 
 ---
 
 ## Upcoming Steps
 
-- **B-4**: `server/routes/articles_route.py` — persona_boost + matched_tags + abstract projection fix
 - **B-5**: `server/routes/external_content_route.py` (NEW) — Guardian API + MongoDB cache

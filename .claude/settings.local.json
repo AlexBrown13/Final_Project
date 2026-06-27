@@ -68,7 +68,8 @@
       "Bash(python -m unittest server.tests.test_chat_parsing -v)",
       "Bash(python -m unittest discover -s server/tests)",
       "Bash(python -m unittest discover -s tests)",
-      "Bash(python -c \"import ast; ast.parse\\(open\\(r'server/routes/ai_assistant_route.py'\\).read\\(\\)\\); print\\('PARSE OK'\\)\")"
+      "Bash(python -c \"import ast; ast.parse\\(open\\(r'server/routes/ai_assistant_route.py'\\).read\\(\\)\\); print\\('PARSE OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\(r'server/routes/articles_route.py', encoding='utf-8'\\).read\\(\\)\\); print\\('PARSE OK'\\)\")"
     ]
   }
 }

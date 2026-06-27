@@ -34,15 +34,69 @@ def sanitize_tags(raw):
     return cleaned, None
 
 
-def rank_articles(articles: list, user_tags: list) -> list:
+# ── Persona boost keyword groups (Revamp.md PART 4, lines 220-224) ────────────
+_STORIES_KEYWORDS = ("case study", "narrative", "interview", "testimony",
+                     "survivor", "personal account", "qualitative")
+_RESEARCH_KEYWORDS = ("prevalence", "epidemiological", "randomized", "meta-analysis",
+                      "systematic review", "cohort", "longitudinal")
+_SUPPORT_KEYWORDS = ("support", "intervention", "treatment", "therapy",
+                     "recovery", "coping", "resilience")
+_PROFESSIONAL_KEYWORDS = ("clinical", "framework", "protocol", "evidence-based",
+                          "intervention", "efficacy")
+# Abstracts that are "purely epidemiological" get demoted for grieving/distressed users.
+_EPIDEMIOLOGICAL_KEYWORDS = ("prevalence", "epidemiological", "incidence",
+                             "meta-analysis", "systematic review", "cohort")
+
+
+def persona_boost(abstract: str, emotional_state: str, content_preference: str) -> float:
+    """
+    Bounded [0.0, 1.0] persona-fit score from case-insensitive keyword matching on the
+    article abstract (NO ML). Per Revamp.md PART 4 (lines 220-224). content_preference and
+    emotional_state independently contribute; the demote rule subtracts for grieving/
+    distressed users when the abstract is purely epidemiological.
+    """
+    text = (abstract or "").lower()
+    if not text:
+        return 0.0
+
+    boost = 0.0
+
+    # content_preference contribution (0.5 if any group keyword present)
+    if content_preference == "stories" and any(k in text for k in _STORIES_KEYWORDS):
+        boost += 0.5
+    elif content_preference == "research" and any(k in text for k in _RESEARCH_KEYWORDS):
+        boost += 0.5
+
+    # emotional_state contribution (0.5 if any group keyword present)
+    if emotional_state in ("grieving", "distressed"):
+        if any(k in text for k in _SUPPORT_KEYWORDS):
+            boost += 0.5
+        # demote purely epidemiological abstracts for vulnerable users
+        if any(k in text for k in _EPIDEMIOLOGICAL_KEYWORDS) \
+                and not any(k in text for k in _SUPPORT_KEYWORDS):
+            boost -= 0.5
+    elif emotional_state == "professional":
+        if any(k in text for k in _PROFESSIONAL_KEYWORDS):
+            boost += 0.5
+
+    # bound to [0.0, 1.0]
+    return max(0.0, min(boost, 1.0))
+
+
+def rank_articles(articles: list, user_tags: list,
+                  emotional_state: str = "curious",
+                  content_preference: str = "mixed") -> list:
     """
     Sort articles using the content_score stored at ingestion time, combined
-    with live click engagement and recency. No ML inference on reads.
+    with live click engagement, recency, and a persona-fit boost. No ML inference
+    on reads — persona_boost is case-insensitive keyword matching on the abstract.
 
     Final score:
-      0.6 × content_score  (BM25+embedding, computed once at ingestion)
-      0.25 × click score   (normalised, capped at 10 clicks)
-      0.15 × recency       (publication year, 2000–2026 range)
+      0.60 × content_score  (BM25+embedding, computed once at ingestion)
+      0.25 × click score    (normalised, capped at 10 clicks)
+      0.05 × recency        (publication year, 2000–2026 range)
+      0.10 × persona_boost  (keyword match on abstract vs emotional_state +
+                             content_preference, bounded [0.0, 1.0], no ML)
     """
     if not articles:
         return articles
@@ -53,7 +107,11 @@ def rank_articles(articles: list, user_tags: list) -> list:
         click_score = min(article.get("click_count", 0) / 10.0, 1.0)
         year = article.get("year") or 2000
         recency_score = max(0.0, min((int(year) - 2000) / 26.0, 1.0))
-        final = 0.6 * content_score + 0.25 * click_score + 0.15 * recency_score
+        boost = persona_boost(article.get("abstract"), emotional_state, content_preference)
+        final = (0.60 * content_score
+                 + 0.25 * click_score
+                 + 0.05 * recency_score
+                 + 0.10 * boost)
         scored.append((final, article))
 
     scored.sort(key=lambda x: x[0], reverse=True)
@@ -104,7 +162,19 @@ def get_articles():
             article["_id"] = str(article["_id"])
             articles.append(article)
 
-        articles = rank_articles(articles, user_tags)
+        articles = rank_articles(
+            articles, user_tags,
+            emotional_state=persona_profile.get("emotional_state", "curious"),
+            content_preference=persona_profile.get("content_preference", "mixed"),
+        )
+
+        for article in articles:
+            title = (article.get("title") or "").lower()
+            abstract = (article.get("abstract") or "").lower()
+            article["matched_tags"] = [
+                tag for tag in user_tags
+                if tag.lower() in title or tag.lower() in abstract
+            ]
 
         return jsonify({"articles": articles, "persona_profile": persona_profile}), 200
     except Exception as e:
