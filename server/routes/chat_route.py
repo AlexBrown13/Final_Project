@@ -75,8 +75,8 @@ _GENERIC_TAGS = {
     "research", "study", "war", "conflict",
 }
 
-_VALID_EMOTIONAL_STATES = {"distressed", "seeking_support", "curious", "neutral", "analytical"}
-_VALID_CONTENT_PREFERENCES = {"stories", "mixed", "data"}
+_VALID_EMOTIONAL_STATES = {"grieving", "distressed", "curious", "professional", "neutral"}
+_VALID_CONTENT_PREFERENCES = {"stories", "research", "mixed"}
 
 
 def _clean_tags(raw_tags, primary_topic=None):

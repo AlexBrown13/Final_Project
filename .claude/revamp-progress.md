@@ -23,12 +23,95 @@ Fixes applied: removed `index` prop from ArticleRow (prop is now `{ article }` o
 Commits: `0475a19..88f2e8f`
 Files: server/utils/chat_prompts.py (14 lines: field count "5"→"7", added emotional_state + content_preference fields with closed enums)
 Review: all invariants passed — only chat_prompts.py touched, no server routes/auth/tests/client files modified, parse_persona_profile in chat_route.py backward-compatible via .get() pattern, enum values all lowercase/snake_case for B-2 defaulting
+> ANNOTATION 2026-06-27 (B-fix): The enum VALUES committed here were OFF-SPEC vs
+> Revamp.md (the source of truth). B-1 used emotional_state {distressed,
+> seeking_support, curious, neutral, analytical} and content_preference {stories,
+> mixed, data}. Revamp.md (PART 1, lines 52-70) authoritatively defines
+> emotional_state {grieving, distressed, curious, professional, neutral} and
+> content_preference {stories, research, mixed}. The frontend (C-1/2/3) and
+> client/design-refs/README.md already use the Revamp.md values. B-fix corrects
+> chat_prompts.py to match. History above left intact for the record.
 
 ---
 
-## Current Step — IN PROGRESS
+## Current Step — B-fix: align emotional_state + content_preference enums to Revamp.md
 
-### B-2: `server/routes/chat_route.py` — parse new fields, fallback emotional_state → "neutral"
+**Why:** A spec conflict was found. The committed backend (B-1 chat_prompts.py, B-2
+chat_route.py) used OFF-SPEC enum values. Revamp.md is the SOURCE OF TRUTH and the
+frontend + design-refs already match it. The backend is the wrong side and must be
+corrected.
+
+**Authoritative values (Revamp.md PART 1):**
+- `emotional_state` ∈ {grieving, distressed, curious, professional, neutral} (lines 52-61)
+- `content_preference` ∈ {stories, research, mixed} (lines 63-70)
+- Defaults unchanged: emotional_state → "neutral"; content_preference → "mixed"
+  (both remain valid members of the corrected enums).
+
+**Files to change (exactly TWO source files):**
+
+1. `d:\Program Files (x86)\Final_Project\server\utils\chat_prompts.py`
+   - Line 92 — replace the emotional_state enum line:
+     `- emotional_state: one of "grieving", "distressed", "curious", "professional", "neutral"`
+   - Lines 93-96 — replace the inference guidance with Revamp.md signals (closed enum):
+     - grieving = personal loss, a family member, October 7 personally, bereavement
+     - distressed = current active struggle / overwhelm / crisis language (sub-threshold;
+       distress.py already intercepts above-threshold crisis)
+     - curious = exploratory, intellectual, enthusiastic about learning, broad questions
+     - professional = detached clinical framing, third-person ("my clients",
+       "the population I work with"), no personal emotional language
+     - neutral = no strong signal, matter-of-fact (default, most common)
+     Keep the closing "Must be one of the five exact strings (closed enum)." sentence and
+     the note that this drives AI assistant tone (B-3) / content framing.
+   - Line 97 — replace the content_preference enum line:
+     `- content_preference: one of "stories", "research", "mixed"`
+   - Lines 98-101 — replace guidance with Revamp.md meanings (closed enum):
+     - stories = human accounts, personal testimonies, accessible journalism
+     - research = data, statistics, academic papers, clinical frameworks
+     - mixed = both, or unclear
+     Keep the note that this is the companion to free-text preferred_content (which is
+     PRESERVED) and drives article mix / persona_boost (B-4); keep the "Must be one of the
+     three exact strings (closed enum)." sentence.
+   - No separate JSON output-example block lists these values (confirmed via grep: enum
+     values appear only at lines 92 and 97), so no example needs editing.
+
+2. `d:\Program Files (x86)\Final_Project\server\routes\chat_route.py`
+   - Line 78 — `_VALID_EMOTIONAL_STATES = {"grieving", "distressed", "curious", "professional", "neutral"}`
+   - Line 79 — `_VALID_CONTENT_PREFERENCES = {"stories", "research", "mixed"}`
+   - The success branch (lines 128-129) and fallback branch (lines 139-140) already
+     reference these sets and already default to "neutral"/"mixed" — both defaults are
+     still valid members. NO further change needed there.
+
+**What to PRESERVE (do NOT change):**
+- chat_prompts.py: persona classification logic, the persona enum, interest_tags /
+  primary_topic / preferred_content / search_query field text, the free-text
+  preferred_content field, the search-query rules block, the field-count "7".
+- chat_route.py: `parse_persona_profile` structure (success + fallback branches),
+  `_clean_tags`, `_GENERIC_TAGS`, `clean_ai_json`, `reconstruct_conversation`,
+  `format_conversation`, all other field defaults, the `except` signature + warning, the
+  `chat()` endpoint.
+
+**Scope:** 2 source files. No new files. No client changes. No test edits. Within the
+5-file limit; no split required.
+
+**Verification (post-coding, no edits):**
+- `parse_persona_profile('{}')` → emotional_state="neutral", content_preference="mixed".
+- emotional_state="grieving" / content_preference="research" pass through unchanged.
+- emotional_state="seeking_support" or "analytical" (the OLD off-spec values) now coerce
+  to "neutral"; content_preference="data" now coerces to "mixed".
+
+**REVIEWER NOTE (process correction):** Going forward, review every step against
+**Revamp.md** (the source of truth), NOT only against this progress-file plan. The
+original B-1/B-2 deviation slipped through because review checked only the progress plan,
+which itself carried the off-spec values.
+
+Status: IN PROGRESS
+
+---
+
+> RECONCILED 2026-06-27: B-2 was COMPLETED and committed (`a9a4c84`). The progress
+> file had been left at "IN PROGRESS". The full B-2 plan is retained below for history.
+
+### B-2: `server/routes/chat_route.py` — parse new fields, fallback emotional_state → "neutral" — COMPLETE
 
 **Goal:** Make `parse_persona_profile()` extract the two new B-1 schema fields
 (`emotional_state`, `content_preference`) into the returned profile dict, with safe
@@ -118,11 +201,25 @@ tests inside B-2. Do not silently edit tests.
   `content_preference="charts"` coerces to `"mixed"`.
 - Malformed JSON → fallback dict with the two new defaults present.
 
-Status: IN PROGRESS
+Status: COMPLETE — committed a9a4c84 (reconciled 2026-06-27)
+> ANNOTATION 2026-06-27 (B-fix): The enum SETS introduced here (`_VALID_EMOTIONAL_STATES`
+> = {distressed, seeking_support, curious, neutral, analytical}, `_VALID_CONTENT_PREFERENCES`
+> = {stories, mixed, data}) were OFF-SPEC vs Revamp.md (source of truth). They are corrected
+> by B-fix to {grieving, distressed, curious, professional, neutral} and
+> {stories, research, mixed}. Defaults ("neutral"/"mixed") are unchanged and remain valid.
+> The B-2 plan text above (which references the old values) is left intact for history.
 
 ---
 
 ## Upcoming Steps
+
+- **C-3a** (NEXT): Results-page design-fidelity polish vs `client/design-refs/`. Scope:
+  (a) Researcher `ArticleRow.jsx` — add zero-padded index, make title a clickable
+  button that toggles the abstract, add DOI + copy-to-clipboard row (right-align tags).
+  (b) Add language toggle + `dir` state/RTL to `InformedResults.jsx` and
+  `ResearcherResults.jsx` (P1 already has it). (c) Fix Beginner "Data Graphs" link
+  `/data` → `/graphs/israel`. OUT OF SCOPE: OpenAlex query block (user declined),
+  P1 second Guardian mock card, profile-grid field layout (left as-is).
 
 - **C-4**: Wire all three personas to real data — Guardian fetch, articles fetch, session profile
 - **B-3**: `server/routes/ai_assistant_route.py` — emotional guidance + rebuild system prompt

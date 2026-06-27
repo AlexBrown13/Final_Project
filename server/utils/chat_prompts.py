@@ -89,15 +89,22 @@ Provide only valid JSON with these seven fields:
 - primary_topic: the single most specific topic or group this user cares about most
   (e.g. "children", "veterans", "PTSD treatment", "October 7", "resilience", "domestic violence")
   — this is used to personalize the order and emphasis of content shown to the user
-- emotional_state: one of "distressed", "seeking_support", "curious", "neutral", "analytical"
-  Infer the user's emotional posture toward the topic from tone and word choice. Personal pain or urgency
-  maps to "distressed" or "seeking_support"; general interest to "curious"; detached, clinical, or data-driven
-  tone to "analytical"; insufficient signal to "neutral". This drives the AI assistant's response tone (B-3)
-  and content framing. Must be one of the five exact strings listed (closed enum).
-- content_preference: one of "stories", "mixed", "data"
-  The machine-readable form of preferred_content. "stories" = personal narratives and accessible explanations,
-  "data" = research, statistics, clinical frameworks, "mixed" = both. This companion to the free-text
-  preferred_content (which is PRESERVED) drives article mix and persona_boost (B-4).
+- emotional_state: one of "grieving", "distressed", "curious", "professional", "neutral"
+  Infer the user's emotional posture toward the topic from tone and word choice:
+  "grieving" = personal loss, a family member, October 7 personally, bereavement;
+  "distressed" = current active struggle, overwhelm, or crisis language (sub-threshold —
+  distress.py already intercepts above-threshold crisis);
+  "curious" = exploratory, intellectual, enthusiastic about learning, broad questions;
+  "professional" = detached clinical framing, third-person ("my clients", "the population I work with"),
+  no personal emotional language;
+  "neutral" = no strong signal, matter-of-fact (default, most common case).
+  This drives the AI assistant's response tone (B-3) and content framing.
+  Must be one of the five exact strings listed (closed enum).
+- content_preference: one of "stories", "research", "mixed"
+  The machine-readable form of preferred_content. "stories" = human accounts, personal testimonies,
+  accessible journalism; "research" = data, statistics, academic papers, clinical frameworks;
+  "mixed" = both, or unclear. This companion to the free-text preferred_content (which is PRESERVED)
+  drives article mix and persona_boost (B-4).
   Must be one of the three exact strings listed (closed enum).
 - search_query: an effective OpenAlex search query (see rules below)
 

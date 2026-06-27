@@ -83,7 +83,7 @@ Keep exactly 5 questions. Change what the LLM extracts from the same conversatio
 
 **`search_query`** (unchanged, but demoted — internal use only)
 - Value: OpenAlex Boolean query string e.g. `"trauma AND Israel AND children AND (PTSD OR anxiety OR treatment)"`
-- Used ONLY for: OpenAlex article fetching at ingestion, researcher clipboard copy on results page
+- Used ONLY for: OpenAlex article fetching at ingestion. (DESCOPED 2026-06-27: the researcher results-page clipboard-copy of this query was removed — query is internal-only now.)
 - NOT used for: RAG chat, ranking, Guardian fetching, anything else
 - Existing `_ISRAEL_TERMS` filter in `build_query()` still strips "Israel" from tags to prevent redundant queries
 
@@ -453,7 +453,7 @@ All extracted fields shown as a clean data display:
 - Primary topic: [value]
 - Focus areas: [interest_tags as pills]
 - Content preference: [value]
-- OpenAlex search query: displayed in a monospace code block with a copy-to-clipboard button
+- OpenAlex search query: DESCOPED 2026-06-27 — NOT displayed on the results page (was: monospace code block with copy button)
 - emotional_state: HIDDEN (see above)
 
 **Page flow:**
@@ -600,7 +600,7 @@ Design direction: This person is capable and engaged. They want structure and de
 Who they are: Academic, clinician, or serious researcher. Came for research or professional purposes. Wants maximum information density. Respects credible sources. Does not want hand-holding, decorative elements, or emotional framing. Treats this like a tool, not a product experience.
 
 Content on their page:
-- Full extracted profile card displaying all fields: persona, primary topic, interest tags, content preference, and their OpenAlex Boolean search query in a copyable code block. Note: if this researcher came for personal/emotional reasons, the emotional state field is hidden from this display — we don't show it back to them.
+- Full extracted profile card displaying all fields: persona, primary topic, interest tags, content preference. (DESCOPED 2026-06-27: the OpenAlex Boolean query copyable code block was removed — not shown.) Note: if this researcher came for personal/emotional reasons, the emotional state field is hidden from this display — we don't show it back to them.
 - 1 OWID chart — epidemiological, data-heavy
 - Academic article previews in a dense, information-rich format — title, year, journal, authors, DOI (copyable), matched tag pills, abstract expandable on click. No Guardian stories — researchers don't want journalism.
 - Minimal "Adjust your topics" control
