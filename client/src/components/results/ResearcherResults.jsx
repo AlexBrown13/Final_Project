@@ -410,7 +410,7 @@ export default function ResearcherResults({ profile, academicArticles = [] }) {
                     value={addVal}
                     onChange={e => setAddVal(e.target.value)}
                     onKeyDown={handleAddKey}
-                    placeholder="add tag&hellip;"
+                    placeholder="add tag…"
                     maxLength={40}
                     style={{
                       flex: 1,
@@ -572,7 +572,7 @@ export default function ResearcherResults({ profile, academicArticles = [] }) {
 
           {academicArticles.length > 0 ? (
             academicArticles.map((article, i) => (
-              <ArticleRow key={i} article={article} index={i} />
+              <ArticleRow key={i} article={article} />
             ))
           ) : (
             /* Skeleton placeholders when no articles yet */

@@ -734,10 +734,6 @@
   animation: p3shimmer 1.6s infinite linear;
 }
 
-.p3-stripe {
-  background-image: repeating-linear-gradient(135deg, #d0dde1 0 10px, #dbe6e9 10px 20px);
-}
-
 .p3-row {
   transition: background .12s ease;
 }

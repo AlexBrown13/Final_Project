@@ -1,24 +1,12 @@
 import { useState } from 'react'
 
-export default function ArticleRow({ article, index }) {
+export default function ArticleRow({ article }) {
   const { title, year, journal, firstAuthor, abstract, url, matchedTags = [] } = article
   const [expanded, setExpanded] = useState(false)
-
-  const num = String((index ?? 0) + 1).padStart(2, '0')
 
   return (
     <article className="p3-row" style={{ padding: '16px 20px', borderBottom: '1px solid #e7eef0' }}>
       <div style={{ display: 'flex', gap: 16 }}>
-        <span style={{
-          fontFamily: "'IBM Plex Mono', monospace",
-          fontSize: 12,
-          color: '#b3c3c9',
-          flexShrink: 0,
-          paddingTop: 3,
-          width: 22,
-        }}>
-          {num}
-        </span>
         <div style={{ flex: 1, minWidth: 0 }}>
           {/* Title */}
           <p
