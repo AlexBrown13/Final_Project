@@ -147,6 +147,49 @@ export async function deleteSession(userId, token) {
 }
 
 /**
+ * GET /api/articles — ranked academic articles for the logged-in user.
+ * Graceful: never throws; returns { articles: [], persona_profile: null } on any error.
+ */
+export async function getArticles(quizUserId) {
+  try {
+    const base = getApiBase();
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+    if (!token) return { articles: [], persona_profile: null };
+    const qs = quizUserId ? `?quiz_user_id=${encodeURIComponent(quizUserId)}` : "";
+    const res = await fetch(`${base}/api/articles${qs}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) return { articles: [], persona_profile: null };
+    const data = await parseJsonSafe(res);
+    return {
+      articles: Array.isArray(data.articles) ? data.articles : [],
+      persona_profile: data.persona_profile ?? null,
+    };
+  } catch {
+    return { articles: [], persona_profile: null };
+  }
+}
+
+/**
+ * GET /api/external/stories?topic= — Guardian stories (B-5; not yet built).
+ * Graceful: never throws; returns [] on any error including 404 (B-5 absent today).
+ */
+export async function getExternalStories(topic) {
+  try {
+    if (!topic) return [];
+    const base = getApiBase();
+    const res = await fetch(
+      `${base}/api/external/stories?topic=${encodeURIComponent(topic)}`
+    );
+    if (!res.ok) return [];           // 404 today (B-5 not built) → []
+    const data = await parseJsonSafe(res);
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];                         // network error → []
+  }
+}
+
+/**
  * GET /api/calls-map-dates — returns the min/max dates.
  */
 export async function fetchCallsMapDates() {

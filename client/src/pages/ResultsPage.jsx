@@ -13,7 +13,7 @@ import {
   AUTH_TOKEN_KEY,
 } from '../config/storageKeys.js'
 import { usePersona } from '../context/usePersona.js'
-import { fetchHealth, getResult } from '../utils/api.js'
+import { fetchHealth, getResult, getArticles, getExternalStories } from '../utils/api.js'
 import { getApiBase } from '../config/api.js'
 import styles from './ResultsPage.module.css'
 
@@ -26,68 +26,37 @@ const MOCK_PROFILE = {
   headline: null,
 }
 
-const MOCK_STORIES = [
-  {
-    thumbnailUrl: null,
-    headline: 'The families of fallen soldiers who are learning to grieve together',
-    summary: 'Around shared tables and quiet rooms, bereaved parents are finding that the weight feels a little more bearable when it is carried alongside others.',
-    date: '2 Mar 2025',
-    url: '#',
-  },
-]
+function normalizePersonaLabel(p) {
+  const s = String(p || '').toLowerCase().trim()
+  if (s.startsWith('research')) return 'researcher'
+  if (s.startsWith('informed')) return 'informed'   // "informed learner" → "informed"
+  return 'beginner'
+}
 
-const MOCK_ARTICLES = [
-  {
-    title: 'Post-traumatic stress and prolonged grief in bereaved parents',
-    year: 2023,
-    journal: 'Journal of Traumatic Stress',
-    firstAuthor: 'R. Cohen',
-    abstract: 'Parents who lose a child to sudden violence often experience grief and trauma at the same time. This review describes what that looks like and what tends to help.',
-    url: '#',
-    matchedTags: ['grief', 'PTSD'],
-    doi: '10.1002/jts.22845',
-  },
-  {
-    title: 'Prevalence of PTSD in populations exposed to armed conflict: a systematic review',
-    year: 2024,
-    journal: 'Lancet Psychiatry',
-    firstAuthor: 'F. Charlson',
-    abstract: 'Pooled estimates across 129 studies place the prevalence of PTSD among conflict-exposed populations at 22.3%, with heterogeneity attributable to exposure intensity and time since event.',
-    url: '#',
-    matchedTags: ['PTSD', 'prevalence'],
-    doi: '10.1016/S2215-0366(24)00112-9',
-  },
-  {
-    title: 'Trajectories of post-traumatic stress following mass-casualty events',
-    year: 2023,
-    journal: 'JAMA Psychiatry',
-    firstAuthor: 'I. Galatzer-Levy',
-    abstract: 'Latent growth-mixture modeling identifies four stable response trajectories — resilient, recovering, chronic, and delayed-onset — with resilience the modal outcome even at high exposure levels.',
-    url: '#',
-    matchedTags: ['PTSD'],
-    doi: '10.1001/jamapsychiatry.2023.0455',
-  },
-  {
-    title: 'Civilian PTSD in protracted conflict zones: risk and protective factors',
-    year: 2025,
-    journal: 'World Psychiatry',
-    firstAuthor: 'T. Hoppen',
-    abstract: 'Ongoing threat, displacement, and loss of social capital emerge as strongest predictors of chronic course; perceived social support is the most consistent protective factor.',
-    url: '#',
-    matchedTags: ['PTSD', 'civilians'],
-    doi: '10.1002/wps.21188',
-  },
-  {
-    title: 'Intergenerational transmission of trauma in families of conflict survivors',
-    year: 2022,
-    journal: 'Development and Psychopathology',
-    firstAuthor: 'R. Dekel',
-    abstract: 'A three-generation cohort finds measurable transmission of post-traumatic symptomatology, mediated more strongly by parental emotional availability than by direct disclosure of events.',
-    url: '#',
-    matchedTags: ['epidemiology'],
-    doi: '10.1017/S0954579422000451',
-  },
-]
+function mapProfile(personaProfile, headline, score) {
+  const p = personaProfile || {}
+  return {
+    persona: normalizePersonaLabel(p.persona) || scoreToPersona(score),
+    emotionalState: p.emotional_state || undefined,
+    contentPreference: p.content_preference || undefined,
+    interestTags: Array.isArray(p.interest_tags) ? p.interest_tags : [],
+    primaryTopic: p.primary_topic || '',
+    headline: headline || undefined,
+  }
+}
+
+function mapArticle(a) {
+  return {
+    title: a.title || '',
+    year: a.year ?? '',
+    journal: a.journal || '',
+    firstAuthor: Array.isArray(a.authors) ? (a.authors[0] || '') : (a.authors || ''),
+    abstract: a.abstract || '',
+    doi: a.doi || '',
+    url: a.url || a.pdf_url || '',
+    matchedTags: Array.isArray(a.matched_tags) ? a.matched_tags : [],
+  }
+}
 
 function normalizeScore(n) {
   const s = Number(n)
@@ -114,6 +83,9 @@ export default function ResultsPage() {
   const [health, setHealth] = useState(null)
   const [fetchedScore, setFetchedScore] = useState(null)
   const [personaProfile, setPersonaProfile] = useState(null)
+  const [headline, setHeadline] = useState(null)
+  const [articles, setArticles] = useState([])
+  const [stories, setStories] = useState([])
   const [loadError, setLoadError] = useState(null)
 
   const score = routeScore ?? fetchedScore
@@ -167,6 +139,9 @@ export default function ResultsPage() {
     if (routePersona) {
       setPersonaProfile(routePersona)
     }
+    if (location.state?.headline != null) {
+      setHeadline(location.state.headline)
+    }
     setPersona(routePersona?.persona || scoreToPersona(routeScore))
   }, [routeScore, routePersona])
 
@@ -190,6 +165,7 @@ export default function ResultsPage() {
         setLoadError(null)
         setFetchedScore(s)
         setPersonaProfile(data.persona_profile ?? null)
+        setHeadline(data.headline ?? null)
         setPersona(data.persona_profile?.persona || scoreToPersona(s))
         try { localStorage.setItem(SCORE_CACHE_KEY, String(s)) } catch { /* ignore */ }
         return
@@ -218,6 +194,33 @@ export default function ResultsPage() {
     run()
     return () => { cancelled = true }
   }, [routeScore])
+
+  useEffect(() => {
+    if (score == null) return
+    let cancelled = false
+    ;(async () => {
+      const mappedProfile = mapProfile(personaProfile, headline, score)
+
+      try {
+        let quizUserId
+        try { quizUserId = localStorage.getItem(USER_ID_KEY) } catch { quizUserId = null }
+        const { articles: raw } = await getArticles(quizUserId)
+        if (!cancelled) setArticles(raw.map(mapArticle))
+      } catch {
+        if (!cancelled) setArticles([])
+      }
+
+      if (mappedProfile.persona !== 'researcher' && mappedProfile.primaryTopic) {
+        try {
+          const s = await getExternalStories(mappedProfile.primaryTopic)
+          if (!cancelled) setStories(s.map((st) => ({ ...st, thumbnailUrl: st.thumbnail })))
+        } catch {
+          if (!cancelled) setStories([])
+        }
+      }
+    })()
+    return () => { cancelled = true }
+  }, [personaProfile, headline, score])
 
   if (health === null) {
     return (
@@ -288,22 +291,22 @@ export default function ResultsPage() {
     )
   }
 
-  const profile = personaProfile ?? MOCK_PROFILE
+  const profile = personaProfile ? mapProfile(personaProfile, headline, score) : MOCK_PROFILE
   const persona = profile.persona || scoreToPersona(score)
 
   if (persona === 'beginner') {
     return (
       <BeginnerResults
         profile={profile}
-        guardianStories={MOCK_STORIES}
-        academicArticles={MOCK_ARTICLES}
+        guardianStories={stories}
+        academicArticles={articles}
       />
     )
   }
 
   if (persona === 'informed') {
-    return <InformedResults profile={profile} guardianStories={[]} academicArticles={[]} />
+    return <InformedResults profile={profile} guardianStories={stories} academicArticles={articles} />
   }
 
-  return <ResearcherResults profile={profile} academicArticles={MOCK_ARTICLES} />
+  return <ResearcherResults profile={profile} academicArticles={articles} />
 }
