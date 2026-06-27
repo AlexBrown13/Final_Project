@@ -14,9 +14,9 @@ const MOOD_COPY = {
     sub: 'There is a lot out there. We have gathered what we think will actually help — human stories alongside the evidence that explains them.',
   },
   distressed: {
-    eyebrow: 'You're in a safe place',
-    h1: 'Take a breath. We'll go gently, together.',
-    sub: 'You don't have to read anything right now. When you're ready, everything here is waiting for you.',
+    eyebrow: "You're in a safe place",
+    h1: "Take a breath. We'll go gently, together.",
+    sub: "You don't have to read anything right now. When you're ready, everything here is waiting for you.",
   },
 }
 
