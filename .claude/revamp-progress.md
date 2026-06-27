@@ -19,72 +19,113 @@ Files: ResearcherResults.jsx (CREATE), ArticleRow.jsx (CREATE), results-componen
 Review: all invariants passed — no server/auth/test files touched, lint unchanged at 24 (pre-existing)
 Fixes applied: removed `index` prop from ArticleRow (prop is now `{ article }` only), placeholder HTML entity replaced with Unicode ellipsis, `.p3-stripe` unused rule removed, section order (OWID before articles) confirmed against Persona3.dc.html design ref
 
+### B-1: `server/utils/chat_prompts.py` — new extraction schema (emotional_state, content_preference) — COMPLETE
+Commits: `0475a19..88f2e8f`
+Files: server/utils/chat_prompts.py (14 lines: field count "5"→"7", added emotional_state + content_preference fields with closed enums)
+Review: all invariants passed — only chat_prompts.py touched, no server routes/auth/tests/client files modified, parse_persona_profile in chat_route.py backward-compatible via .get() pattern, enum values all lowercase/snake_case for B-2 defaulting
+
 ---
 
 ## Current Step — IN PROGRESS
 
-### B-1: `server/utils/chat_prompts.py` — new extraction schema (emotional_state, content_preference)
+### B-2: `server/routes/chat_route.py` — parse new fields, fallback emotional_state → "neutral"
 
-**Status: IN PROGRESS**
+**Goal:** Make `parse_persona_profile()` extract the two new B-1 schema fields
+(`emotional_state`, `content_preference`) into the returned profile dict, with safe
+closed-enum defaults, so downstream steps (B-3 assistant tone, B-4 article mix /
+persona_boost) and the persisted `persona_profile` document carry these fields.
 
-**Scope: ONE file only —** `server/utils/chat_prompts.py`. No other file is edited in B-1. The parsing of the two new fields is deliberately deferred to B-2 (`chat_route.py` `parse_persona_profile`), so B-1 changes the prompt CONTRACT only, not any Python that consumes it.
+**File to change (exactly ONE source file):**
+`d:\Program Files (x86)\Final_Project\server\routes\chat_route.py`
 
-**Why one file is enough / safe:**
-- `PERSONA_PROFILE_SYSTEM_PROMPT` (this file) is the sole place that defines the JSON schema the LLM must return.
-- `extract_persona_profile()` in `server/services/groq.py` just passes the prompt through to Groq and returns the raw string — it is schema-agnostic, no change needed.
-- `parse_persona_profile()` in `server/routes/chat_route.py` (L111–134) reads only the 5 existing keys with `parsed.get(...)`. Adding two extra keys to the model output is backward-compatible: unknown keys are simply ignored until B-2 wires them. No crash risk.
+**Exact changes — `parse_persona_profile()` only (currently lines 111–135):**
 
-**Exact changes to make in `server/utils/chat_prompts.py`:**
+1. SUCCESS branch — the returned dict (currently lines 120–126). Add two new keys
+   AFTER `primary_topic` and BEFORE `search_query`, validated against the B-1 closed
+   enums. Read each via `.get()` with a default, then coerce any out-of-enum value to
+   the default:
+   - `emotional_state`: allowed = `{"distressed", "seeking_support", "curious", "neutral", "analytical"}`.
+     Read `parsed.get("emotional_state", "neutral")`; if the value is not a str or not
+     in the allowed set → `"neutral"`.
+   - `content_preference`: allowed = `{"stories", "mixed", "data"}`.
+     Read `parsed.get("content_preference", "mixed")`; if not a str or not in the
+     allowed set → `"mixed"`.
+   Resulting success dict key order:
+   `persona, interest_tags, preferred_content, primary_topic, emotional_state, content_preference, search_query`.
 
-1. **`PERSONA_PROFILE_SYSTEM_PROMPT` — expand the field list from 5 to 7 fields.**
-   - Change the line "Provide only valid JSON with these five fields:" → "...with these seven fields:".
-   - Keep all 5 existing field definitions verbatim: `persona`, `interest_tags`, `preferred_content`, `primary_topic`, `search_query`.
-   - ADD field definition `emotional_state`: one of a fixed closed vocabulary. Proposed enum:
-     `"distressed"`, `"seeking_support"`, `"curious"`, `"neutral"`, `"analytical"`.
-     Description: infer the user's emotional posture toward the topic from tone and word choice
-     (personal pain / urgency → "distressed" or "seeking_support"; general interest → "curious";
-     detached/clinical/data-driven → "analytical"; insufficient signal → "neutral").
-     This drives tone of the AI assistant (B-3) and content framing.
-   - ADD field definition `content_preference`: one of a fixed closed vocabulary. Proposed enum:
-     `"stories"`, `"mixed"`, `"data"`.
-     Description: the structured form of `preferred_content` — `"stories"` = personal narratives /
-     accessible explanations, `"data"` = research / statistics / clinical frameworks,
-     `"mixed"` = both. This is the machine-readable companion to the free-text `preferred_content`
-     (which is PRESERVED, not replaced) and will drive persona_boost / article mix (B-4).
-   - Note explicitly in the prompt that `content_preference` must be one of the three exact strings,
-     and `emotional_state` one of the five exact strings (closed enums → safe defaulting in B-2).
+2. EXCEPTION / fallback branch (currently lines 129–134). Add the same two keys with
+   their defaults so the shape is IDENTICAL across both branches:
+   - `"emotional_state": "neutral"`
+   - `"content_preference": "mixed"`
 
-2. **Update the trailing Rules block at the bottom of the prompt:**
-   - "All five fields are required" → "All seven fields are required".
-   - Keep "Return only valid JSON with no markdown fences or extra explanation".
+3. Implementation note for the coder: define the two allowed-value sets as small
+   module-level frozensets/sets near `_GENERIC_TAGS` (top of file, ~line 71 area), e.g.
+   `_EMOTIONAL_STATES` and `_CONTENT_PREFERENCES`, OR inline them as local constants
+   inside the function. Either is acceptable; module-level is preferred for reuse by
+   B-3/B-4. This is the ONLY structural addition outside the function body and keeps the
+   change to a single file.
 
-3. **No change to `DYNAMIC_QUESTION_SYSTEM_PROMPT`, `FIRST_QUESTION`, or `SEED_QUESTIONS`.**
-   These already probe content preference (SEED_QUESTIONS[1]) and motivation, which feed both new
-   fields — no additional question needed for B-1.
+**Exact fallback values (canonical — do not deviate):**
+- `emotional_state` default / invalid-coercion target → `"neutral"`
+- `content_preference` default / invalid-coercion target → `"mixed"`
+  (Rationale: "mixed" is the neutral middle of the stories↔data axis, matching the
+  "neutral" emotional default; avoids biasing article mix when the LLM omits the field.)
 
-**What to PRESERVE (do not touch):**
-- All 5 existing JSON field names and their exact descriptions (downstream parsing in B-2/B-4 relies on them).
-- `preferred_content` stays as a free-text field; `content_preference` is ADDED alongside, not a rename.
-- `search_query` rules block, the persona definitions, edge-case rules, language rule.
-- `max_tokens=450` in `groq.py` — two short enum fields fit comfortably; flag for B-2 to re-check only if output truncates.
+**What to PRESERVE (do NOT change):**
+- All five existing keys and their current defaults: `persona`→"beginner",
+  `interest_tags`→`_clean_tags(...)`, `preferred_content`→"", `primary_topic`→"",
+  `search_query`→"".
+- The free-text `preferred_content` field stays — `content_preference` is a SEPARATE
+  companion field, not a replacement (per B-1 schema note, line 99–100 of chat_prompts.py).
+- `clean_ai_json()`, `_clean_tags()`, `_GENERIC_TAGS`, `reconstruct_conversation()`,
+  `format_conversation()` — untouched.
+- The `except (json.JSONDecodeError, ValueError, TypeError)` signature and its
+  `logger.warning(...)` line — untouched.
+- The `chat()` endpoint (lines 138–331) — untouched. `persona_profile` already flows
+  unchanged into `completion_fields["persona_profile"]` (line 308) and the JSON response
+  (line 330), so the two new keys propagate to MongoDB and the frontend automatically
+  with NO route-body edits required. `PERSONA_SCORE` / score derivation untouched.
 
-**Constraints / invariants:**
-- Touch exactly 1 file. No server route, no auth, no test, no client file edited.
-- Enum values must be lowercase snake/single tokens to make B-2 defaulting trivial
-  (`emotional_state` fallback → `"neutral"`, per B-2 one-liner; `content_preference` fallback → `"mixed"` — confirm in B-2).
-- Pure-string/prompt edit: no Python lint impact (lint baseline stays 24 pre-existing).
-- After edit: run `graphify update .` (AST-only) to refresh the graph; the prompt constant node label is unchanged so the graph delta is minimal.
+**Caller / propagation check (from graphify):**
+- `parse_persona_profile` is called once, in `chat()` at line 286; its result is stored
+  (line 308) and returned (line 330). No other caller in the codebase.
+- Edges: `parse_persona_profile --calls--> clean_ai_json`, `--calls--> _clean_tags`
+  (both preserved). Three test edges — see blocker below.
 
-**Hand-off note to B-2:** add `emotional_state` and `content_preference` to `parse_persona_profile`'s
-returned dict and to its except-branch defaults (`emotional_state="neutral"`, `content_preference="mixed"`),
-and add `content_preference` to the `_clean`/normalize path if any normalization is desired.
+**BLOCKER / RISK to flag before coding (load-bearing):**
+`server/tests/test_chat_parsing.py` asserts the EXACT full return dict of
+`parse_persona_profile` via `assertEqual`:
+- `test_parse_persona_profile_with_string_tags` (expects 4 keys, NO `primary_topic`)
+- `test_parse_persona_profile_with_missing_fields` (expects 4 keys)
+- `test_parse_persona_profile_malformed_json` (expects 4 keys)
+These tests are ALREADY out of sync with current code (live code returns 5 keys incl.
+`primary_topic`; tests expect 4 and omit it) — i.e. they are pre-existing failures, NOT
+introduced by B-2. Adding `emotional_state` + `content_preference` widens this gap.
+Decision needed from reviewer: B-2 is scoped to `chat_route.py` only and MUST NOT edit
+test files under the current invariants. Recommend a FOLLOW-UP step (propose "B-2a:
+resync test_chat_parsing.py expected dicts to the 7-key schema") rather than touching
+tests inside B-2. Do not silently edit tests.
+
+**Scope:** 1 source file (`chat_route.py`). No new files. No client changes. Within the
+5-file limit (1 file). No split required.
+
+**Verification (no code edits — for the implementer after coding):**
+- `parse_persona_profile('{}')` returns 7 keys incl. `emotional_state="neutral"`,
+  `content_preference="mixed"`.
+- Valid JSON with `emotional_state="analytical"`, `content_preference="data"` passes
+  through unchanged.
+- Out-of-enum values (e.g. `emotional_state="angry"`) coerce to `"neutral"`;
+  `content_preference="charts"` coerces to `"mixed"`.
+- Malformed JSON → fallback dict with the two new defaults present.
+
+Status: IN PROGRESS
 
 ---
 
 ## Upcoming Steps
 
 - **C-4**: Wire all three personas to real data — Guardian fetch, articles fetch, session profile
-- **B-2**: `server/routes/chat_route.py` — parse new fields, fallback emotional_state → "neutral"
 - **B-3**: `server/routes/ai_assistant_route.py` — emotional guidance + rebuild system prompt
 - **B-4**: `server/routes/articles_route.py` — persona_boost + matched_tags + abstract projection fix
 - **B-5**: `server/routes/external_content_route.py` (NEW) — Guardian API + MongoDB cache
+- **(proposed) B-2a**: resync `server/tests/test_chat_parsing.py` expected dicts to the 7-key persona schema (separate from B-2 to respect the no-test-edit invariant)

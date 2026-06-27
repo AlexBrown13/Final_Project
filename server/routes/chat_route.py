@@ -75,6 +75,9 @@ _GENERIC_TAGS = {
     "research", "study", "war", "conflict",
 }
 
+_VALID_EMOTIONAL_STATES = {"distressed", "seeking_support", "curious", "neutral", "analytical"}
+_VALID_CONTENT_PREFERENCES = {"stories", "mixed", "data"}
+
 
 def _clean_tags(raw_tags, primary_topic=None):
     """
@@ -122,6 +125,8 @@ def parse_persona_profile(raw: str) -> dict:
             "interest_tags": interest_tags,
             "preferred_content": parsed.get("preferred_content", ""),
             "primary_topic": primary_topic,
+            "emotional_state": parsed.get("emotional_state", "neutral") if parsed.get("emotional_state") in _VALID_EMOTIONAL_STATES else "neutral",
+            "content_preference": parsed.get("content_preference", "mixed") if parsed.get("content_preference") in _VALID_CONTENT_PREFERENCES else "mixed",
             "search_query": parsed.get("search_query", "")
         }
     except (json.JSONDecodeError, ValueError, TypeError) as e:
@@ -131,6 +136,8 @@ def parse_persona_profile(raw: str) -> dict:
             "interest_tags": [],
             "preferred_content": "",
             "primary_topic": "",
+            "emotional_state": "neutral",
+            "content_preference": "mixed",
             "search_query": ""
         }
 
