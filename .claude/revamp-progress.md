@@ -109,9 +109,9 @@ review retained in git history of this file.)
 
 ---
 
-## B-5: Guardian API integration (NEW route + blueprint registration + Mongo cache) — IN PROGRESS
+## B-5: Guardian API integration (NEW route + blueprint registration + Mongo cache) — COMPLETE
 
-**THIS IS THE FINAL REVAMP STEP.**
+**THIS WAS THE FINAL REVAMP STEP.**
 
 **Source of truth:** Revamp.md PART 5 (lines 247-281), verified line-by-line.
 **Test gate (must pass, no regressions):** `python -m unittest discover -s server/tests`
@@ -351,12 +351,43 @@ except Exception as e:
   failure branch; item dict has all 6 keys with `source: "The Guardian"`.
 - After coding: `graphify update .` to refresh the graph.
 
-**Status: DONE — awaiting review**
+**Status: COMPLETE**
 Commit: `9bace53`. 3 files: NEW `server/routes/external_content_route.py`
 (blueprint `external_content_bp`, PUBLIC `GET /external/stories`, top-level JSON array,
 `[]` on every failure path, 0-results not cached), `server/app.py` (import + register
 with `url_prefix="/api"` → `/api/external/stories`), `server/services/mongo.py`
 (`guardian_cache_collection` + TTL index `fetched_at`/3600s + unique index `topic`).
-Verification: AST parse OK; test gate `Ran 5 tests ... OK` (non-regression); `import app`
-OK with route registered exactly once at `/api/external/stories`; no `@jwt_required` on
-the route; graphify updated (106 files). No client/test files touched.
+Review (2026-06-28): all invariants passed — AST parse OK on all 3 files; no @jwt_required;
+top-level JSON array (4 jsonify([]) paths, 0 dict wraps); all 6 item keys present; source
+constant "The Guardian" correct; requests timeout present; Guardian URL correct; 0-results
+early return at L71 before cache write; topic lower().strip() normalization confirmed;
+field mappings trailText/webUrl/webPublicationDate all correct; q/section/show-fields/
+page-size/api-key params all match Revamp.md PART 5 exactly; mongo.py guardian_cache
+TTL+unique indexes confirmed; app.py import+register both present, existing blueprints
+and jwt blocklist preserved; only 3 planned files changed (plus .claude/settings.local.json,
+status.log, __pycache__ side-effects — all legitimate); no client/test/auth files touched;
+"translation logic" warning was a false positive (docstring comment only).
+Test gate: `Ran 5 tests in 0.001s OK` (non-regression confirmed).
+
+---
+
+## REVAMP COMPLETE — 2026-06-28
+
+All planned steps finished in commit sequence on branch `revamp`:
+
+| Step   | Commit    | What it did |
+|--------|-----------|-------------|
+| B-fix  | —         | Aligned emotional_state/content_preference enums to Revamp.md |
+| C-3a   | —         | Results-page design-fidelity polish vs design-refs |
+| C-3b   | `5e4181a` | Fixed build-breaking unescaped apostrophes in BeginnerResults MOOD_COPY |
+| C-4    | `8ba5bce` | Wired ResultsPage to real data (profile mapping, articles fetch, Guardian fetch) |
+| B-2a   | `a35cb24` | Repaired/resynced test_chat_parsing.py to 7-key schema, dropped dead score tests |
+| B-3    | `1be5319` | Wired all profile fields into ai_assistant_route RAG system prompt |
+| B-4    | `1be6d5a` | Article ranking persona_boost + matched_tags in articles_route |
+| B-5    | `9bace53` | Guardian API integration: new route + blueprint registration + Mongo cache |
+
+Full step list (including earlier C-series and B-1/B-2): C-1, C-2, C-3, B-1, B-fix, B-2,
+C-3a, C-3b, C-4, B-2a, B-3, B-4, B-5. Test gate held at `Ran 5 tests OK` throughout.
+Build gate held (npm run build passes). No auth/access control logic was changed at any step.
+No trauma content or copy was modified at any step (C-3b changed string delimiters only,
+not text). No API contracts were broken without updating consumers.
