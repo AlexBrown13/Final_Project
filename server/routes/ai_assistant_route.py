@@ -75,8 +75,12 @@ def article_chat():
             quiz_user_id = body.get("quiz_user_id")
             if quiz_user_id and quiz_user_id != user_id:
                 session = chat_collection.find_one({"user_id": quiz_user_id}, {"persona_profile": 1})
-        if session:
-            persona = (session.get("persona_profile") or {}).get("persona", "informed learner")
+        profile = (session.get("persona_profile") or {}) if session else {}
+        persona = profile.get("persona", "informed learner")
+        emotional_state = profile.get("emotional_state", "curious")
+        content_preference = profile.get("content_preference", "mixed")
+        primary_topic = profile.get("primary_topic", "")
+        interest_tags = profile.get("interest_tags", [])
 
         # Build articles context block
         if articles:
@@ -87,20 +91,44 @@ def article_chat():
         else:
             articles_context = "No articles available."
 
-        # Tone instruction based on persona
+        # Emotional guidance based on emotional_state
+        EMOTIONAL_GUIDANCE = {
+            "grieving": "This user may be processing personal loss. Be gentle and warm. Validate their emotional experience before presenting facts. Do not lead with statistics or clinical language. If they seem overwhelmed, it is appropriate to mention ERAN 1201 (crisis support line).",
+            "distressed": "This user may be struggling. Keep responses short, clear, and warm. Avoid overwhelming them with information. If crisis language appears, mention ERAN 1201.",
+            "curious": "This user is exploring intellectually. Be engaging, thorough, and willing to go deep on topics they ask about.",
+            "professional": "This user works with trauma survivors professionally. Focus on practical clinical frameworks, intervention strategies, and citable findings they can use with clients. Be direct and information-dense.",
+            "neutral": "This user has not expressed strong emotional signals. Be informative, clear, and balanced. Match their tone.",
+        }
+        emotional_guidance = EMOTIONAL_GUIDANCE.get(emotional_state, EMOTIONAL_GUIDANCE["neutral"])
+
+        # Tone instruction based on persona AND emotional_state together
         if persona == "researcher":
-            tone = "Use academic language. Be precise and data-focused. Reference specific articles by number."
+            if emotional_state in ("grieving", "distressed"):
+                tone = "Be precise but compassionate. This researcher may have a personal connection to the topic."
+            else:  # professional / curious / neutral (and any other)
+                tone = "Use academic language. Be precise and data-focused. Reference specific articles by number."
         elif persona == "beginner":
-            tone = "Use simple, warm language. Avoid jargon. Explain concepts clearly and gently."
-        else:
-            tone = "Balance accessibility with depth. Reference specific articles when relevant."
+            if emotional_state in ("grieving", "distressed"):
+                tone = "Use very simple, warm language. No jargon at all. Lead with empathy before information."
+            elif emotional_state == "curious":
+                tone = "Use simple, friendly language. Explain concepts clearly. Make it accessible and engaging."
+            else:  # neutral (and any other)
+                tone = "Use simple, clear language. Be welcoming and informative without being clinical."
+        else:  # "informed learner" + any (also the safe fallback for unknown personas)
+            tone = "Balance accessibility with depth. Reference articles when relevant. Match the user's tone."
 
         # Build message list: system carries static context, history is structured
         # properly, current question is the final user turn.
         system_content = (
-            f"You are an assistant helping a user understand their personalised set of "
-            f"academic articles about trauma in Israel.\n\n"
-            f"How to respond: {tone}\n"
+            f"You are an assistant helping a user explore academic articles about trauma in Israel.\n\n"
+            f"User profile:\n"
+            f"- Persona: {persona}\n"
+            f"- Emotional state: {emotional_state}\n"
+            f"- Main topic of interest: {primary_topic}\n"
+            f"- Also interested in: {', '.join(interest_tags)}\n"
+            f"- Content preference: {content_preference}\n\n"
+            f"Tone: {tone}\n"
+            f"Emotional guidance: {emotional_guidance}\n\n"
             f"Answer only based on the articles below. If the question is unrelated, say so briefly.\n\n"
             f"Articles:\n{articles_context}"
         )

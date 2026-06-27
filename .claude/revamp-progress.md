@@ -83,197 +83,209 @@ held at baseline. (Full plan + review retained in git history.)
 
 ---
 
-## B-2a: repair & resync `server/tests/test_chat_parsing.py` to the 7-key persona schema — IN PROGRESS
+## B-2a: repair & resync `server/tests/test_chat_parsing.py` to the 7-key persona schema — COMPLETE
+Commit context per prior review. Test gate is now REAL and is the gate for B-3/B-4/B-5:
+`python -m unittest discover -s server/tests` → `Ran 5 tests in 0.001s OK`.
+(Full investigation + plan + review retained in git history of this file.)
 
-**Why this is its own step:** All prior backend steps (B-1, B-2, B-fix) carried a
-"run tests" gate that was a NO-OP, because `server/tests/test_chat_parsing.py` fails at
-IMPORT time (`from routes.chat_route import parse_score_response` → ImportError). A failed
-import aborts collection of the ENTIRE module, so NO test in it has actually run since
-`parse_score_response` was removed. This is the ONE step where editing a test file is
-explicitly allowed. Fixing it turns the test gate REAL and unblocks B-3 / B-4 / B-5.
+---
+
+## B-3: `server/routes/ai_assistant_route.py` — wire ALL profile fields into the article-chat (RAG) system prompt — IN PROGRESS
+
+**Source of truth:** Revamp.md PART 3 (lines 132-192). ONE source file only.
+
+**Test gate (must pass, no regressions):** `python -m unittest discover -s server/tests`
+(currently `Ran 5 tests in 0.001s OK`). Note: B-3 does not change tested code paths, so
+the gate is a non-regression guard, not new coverage.
 
 ### INVESTIGATION FINDINGS (authoritative, from source + Revamp.md)
 
-**Finding 1 — `parse_score_response` no longer exists and was REMOVED, not renamed.**
-- `grep "def \w+"` on `server/routes/chat_route.py` returns exactly 6 functions:
-  `reconstruct_conversation` (L29), `format_conversation` (L50), `clean_ai_json` (L58),
-  `_clean_tags` (L82), `parse_persona_profile` (L114), `chat` (L147).
-  There is NO score-parsing function of any name in chat_route.py.
-- Codebase-wide grep for `parse_score|score_response|def .*score` finds only:
-  (a) the broken references inside the test file itself, and
-  (b) `server/services/groq.py:65 def score_user_conversation(...)` — a NETWORK call to
-      Groq that returns raw model content or None; it is NOT a JSON parser and does not
-      return `{"score","reason"}`. It is also not invoked by the current chat flow.
-- The scoring DESIGN changed: `chat_route.chat()` now DERIVES the score from the persona
-  via `score = PERSONA_SCORE.get(persona_profile.get("persona","beginner"), 1)` (L296).
-  There is no longer any LLM "score 1-3 + reason" JSON to parse. The old
-  `parse_score_response` (which produced `{"score":1,"reason":"...defaulting to score 1"}`)
-  is dead behavior that the system no longer has.
-- CONCLUSION: the import and the three `test_parse_score_response_*` tests must be
-  REMOVED (not rewired to another function). Rewiring them to `score_user_conversation`
-  would be inventing coverage for a network function with different semantics — out of
-  scope and wrong. We do NOT invent a replacement function.
+**Graphify orientation:** GRAPH_REPORT god/community map — `ai_assistant()` lives in
+Community 265 (with ask_ollama/check_ollama/main/save_conversation_to_db); the
+`article_chat()` route lives in Community 12. Only the `article_chat()` handler is touched
+by B-3.
 
-**Finding 2 — live `parse_persona_profile` return shape (chat_route.py L114-142).**
-SUCCESS branch returns (L123-131):
-  persona = parsed.get("persona","beginner")
-  interest_tags = _clean_tags(parsed.get("interest_tags",[]), primary_topic)
-  preferred_content = parsed.get("preferred_content","")
-  primary_topic = parsed.get("primary_topic","")
-  emotional_state = parsed.get("emotional_state","neutral") if in _VALID_EMOTIONAL_STATES else "neutral"
-  content_preference = parsed.get("content_preference","mixed") if in _VALID_CONTENT_PREFERENCES else "mixed"
-  search_query = parsed.get("search_query","")
-FALLBACK branch (L134-142, on JSONDecodeError/ValueError/TypeError) returns:
-  persona="beginner", interest_tags=[], preferred_content="", primary_topic="",
-  emotional_state="neutral", content_preference="mixed", search_query="".
-Enum sets (L78-79): _VALID_EMOTIONAL_STATES = {grieving,distressed,curious,professional,
-neutral}; _VALID_CONTENT_PREFERENCES = {stories,research,mixed}. Matches Revamp.md PART 1.
+**Finding 1 — the file and the exact lines (`server/routes/ai_assistant_route.py`, 130 lines total).**
+- `article_chat()` is defined at L41-130 (route `'/article-chat'`, POST, `@jwt_required()`).
+- The OTHER route `ai_assistant()` (L17-38, `'/ai/assistant'`) is NOT touched.
+- Module-level 5-minute cache: `_articles_cache` (L10) + `_ARTICLES_CACHE_TTL = 5 * 60` (L11).
+  Cache read/populate logic is L57-66. **PRESERVE verbatim.**
+- Session/persona lookup block: L68-79. Currently:
+  - L72: `persona = "informed learner"` (default).
+  - L73-77: secure JWT-identity lookup of `chat_collection`, with fallback to
+    `quiz_user_id` from body (current data model). **PRESERVE this lookup logic.**
+  - L78-79: `if session:` then
+    `persona = (session.get("persona_profile") or {}).get("persona", "informed learner")`.
+    This is the ONLY-persona extraction that B-3 expands to all 6 fields.
+- Article context block: L81-88. Format is numbered `[{i+1}] {title} ({year})\n{abstract[:400]}`
+  (400-char abstract truncation, "Untitled"/"n/a"/"No abstract." fallbacks). **PRESERVE verbatim.**
+- Current 3-string tone map: L90-96 (researcher / beginner / else). **REPLACED** by the new
+  persona+emotional_state tone map.
+- Current `system_content`: L100-106. **REPLACED** by the PART 3 template.
+- History handling (L108-112: system msg + `history[-4:]` + final user turn) — **PRESERVE.**
+- `client.chat.completions.create(...)` at L114-120: `model="llama-3.3-70b-versatile"`,
+  `temperature=0.5`, **`max_tokens=800` (L118)** — **PRESERVE.**
+- Empty-response guard L121-123 (returns 503) and answer return L124-126 — **PRESERVE.**
+- Outer try/except (L44, L128-130) returning `{"error": "Assistant unavailable."}` 500 —
+  **PRESERVE** (this is the route's distress/failure handling).
 
-**Finding 3 — how tests run / importability.**
-- Tests use stdlib `unittest` (class `ChatParsingTests(unittest.TestCase)`,
-  `unittest.main()` guard). No pytest.ini, no conftest.py in the repo (only inside .venv).
-- Importability is self-contained: the test file already does
-  `ROOT = abspath(join(dirname(__file__),".."))` then `sys.path.insert(0, ROOT)` so
-  `routes.chat_route` resolves against `server/`. It also sets MONGO_ATLAS_URL /
-  DB_ATLAS_NAME env defaults before import. NO conftest/import shim is needed — only the
-  test file changes.
-- Runner for the gate: `python -m pytest server/tests` OR `python -m unittest
-  server.tests.test_chat_parsing` (both work; pytest also collects unittest classes).
+**Finding 2 — session object shape & profile field names.**
+- `session = chat_collection.find_one({...}, {"persona_profile": 1})` → either `None` or a
+  doc with `persona_profile`. `session.get("persona_profile")` may be `None`, hence the
+  `or {}` guard. So `profile = session.get("persona_profile") or {}` is correct.
+- Field names produced by `parse_persona_profile` (chat_route.py L114-142, confirmed via
+  B-2a Finding 2) are snake_case: `persona`, `emotional_state`, `content_preference`,
+  `primary_topic`, `interest_tags` (plus `preferred_content`, `search_query` which B-3 does
+  not use). `interest_tags` is a LIST. **PART 3's `profile.get(...)` extraction matches.**
+- CRITICAL live `persona` values: `"beginner" | "informed learner" | "researcher"` — note
+  the SPACE in "informed learner". The new tone map MUST key off these exact strings.
+- Live enums (chat_route.py L78-79, post B-fix): emotional_state ∈ {grieving, distressed,
+  curious, professional, neutral}; content_preference ∈ {stories, research, mixed}. The five
+  emotional_guidance branches cover exactly the emotional_state enum.
+
+**Finding 3 — the emotional_state default discrepancy (FLAGGED + DECISION).**
+- B-fix default for emotional_state is `"neutral"`; Revamp.md PART 3 line 154 uses
+  `profile.get("emotional_state", "curious")`.
+- This default ONLY fires when the `emotional_state` KEY is entirely ABSENT from the stored
+  doc (legacy/partial profile). Any profile created through the current quiz pipeline always
+  carries a valid enum value (parse defaults it to "neutral"), so for live data the `.get()`
+  default is effectively dead.
+- **DECISION (orchestrator):** FOLLOW Revamp.md PART 3 verbatim — use default `"curious"`
+  in `ai_assistant_route.py`. Rationale: PART 3 is the stated source of truth for THIS step,
+  the default is near-unreachable for real sessions, and the assistant context tolerates
+  either valid enum value. This is a deliberate, documented deviation from the B-fix parse
+  default (which stays "neutral" in chat_route.py — NOT changed by B-3).
 
 ### FILE TO CHANGE (exactly ONE)
-`d:\Program Files (x86)\Final_Project\server\tests\test_chat_parsing.py`
-(No conftest, no import shim, no source files. Only this test file.)
+`d:\Program Files (x86)\Final_Project\server\routes\ai_assistant_route.py`
+(No other route, no chat_route.py, no articles_route.py, no tests, no client.)
 
 ### EXACT CHANGES
 
-**Change A — fix the import (remove the dead symbol).** Lines 11-15 become:
+**Change A — expand session field extraction.** Replace L78-79:
+```python
+        if session:
+            persona = (session.get("persona_profile") or {}).get("persona", "informed learner")
 ```
-from routes.chat_route import (
-    format_conversation,
-    parse_persona_profile,
-)
+with (keep the `persona = "informed learner"` pre-default at L72 and the lookup at L73-77
+unchanged; on `if session:` populate all 6 locals from the profile):
+```python
+        profile = (session.get("persona_profile") or {}) if session else {}
+        persona = profile.get("persona", "informed learner")
+        emotional_state = profile.get("emotional_state", "curious")
+        content_preference = profile.get("content_preference", "mixed")
+        primary_topic = profile.get("primary_topic", "")
+        interest_tags = profile.get("interest_tags", [])
 ```
-(Drop `parse_score_response`.)
+(Implementation note: this collapses the `if session:` guard into a single `profile` assign
+so all five derived fields default cleanly when `session` is None. The pre-existing L72
+`persona = "informed learner"` default may be dropped if it becomes redundant, OR kept —
+implementer's choice as long as `persona` defaults to "informed learner" when no session.
+Net behavior: identical default for persona; four new locals.)
 
-**Change B — DELETE the three dead score tests** (current L31-53):
-`test_parse_score_response_valid_json`, `test_parse_score_response_markdown_json`,
-`test_parse_score_response_invalid_returns_default`. Rationale in Finding 1: the function
-and its behavior no longer exist; scoring is now persona-derived. PRESERVE
-`test_format_conversation` unchanged.
+**Change B — replace the 3-string tone map (L90-96) with a persona+emotional_state map.**
+Build `emotional_guidance` first, then `tone`. EXACT strings from Revamp.md PART 3:
 
-**Change C — resync the three `parse_persona_profile` expected dicts to the full 7-key
-schema** with enum-aware defaults (emotional_state="neutral", content_preference="mixed"),
-preserving each test's ORIGINAL INTENT.
+`emotional_guidance` keyed on `emotional_state` (lines 161-165):
+```python
+        EMOTIONAL_GUIDANCE = {
+            "grieving": "This user may be processing personal loss. Be gentle and warm. Validate their emotional experience before presenting facts. Do not lead with statistics or clinical language. If they seem overwhelmed, it is appropriate to mention ERAN 1201 (crisis support line).",
+            "distressed": "This user may be struggling. Keep responses short, clear, and warm. Avoid overwhelming them with information. If crisis language appears, mention ERAN 1201.",
+            "curious": "This user is exploring intellectually. Be engaging, thorough, and willing to go deep on topics they ask about.",
+            "professional": "This user works with trauma survivors professionally. Focus on practical clinical frameworks, intervention strategies, and citable findings they can use with clients. Be direct and information-dense.",
+            "neutral": "This user has not expressed strong emotional signals. Be informative, clear, and balanced. Match their tone.",
+        }
+        emotional_guidance = EMOTIONAL_GUIDANCE.get(emotional_state, EMOTIONAL_GUIDANCE["neutral"])
+```
+(Default-to-"neutral" guidance for any out-of-enum value — "neutral" is the documented
+most-common case per line 165.)
 
-C1. `test_parse_persona_profile_with_string_tags` — intent: string `interest_tags`
-coerced to a list; passthrough of provided fields; defaults for omitted fields.
-Note: input has `"preferred_content": "data"` and `"persona":"researcher"`; it does NOT
-provide emotional_state or content_preference, so both DEFAULT. preferred_content passes
-through verbatim ("data"). primary_topic absent → "". Expected:
+`tone` keyed on `persona` AND `emotional_state` together (lines 167-173). Note persona key
+`"informed learner"` WITH the space, and `"informed learner" + any` is the catch-all:
+```python
+        if persona == "researcher":
+            if emotional_state in ("grieving", "distressed"):
+                tone = "Be precise but compassionate. This researcher may have a personal connection to the topic."
+            else:  # professional / curious / neutral (and any other)
+                tone = "Use academic language. Be precise and data-focused. Reference specific articles by number."
+        elif persona == "beginner":
+            if emotional_state in ("grieving", "distressed"):
+                tone = "Use very simple, warm language. No jargon at all. Lead with empathy before information."
+            elif emotional_state == "curious":
+                tone = "Use simple, friendly language. Explain concepts clearly. Make it accessible and engaging."
+            else:  # neutral (and any other)
+                tone = "Use simple, clear language. Be welcoming and informative without being clinical."
+        else:  # "informed learner" + any (also the safe fallback for unknown personas)
+            tone = "Balance accessibility with depth. Reference articles when relevant. Match the user's tone."
 ```
-{
-    "persona": "researcher",
-    "interest_tags": ["trauma"],
-    "preferred_content": "data",
-    "primary_topic": "",
-    "emotional_state": "neutral",
-    "content_preference": "mixed",
-    "search_query": "trauma israel",
-}
-```
-CAVEAT TO VERIFY DURING CODING: the input tag is the literal string "trauma", which is a
-member of `_GENERIC_TAGS` (L72). `_clean_tags(["trauma"], primary_topic="")` would FILTER
-it and, with empty primary_topic, return `[]` — NOT `["trauma"]`. The original test
-asserted `["trauma"]`, which is INCONSISTENT with the live (and pre-existing) _clean_tags
-generic-filter behavior. Implementer MUST run the test and, if it fails on this line,
-change the INPUT tag to a NON-generic value (e.g. `"PTSD"`) and assert
-`"interest_tags": ["PTSD"]`, so the test genuinely verifies string→list COERCION (the real
-intent) rather than smuggling in a generic-tag passthrough that the code is designed to
-strip. Do NOT weaken the assertion to `[]`; fix the fixture so coercion is actually
-exercised. State the chosen value in the implementation notes.
+Mapping coverage check vs Revamp.md lines 168-173:
+- researcher + professional/curious/neutral → academic string ✓ (else branch)
+- researcher + grieving/distressed → "precise but compassionate" ✓
+- beginner + grieving/distressed → "very simple, warm ... empathy before information" ✓
+- beginner + curious → "simple, friendly ... accessible and engaging" ✓
+- beginner + neutral → "simple, clear ... welcoming ... without being clinical" ✓
+- informed learner + any → "Balance accessibility with depth ..." ✓
 
-C2. `test_parse_persona_profile_with_missing_fields` — input `"{}"` (valid empty JSON →
-SUCCESS branch, all `.get()` defaults). Intent: every field defaults. Expected:
+**Change C — rebuild `system_content` (replace L100-106) with the PART 3 template
+(lines 176-189), verbatim in substance:**
+```python
+        system_content = (
+            f"You are an assistant helping a user explore academic articles about trauma in Israel.\n\n"
+            f"User profile:\n"
+            f"- Persona: {persona}\n"
+            f"- Emotional state: {emotional_state}\n"
+            f"- Main topic of interest: {primary_topic}\n"
+            f"- Also interested in: {', '.join(interest_tags)}\n"
+            f"- Content preference: {content_preference}\n\n"
+            f"Tone: {tone}\n"
+            f"Emotional guidance: {emotional_guidance}\n\n"
+            f"Answer only based on the articles below. If the question is unrelated, say so briefly.\n\n"
+            f"Articles:\n{articles_context}"
+        )
 ```
-{
-    "persona": "beginner",
-    "interest_tags": [],
-    "preferred_content": "",
-    "primary_topic": "",
-    "emotional_state": "neutral",
-    "content_preference": "mixed",
-    "search_query": "",
-}
-```
+(Edge note: `', '.join(interest_tags)` requires `interest_tags` to be a list of strings —
+it is, per parse_persona_profile `_clean_tags`. Defensive `str()` coercion inside join is
+acceptable but not required; keep it simple unless a non-string slips through.)
 
-C3. `test_parse_persona_profile_malformed_json` — input is unterminated JSON
-(```json\n{...interest_tags:[...]\n``` with no closing brace) → JSONDecodeError →
-FALLBACK branch. Intent: malformed JSON yields the full default dict. Expected: IDENTICAL
-to C2 (the fallback dict equals the all-defaults success dict). Keep the same expected dict
-as C2.
-
-**Optional coverage strengthening (DECISION: YES, minimal, no scope creep):** In C1, since
-emotional_state/content_preference are now first-class, the expected dict already asserts
-their DEFAULTS — that is sufficient. Additionally, ADD ONE small new test
-`test_parse_persona_profile_valid_enums_passthrough` that feeds valid non-default enum
-values and asserts they pass through (locks the enum-passthrough path, complementing the
-default path):
-```
-def test_parse_persona_profile_valid_enums_passthrough(self):
-    raw = '{"persona": "informed learner", "primary_topic": "children", "emotional_state": "grieving", "content_preference": "research"}'
-    result = parse_persona_profile(raw)
-    self.assertEqual(result["emotional_state"], "grieving")
-    self.assertEqual(result["content_preference"], "research")
-    self.assertEqual(result["persona"], "informed learner")
-    self.assertEqual(result["primary_topic"], "children")
-```
-(Uses Revamp.md-valid values grieving/research so it also guards against enum drift. Uses a
-non-generic primary_topic "children" — no _clean_tags concern since no interest_tags given.)
-This is the only NEW assertion added; it strengthens coverage of B-1/B-fix without
-touching the deleted-score concern.
-
-### WHAT TO PRESERVE
-- `test_format_conversation` — unchanged (still valid; format_conversation unchanged).
-- The file's import-bootstrap block (L1-9: sys.path insert + env defaults) — unchanged;
-  it is what makes `routes.chat_route` importable without a conftest.
-- The `if __name__ == "__main__": unittest.main()` guard — unchanged.
-- unittest style (do NOT convert to pytest-style asserts).
-- Do NOT weaken any assertion merely to pass — every expected dict must reflect the
-  CORRECT live behavior per Revamp.md PART 1. The only deletions are the three score tests
-  whose target function/behavior no longer exists.
-- Touch NO source files, NO conftest, NO other test.
+### WHAT TO PRESERVE (Revamp.md line 192 + route invariants)
+- The article context format (L81-88): numbered `[{i+1}]`, title + `(year)`, 400-char
+  abstract truncation, all `Untitled`/`n/a`/`No abstract.` fallbacks — UNCHANGED.
+- `max_tokens=800` (L118), `model="llama-3.3-70b-versatile"`, `temperature=0.5` — UNCHANGED.
+- The 5-minute server-side article cache (`_articles_cache`, `_ARTICLES_CACHE_TTL`, L57-66) —
+  UNCHANGED.
+- Auth: `@jwt_required()` + `get_jwt_identity()` + the secure JWT-identity-first session
+  lookup with `quiz_user_id` fallback (L68-77) — UNCHANGED.
+- Crisis/distress handling: ERAN 1201 mentions are now IN the guidance strings (grieving +
+  distressed) per spec; the outer try/except 500 "Assistant unavailable." and the 503
+  empty-response guard — UNCHANGED.
+- The OTHER route `ai_assistant()` (L17-38) — UNTOUCHED.
+- Do NOT change the articles fetch, history handling, or any other route/file.
 
 ### INVARIANTS
-- Exactly ONE file changed: `server/tests/test_chat_parsing.py`. No new files. No source/
-  conftest/shim edits.
-- After this step the FULL suite must IMPORT and PASS. This becomes the real test gate for
-  B-3 / B-4 / B-5.
+- Exactly ONE file changed: `server/routes/ai_assistant_route.py` (only the `article_chat()`
+  handler body). No new files. No edits to chat_route.py / articles_route.py / tests / client.
+- `persona` key `"informed learner"` (WITH space) handled as a first-class branch / catch-all.
+- All five emotional_guidance branches present and verbatim-in-substance vs lines 161-165,
+  including ERAN 1201 in grieving + distressed.
+- All six tone combinations present and verbatim-in-substance vs lines 168-173.
+- system_content matches the lines 176-189 template field-for-field and order-for-order.
 
 ### VERIFICATION (post-coding)
-- `python -m pytest server/tests` → collects with NO ImportError; all tests PASS.
-  (Equivalently `python -m unittest server.tests.test_chat_parsing` from repo root, or
-  `python -m unittest test_chat_parsing` run from `server/tests`.)
-- Confirm no remaining reference to `parse_score_response` anywhere in the test file.
-- Confirm the three persona expected dicts each have all 7 keys with
-  emotional_state="neutral", content_preference="mixed" defaults (and the passthrough test
-  asserts grieving/research).
-- Confirm `test_format_conversation` still passes unchanged.
-- Implementation notes MUST record the value chosen for the C1 string-tags fixture (e.g.
-  "PTSD") if the literal "trauma" was filtered by _clean_tags.
+- Test gate: `python -m unittest discover -s server/tests` → still `Ran 5 tests ... OK`
+  (no regression; B-3 touches no tested function).
+- `python -c "import ast; ast.parse(open(r'server/routes/ai_assistant_route.py').read())"`
+  (or import the module) — file parses / imports clean.
+- Grep the new file: confirm `max_tokens=800` present; `_ARTICLES_CACHE_TTL` unchanged;
+  article-context f-string `[400]` slice present; both ERAN 1201 mentions present; persona
+  key `"informed learner"` present.
+- Confirm the old 3-string tone block and old system_content are fully gone.
+- After coding: `graphify update .` to refresh the graph.
 
-Status: DONE — awaiting review
-
-Implementation note: C1 string-tags fixture changed from "trauma" (a _GENERIC_TAGS
-member that _clean_tags strips → []) to "PTSD" (non-generic), asserting
-interest_tags=["PTSD"] so the test genuinely exercises string→list coercion.
-Runner: pytest is not installed in .venv; used `python -m unittest` instead
-(`python -m unittest server.tests.test_chat_parsing` and `python -m unittest
-discover -s server/tests`). 5 tests collected, no ImportError, all PASS.
+**Status: IN PROGRESS**
 
 ---
 
 ## Upcoming Steps
 
-- **B-3**: `server/routes/ai_assistant_route.py` — emotional guidance + rebuild system prompt
 - **B-4**: `server/routes/articles_route.py` — persona_boost + matched_tags + abstract projection fix
 - **B-5**: `server/routes/external_content_route.py` (NEW) — Guardian API + MongoDB cache
