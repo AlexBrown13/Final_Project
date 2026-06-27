@@ -712,3 +712,80 @@
     transform: none !important;
   }
 }
+
+/* ─── Persona 3 — Researcher ────────────────────────────────────────────────── */
+
+@keyframes p3shimmer {
+  0%   { background-position: -360px 0; }
+  100% { background-position:  360px 0; }
+}
+@keyframes p3fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes p3rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.p3-skel {
+  background: linear-gradient(90deg, #e4ecee 0%, #f0f5f6 50%, #e4ecee 100%);
+  background-size: 720px 100%;
+  animation: p3shimmer 1.6s infinite linear;
+}
+
+.p3-stripe {
+  background-image: repeating-linear-gradient(135deg, #d0dde1 0 10px, #dbe6e9 10px 20px);
+}
+
+.p3-row {
+  transition: background .12s ease;
+}
+.p3-row:hover {
+  background: #f0f6f7;
+}
+.p3-row:nth-of-type(even) {
+  background: #f5f8f9;
+}
+.p3-row:nth-of-type(even):hover {
+  background: #eef5f6;
+}
+
+.p3-link {
+  transition: color .12s ease;
+}
+.p3-link:hover {
+  color: #1d4c59;
+}
+
+/* Nav */
+.p3-nav {
+  animation: p3fade .4s ease both;
+}
+
+/* Hero */
+.p3-hero > * {
+  opacity: 0;
+  animation: p3rise .5s cubic-bezier(.2, .6, .3, 1) both;
+}
+.p3-hero > *:nth-child(1) { animation-delay: .08s; }
+.p3-hero > *:nth-child(2) { animation-delay: .18s; }
+.p3-hero > *:nth-child(3) { animation-delay: .28s; }
+
+/* Reveal (article stack and subsequent sections) */
+.p3-reveal {
+  opacity: 0;
+  animation: p3rise .55s cubic-bezier(.2, .6, .3, 1) both;
+  animation-delay: .38s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .p3-nav,
+  .p3-hero > *,
+  .p3-reveal,
+  .p3-skel {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

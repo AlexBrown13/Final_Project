@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import BackendDown from '../components/BackendDown.jsx'
 import BeginnerResults from '../components/results/BeginnerResults.jsx'
 import InformedResults from '../components/results/InformedResults.jsx'
+import ResearcherResults from '../components/results/ResearcherResults.jsx'
 import '../components/results/results-components.css'
 import {
   USER_ID_KEY,
@@ -45,6 +46,42 @@ const MOCK_ARTICLES = [
     url: '#',
     matchedTags: ['grief', 'PTSD'],
   },
+  {
+    title: 'Prevalence of PTSD in populations exposed to armed conflict: a systematic review',
+    year: 2024,
+    journal: 'Lancet Psychiatry',
+    firstAuthor: 'F. Charlson',
+    abstract: 'Pooled estimates across 129 studies place the prevalence of PTSD among conflict-exposed populations at 22.3%, with heterogeneity attributable to exposure intensity and time since event.',
+    url: '#',
+    matchedTags: ['PTSD', 'prevalence'],
+  },
+  {
+    title: 'Trajectories of post-traumatic stress following mass-casualty events',
+    year: 2023,
+    journal: 'JAMA Psychiatry',
+    firstAuthor: 'I. Galatzer-Levy',
+    abstract: 'Latent growth-mixture modeling identifies four stable response trajectories — resilient, recovering, chronic, and delayed-onset — with resilience the modal outcome even at high exposure levels.',
+    url: '#',
+    matchedTags: ['PTSD'],
+  },
+  {
+    title: 'Civilian PTSD in protracted conflict zones: risk and protective factors',
+    year: 2025,
+    journal: 'World Psychiatry',
+    firstAuthor: 'T. Hoppen',
+    abstract: 'Ongoing threat, displacement, and loss of social capital emerge as strongest predictors of chronic course; perceived social support is the most consistent protective factor.',
+    url: '#',
+    matchedTags: ['PTSD', 'civilians'],
+  },
+  {
+    title: 'Intergenerational transmission of trauma in families of conflict survivors',
+    year: 2022,
+    journal: 'Development and Psychopathology',
+    firstAuthor: 'R. Dekel',
+    abstract: 'A three-generation cohort finds measurable transmission of post-traumatic symptomatology, mediated more strongly by parental emotional availability than by direct disclosure of events.',
+    url: '#',
+    matchedTags: ['epidemiology'],
+  },
 ]
 
 function normalizeScore(n) {
@@ -57,11 +94,6 @@ function scoreToPersona(s) {
   if (s === 3) return 'researcher'
   if (s === 2) return 'informed'
   return 'beginner'
-}
-
-
-function ResearcherResults() {
-  return null
 }
 
 export default function ResultsPage() {
@@ -268,5 +300,5 @@ export default function ResultsPage() {
     return <InformedResults profile={profile} guardianStories={[]} academicArticles={[]} />
   }
 
-  return <ResearcherResults profile={profile} academicArticles={[]} />
+  return <ResearcherResults profile={profile} academicArticles={MOCK_ARTICLES} />
 }
