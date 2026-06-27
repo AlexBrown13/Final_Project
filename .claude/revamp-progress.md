@@ -90,7 +90,7 @@ Commit context per prior review. Test gate is now REAL and is the gate for B-3/B
 
 ---
 
-## B-3: `server/routes/ai_assistant_route.py` — wire ALL profile fields into the article-chat (RAG) system prompt — IN PROGRESS
+## B-3: `server/routes/ai_assistant_route.py` — wire ALL profile fields into the article-chat (RAG) system prompt — DONE — awaiting review
 
 **Source of truth:** Revamp.md PART 3 (lines 132-192). ONE source file only.
 
@@ -281,7 +281,13 @@ acceptable but not required; keep it simple unless a non-string slips through.)
 - Confirm the old 3-string tone block and old system_content are fully gone.
 - After coding: `graphify update .` to refresh the graph.
 
-**Status: IN PROGRESS**
+**Status: DONE — awaiting review**
+Commit: `1be5319`. One file changed (`server/routes/ai_assistant_route.py`, `article_chat()`
+handler only): Change A (6 profile locals), Change B (EMOTIONAL_GUIDANCE dict + persona×
+emotional_state tone), Change C (PART 3 system_content template). Test gate green
+(`Ran 5 tests ... OK`), file parses, graphify updated. Preserved: article-context format,
+max_tokens=800, model/temp, 5-min cache, auth+lookup, history, 503/500 guards, ERAN 1201 in
+grieving+distressed, the other route `ai_assistant()`.
 
 ---
 
