@@ -248,7 +248,7 @@ export default function BeginnerResults({ profile, guardianStories = [], academi
               </a>
             </li>
             <li className="p1-explore-item">
-              <a href="/data" className="p1-explore-link">
+              <a href="/graphs/israel" className="p1-explore-link">
                 <span className="p1-explore-name">Data Graphs</span>
                 <span className="p1-explore-desc">Explore the numbers behind the stories</span>
               </a>

@@ -55,7 +55,8 @@
       "Bash(python -c \"from routes.chat_route import parse_persona_profile; r = parse_persona_profile\\('{}'\\); print\\(list\\(r.keys\\(\\)\\)\\); assert r['emotional_state'] == 'neutral'; assert r['content_preference'] == 'mixed'; print\\('OK'\\)\")",
       "Bash(graphify explain *)",
       "Bash(python -m pytest tests/ -q)",
-      "Bash(python -m unittest discover -s tests -v)"
+      "Bash(python -m unittest discover -s tests -v)",
+      "Bash(npx eslint *)"
     ]
   }
 }

@@ -106,6 +106,7 @@ export default function ResearcherResults({ profile, academicArticles = [] }) {
   const headline = profile.headline || HEADLINE[mood] || HEADLINE.neutral
   const prefLabel = PREF_LABEL[pref] || PREF_LABEL.research
 
+  const [dir, setDir] = useState('ltr')
   const [topicsOpen, setTopicsOpen] = useState(false)
   const [topics, setTopics] = useState(profile.interestTags || [])
   const [addVal, setAddVal] = useState('')
@@ -128,7 +129,7 @@ export default function ResearcherResults({ profile, academicArticles = [] }) {
   }
 
   return (
-    <div style={{
+    <div dir={dir} style={{
       fontFamily: "'IBM Plex Sans', -apple-system, sans-serif",
       background: '#eef3f5',
       color: '#1b2a31',
@@ -184,6 +185,23 @@ export default function ResearcherResults({ profile, academicArticles = [] }) {
           }}>
             researcher mode
           </span>
+          <button
+            type="button"
+            onClick={() => setDir(d => d === 'ltr' ? 'rtl' : 'ltr')}
+            aria-label="Toggle language direction"
+            style={{
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: 12,
+              color: '#2f6675',
+              background: 'transparent',
+              border: '1px solid #c6d6da',
+              borderRadius: 4,
+              padding: '5px 12px',
+              cursor: 'pointer',
+            }}
+          >
+            {dir === 'ltr' ? 'עברית' : 'English'}
+          </button>
         </div>
       </nav>
 
@@ -572,7 +590,7 @@ export default function ResearcherResults({ profile, academicArticles = [] }) {
 
           {academicArticles.length > 0 ? (
             academicArticles.map((article, i) => (
-              <ArticleRow key={i} article={article} />
+              <ArticleRow key={i} index={String(i + 1).padStart(2, '0')} article={article} />
             ))
           ) : (
             /* Skeleton placeholders when no articles yet */

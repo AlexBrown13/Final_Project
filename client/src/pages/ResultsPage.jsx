@@ -45,6 +45,7 @@ const MOCK_ARTICLES = [
     abstract: 'Parents who lose a child to sudden violence often experience grief and trauma at the same time. This review describes what that looks like and what tends to help.',
     url: '#',
     matchedTags: ['grief', 'PTSD'],
+    doi: '10.1002/jts.22845',
   },
   {
     title: 'Prevalence of PTSD in populations exposed to armed conflict: a systematic review',
@@ -54,6 +55,7 @@ const MOCK_ARTICLES = [
     abstract: 'Pooled estimates across 129 studies place the prevalence of PTSD among conflict-exposed populations at 22.3%, with heterogeneity attributable to exposure intensity and time since event.',
     url: '#',
     matchedTags: ['PTSD', 'prevalence'],
+    doi: '10.1016/S2215-0366(24)00112-9',
   },
   {
     title: 'Trajectories of post-traumatic stress following mass-casualty events',
@@ -63,6 +65,7 @@ const MOCK_ARTICLES = [
     abstract: 'Latent growth-mixture modeling identifies four stable response trajectories — resilient, recovering, chronic, and delayed-onset — with resilience the modal outcome even at high exposure levels.',
     url: '#',
     matchedTags: ['PTSD'],
+    doi: '10.1001/jamapsychiatry.2023.0455',
   },
   {
     title: 'Civilian PTSD in protracted conflict zones: risk and protective factors',
@@ -72,6 +75,7 @@ const MOCK_ARTICLES = [
     abstract: 'Ongoing threat, displacement, and loss of social capital emerge as strongest predictors of chronic course; perceived social support is the most consistent protective factor.',
     url: '#',
     matchedTags: ['PTSD', 'civilians'],
+    doi: '10.1002/wps.21188',
   },
   {
     title: 'Intergenerational transmission of trauma in families of conflict survivors',
@@ -81,6 +85,7 @@ const MOCK_ARTICLES = [
     abstract: 'A three-generation cohort finds measurable transmission of post-traumatic symptomatology, mediated more strongly by parental emotional availability than by direct disclosure of events.',
     url: '#',
     matchedTags: ['epidemiology'],
+    doi: '10.1017/S0954579422000451',
   },
 ]
 
