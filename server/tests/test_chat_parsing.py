@@ -10,7 +10,6 @@ os.environ.setdefault("DB_ATLAS_NAME", "testdb")
 
 from routes.chat_route import (
     format_conversation,
-    parse_score_response,
     parse_persona_profile,
 )
 
@@ -28,38 +27,17 @@ class ChatParsingTests(unittest.TestCase):
         )
         self.assertEqual(format_conversation(conversation), expected)
 
-    def test_parse_score_response_valid_json(self):
-        raw = '{"score": 2, "reason": "Clear and thoughtful response."}'
-        self.assertEqual(
-            parse_score_response(raw),
-            {"score": 2, "reason": "Clear and thoughtful response."},
-        )
-
-    def test_parse_score_response_markdown_json(self):
-        raw = "```json\n{\"score\": 3, \"reason\": \"Very research-oriented answer.\"}\n```"
-        self.assertEqual(
-            parse_score_response(raw),
-            {"score": 3, "reason": "Very research-oriented answer."},
-        )
-
-    def test_parse_score_response_invalid_returns_default(self):
-        raw = "This is not JSON"
-        self.assertEqual(
-            parse_score_response(raw),
-            {
-                "score": 1,
-                "reason": "Could not parse scoring response — defaulting to score 1",
-            },
-        )
-
     def test_parse_persona_profile_with_string_tags(self):
-        raw = "```json\n{\"persona\": \"researcher\", \"interest_tags\": \"trauma\", \"preferred_content\": \"data\", \"search_query\": \"trauma israel\"}\n```"
+        raw = "```json\n{\"persona\": \"researcher\", \"interest_tags\": \"PTSD\", \"preferred_content\": \"data\", \"search_query\": \"trauma israel\"}\n```"
         self.assertEqual(
             parse_persona_profile(raw),
             {
                 "persona": "researcher",
-                "interest_tags": ["trauma"],
+                "interest_tags": ["PTSD"],
                 "preferred_content": "data",
+                "primary_topic": "",
+                "emotional_state": "neutral",
+                "content_preference": "mixed",
                 "search_query": "trauma israel",
             },
         )
@@ -72,6 +50,9 @@ class ChatParsingTests(unittest.TestCase):
                 "persona": "beginner",
                 "interest_tags": [],
                 "preferred_content": "",
+                "primary_topic": "",
+                "emotional_state": "neutral",
+                "content_preference": "mixed",
                 "search_query": "",
             },
         )
@@ -84,9 +65,20 @@ class ChatParsingTests(unittest.TestCase):
                 "persona": "beginner",
                 "interest_tags": [],
                 "preferred_content": "",
+                "primary_topic": "",
+                "emotional_state": "neutral",
+                "content_preference": "mixed",
                 "search_query": "",
             },
         )
+
+    def test_parse_persona_profile_valid_enums_passthrough(self):
+        raw = '{"persona": "informed learner", "primary_topic": "children", "emotional_state": "grieving", "content_preference": "research"}'
+        result = parse_persona_profile(raw)
+        self.assertEqual(result["emotional_state"], "grieving")
+        self.assertEqual(result["content_preference"], "research")
+        self.assertEqual(result["persona"], "informed learner")
+        self.assertEqual(result["primary_topic"], "children")
 
 
 if __name__ == "__main__":

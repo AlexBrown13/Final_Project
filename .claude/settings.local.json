@@ -56,7 +56,17 @@
       "Bash(graphify explain *)",
       "Bash(python -m pytest tests/ -q)",
       "Bash(python -m unittest discover -s tests -v)",
-      "Bash(npx eslint *)"
+      "Bash(npx eslint *)",
+      "Bash(npx --yes eslint --stdin --stdin-filename ArticleRow.jsx)",
+      "Bash(git worktree *)",
+      "Bash(grep -v \"^$\\\\|^D:\\\\|^\\\\s\")",
+      "Bash(python -m pytest server/tests/ -q)",
+      "Bash(python -m pytest server/tests/ -q --no-header)",
+      "Bash(python server/tests/test_chat_parsing.py)",
+      "Bash(grep -v \"^$\")",
+      "Bash(python -m pytest server/tests)",
+      "Bash(python -m unittest server.tests.test_chat_parsing -v)",
+      "Bash(python -m unittest discover -s server/tests)"
     ]
   }
 }

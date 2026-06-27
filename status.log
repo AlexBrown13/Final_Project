@@ -4,3 +4,12 @@
 2026-06-27 20:05:04,287 [INFO] MongoDB Atlas: connection established successfully.
 2026-06-27 20:06:28,038 [INFO] MongoDB Atlas: connection established successfully.
 2026-06-27 20:09:54,212 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-27 20:44:31,271 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-27 21:20:33,627 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-27 21:20:36,727 [WARNING] Failed to parse persona response: Expecting ',' delimiter: line 1 column 72 (char 71). Raw: ```json
+{"persona": "informed learner", "interest_tags": ["research", "health"]
+```
+2026-06-27 21:20:45,263 [INFO] MongoDB Atlas: connection established successfully.
+2026-06-27 21:20:46,137 [WARNING] Failed to parse persona response: Expecting ',' delimiter: line 1 column 72 (char 71). Raw: ```json
+{"persona": "informed learner", "interest_tags": ["research", "health"]
+```
