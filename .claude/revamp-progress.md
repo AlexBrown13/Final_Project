@@ -98,255 +98,257 @@ review retained in git history of this file.)
 
 ---
 
-## B-4: `server/routes/articles_route.py` — article ranking persona_boost + matched_tags (+ verify abstract projection) — IN PROGRESS
-
-**Source of truth:** Revamp.md PART 4 (lines 196-243). ONE source file only:
-`d:\Program Files (x86)\Final_Project\server\routes\articles_route.py` (205 lines total).
-
-**Test gate (must pass, no regressions):** `python -m unittest discover -s server/tests`
-(currently `Ran 5 tests in 0.001s OK`). Note: `rank_articles()` is a pure function and is
-not currently covered. An OPTIONAL small unit test is noted below; the gate may stay at 5
-tests (orchestrator decision: tests may stay as-is, non-regression guard only).
-
-### INVESTIGATION FINDINGS (authoritative — read from source + Revamp.md PART 4)
-
-Graphify orientation: GRAPH_REPORT Community 8 contains exactly the ranking surface —
-`articles()`, `build_query()`, `get_articles()`, `rank_articles()`, `sanitize_tags()`, plus
-the docstring nodes "Sort articles using the content_score..." and "Validate and sanitize a
-list of topic tags...". This confirms `articles_route.py` is the only file in scope and the
-only ranking function is `rank_articles()`. No other community references rank_articles.
-
-**Finding 1 — `rank_articles()` current state (L37-60).**
-- Signature L37: `def rank_articles(articles: list, user_tags: list) -> list:` —
-  `user_tags` is currently accepted but NOT USED (no tag matching today).
-- Per-article computation L52-56:
-  - L52: `content_score = float(article.get("content_score") or 0.0)`
-  - L53: `click_score = min(article.get("click_count", 0) / 10.0, 1.0)`  (capped at 10 clicks)
-  - L54-55: `year = article.get("year") or 2000`;
-    `recency_score = max(0.0, min((int(year) - 2000) / 26.0, 1.0))`  (2000–2026 range)
-  - L56 (THE FORMULA): `final = 0.6 * content_score + 0.25 * click_score + 0.15 * recency_score`
-  - L57: `scored.append((final, article))`
-- L59-60: `scored.sort(key=lambda x: x[0], reverse=True)` then return ranked list.
-- Empty-input guard L47-48 (`if not articles: return articles`) — PRESERVE.
-- Docstring L38-46 describes the OLD 0.6/0.25/0.15 weights — MUST be updated to the new
-  weights + persona_boost so it does not lie.
-
-**Finding 2 — abstract projection (CRITICAL CHECK — Revamp.md line 226 is STALE).**
-- Revamp.md line 226 warns the `get_articles()` projection does NOT return `abstract` and
-  that persona_boost + matched_tags will silently be 0 unless `"abstract": 1` is added.
-- ACTUAL CODE: the projection at L87-99 ALREADY INCLUDES **`"abstract": 1` at L95**.
-  Full projected fields: `_id, openalex_id, title, year, journal, url, pdf_url, abstract,
-  authors, click_count, content_score`.
-- **CONCLUSION: the projection fix is ALREADY SATISFIED in the live code. The Revamp.md
-  warning predates a prior commit that added it.** B-4 must NOT re-add a duplicate key.
-  The implementer's job here is to VERIFY `"abstract": 1` is still present (do not remove
-  it) — it is required by both persona_boost and matched_tags. Reviewer: confirm L95 (or
-  wherever abstract lands) stays in the projection.
-
-**Finding 3 — the `GET /api/articles` handler (`get_articles()`, L74-112).**
-- L78: `user_id = get_jwt_identity()` (auth identity, scopes the article query) — PRESERVE.
-- L80-83: persona/session read at request time:
-  - L80: `quiz_user_id = request.args.get("quiz_user_id")`
-  - L81: `session = chat_collection.find_one({"user_id": quiz_user_id}, {"persona_profile": 1}) if quiz_user_id else None`
-  - L82: `persona_profile = session.get("persona_profile", {}) if session else {}`
-  - L83: `user_tags = (persona_profile.get("interest_tags") or [])`
-- L85-100: the projected `articles_collection.find(...)` cursor (see Finding 2).
-- L102-105: cursor → list, stringify `_id`.
-- L107: `articles = rank_articles(articles, user_tags)`  ← call site to extend.
-- L109: `return jsonify({"articles": articles, "persona_profile": persona_profile}), 200`
-  — the response shape. matched_tags is added PER ARTICLE inside the `articles` list, so
-  the top-level shape is unchanged; the client (C-4 mapArticle) already defaults
-  `matchedTags → []`, so this is backward-compatible.
-- L110-112: outer try/except 500. PRESERVE.
-- The OTHER routes — `update_profile()` PUT (L115-158), `articles()` POST (L161-184),
-  `track_click()` POST (L187-204) — are OUT OF SCOPE and UNTOUCHED.
-
-**Finding 4 — enums (post B-fix, confirmed).**
-- `emotional_state` ∈ {grieving, distressed, curious, professional, neutral}.
-- `content_preference` ∈ {stories, research, mixed}.
-- persona_boost keys off `content_preference` + `emotional_state` ONLY (per Revamp.md
-  PART 4) — `persona` (the "informed learner" string) is NOT used here. Do not branch on it.
-
-### EXACT CHANGES (single file: `server/routes/articles_route.py`)
-
-**Change 0 — VERIFY abstract projection (no edit expected).** Confirm `"abstract": 1`
-remains in the `get_articles()` projection (currently L95). Do not remove; do not duplicate.
-If, and only if, it were missing, add it — but per Finding 2 it is already present.
-
-**Change 1 — add a module-level `persona_boost` helper** (place it directly ABOVE
-`rank_articles()`, i.e. before current L37, after `sanitize_tags()`). Pure function, no I/O,
-case-insensitive substring matching on the abstract, returns a bounded float in [0.0, 1.0]:
-
-```python
-# ── Persona boost keyword groups (Revamp.md PART 4, lines 220-224) ────────────
-_STORIES_KEYWORDS = ("case study", "narrative", "interview", "testimony",
-                     "survivor", "personal account", "qualitative")
-_RESEARCH_KEYWORDS = ("prevalence", "epidemiological", "randomized", "meta-analysis",
-                      "systematic review", "cohort", "longitudinal")
-_SUPPORT_KEYWORDS = ("support", "intervention", "treatment", "therapy",
-                     "recovery", "coping", "resilience")
-_PROFESSIONAL_KEYWORDS = ("clinical", "framework", "protocol", "evidence-based",
-                          "intervention", "efficacy")
-# Abstracts that are "purely epidemiological" get demoted for grieving/distressed users.
-_EPIDEMIOLOGICAL_KEYWORDS = ("prevalence", "epidemiological", "incidence",
-                             "meta-analysis", "systematic review", "cohort")
-
-
-def persona_boost(abstract: str, emotional_state: str, content_preference: str) -> float:
-    """
-    Bounded [0.0, 1.0] persona-fit score from case-insensitive keyword matching on the
-    article abstract (NO ML). Per Revamp.md PART 4 (lines 220-224). content_preference and
-    emotional_state independently contribute; the demote rule subtracts for grieving/
-    distressed users when the abstract is purely epidemiological.
-    """
-    text = (abstract or "").lower()
-    if not text:
-        return 0.0
-
-    boost = 0.0
-
-    # content_preference contribution (0.5 if any group keyword present)
-    if content_preference == "stories" and any(k in text for k in _STORIES_KEYWORDS):
-        boost += 0.5
-    elif content_preference == "research" and any(k in text for k in _RESEARCH_KEYWORDS):
-        boost += 0.5
-
-    # emotional_state contribution (0.5 if any group keyword present)
-    if emotional_state in ("grieving", "distressed"):
-        if any(k in text for k in _SUPPORT_KEYWORDS):
-            boost += 0.5
-        # demote purely epidemiological abstracts for vulnerable users
-        if any(k in text for k in _EPIDEMIOLOGICAL_KEYWORDS) \
-                and not any(k in text for k in _SUPPORT_KEYWORDS):
-            boost -= 0.5
-    elif emotional_state == "professional":
-        if any(k in text for k in _PROFESSIONAL_KEYWORDS):
-            boost += 0.5
-
-    # bound to [0.0, 1.0]
-    return max(0.0, min(boost, 1.0))
-```
-
-Algorithm rationale (spelled out so the implementer has zero ambiguity):
-- Two independent contributions, each worth **0.5** when its keyword group matches:
-  one from `content_preference`, one from `emotional_state`. Max raw boost = 1.0 (matches
-  the 0.10 weight cleanly: a perfectly-fit article gets the full +0.10 term).
-- `content_preference == "mixed"` (the default) contributes 0 — neutral, no story/research
-  preference. `emotional_state` in {curious, neutral} contributes 0 — no boost group is
-  defined for them in PART 4 (only grieving/distressed and professional have groups).
-- **Demote rule** (PART 4 line 223): for grieving/distressed users, if the abstract is
-  "purely epidemiological" (contains an epidemiological keyword AND contains NO support
-  keyword) subtract 0.5. The `not any(support)` clause is what makes it "purely"
-  epidemiological — an abstract that has both stats AND support language is not demoted.
-- Final clamp `max(0.0, min(boost, 1.0))` keeps the term in [0,1] so the 0.10 weight behaves
-  predictably and a demote can never push final_score negative via this term.
-
-**Change 2 — extend `rank_articles()` signature** (L37):
-```python
-def rank_articles(articles: list, user_tags: list,
-                  emotional_state: str = "curious",
-                  content_preference: str = "mixed") -> list:
-```
-(Defaults per Revamp.md line 209: `emotional_state="curious"`, `content_preference="mixed"`.)
-
-**Change 3 — update the `rank_articles()` docstring (L38-46)** to state the NEW weights
-(0.60 content / 0.25 click / 0.05 recency / 0.10 persona_boost) and that persona_boost is
-keyword matching on the abstract, no ML. (Doc only — keep it honest.)
-
-**Change 4 — new formula inside the per-article loop (replace L56).** Keep L52-55
-(content_score, click_score, year, recency_score) VERBATIM — only the weighting line and a
-new persona term change:
-```python
-        boost = persona_boost(article.get("abstract"), emotional_state, content_preference)
-        final = (0.60 * content_score
-                 + 0.25 * click_score
-                 + 0.05 * recency_score
-                 + 0.10 * boost)
-```
-(Weights per Revamp.md lines 214-218: recency reduced 0.15→0.05, persona_boost weight 0.10.
-Sum of weights = 1.00.) Preserve L57 `scored.append((final, article))` and the L59-60 sort.
-
-**Change 5 — compute matched_tags after ranking, inside `get_articles()`.** Per Revamp.md
-lines 232-241. Insert BETWEEN the current L107 (`articles = rank_articles(...)`) and the
-L109 return. Loop over the already-ranked list and attach `matched_tags` to each article
-dict (mutating in place is fine — they are plain dicts from the cursor):
-```python
-        articles = rank_articles(
-            articles, user_tags,
-            emotional_state=persona_profile.get("emotional_state", "curious"),
-            content_preference=persona_profile.get("content_preference", "mixed"),
-        )
-
-        for article in articles:
-            title = (article.get("title") or "").lower()
-            abstract = (article.get("abstract") or "").lower()
-            article["matched_tags"] = [
-                tag for tag in user_tags
-                if tag.lower() in title or tag.lower() in abstract
-            ]
-```
-Notes:
-- This REPLACES the current L107 call (which passes only `articles, user_tags`) with the
-  4-arg call that reads `emotional_state` + `content_preference` from `persona_profile`
-  (already loaded at L82). Defaults "curious"/"mixed" match rank_articles + Revamp.md.
-- `user_tags` is already `persona_profile.get("interest_tags") or []` (L83) — reuse it.
-- matched_tags is computed POST-rank per PART 4 ("After ranking, compute which of the user's
-  interest_tags appear in each article"). Ordering of articles is unchanged by this loop.
-- The default-empty `user_tags` → every article gets `matched_tags: []`, which the client
-  already tolerates (C-4 mapArticle defaults matchedTags → []). Backward-compatible.
-
-**Change 6 — response shape (L109).** UNCHANGED at the top level:
-`return jsonify({"articles": articles, "persona_profile": persona_profile}), 200`. Each
-article in `articles` now carries an extra `matched_tags` key. No new top-level field.
-
-### WHAT TO PRESERVE (Revamp.md PART 4 + route invariants)
-- `content_score` / `click_score` / `recency_score` computations and their data sources
-  (`content_score`, `click_count` capped at 10, `year` 2000–2026) — UNCHANGED (L52-55).
-- The empty-articles guard (L47-48) and the sort (L59-60) — UNCHANGED.
-- `"abstract": 1` in the projection (L95) — MUST REMAIN (persona_boost + matched_tags need it).
-- Auth: `@jwt_required()` + `get_jwt_identity()` scoping the article query (L75-78) — UNCHANGED.
-- The request-time session/persona read (L80-83) — reused, not changed (we now also read
-  emotional_state + content_preference from the same `persona_profile`).
-- Top-level response shape `{"articles": [...], "persona_profile": {...}}` (L109) — UNCHANGED.
-- The outer try/except 500 (L110-112) — UNCHANGED.
-- The OTHER routes: `update_profile()` PUT, `articles()` POST, `track_click()` POST —
-  UNTOUCHED. `sanitize_tags()`, `build_query()` — UNTOUCHED.
-- No ML / no network calls added; persona_boost is pure keyword matching.
-
-### INVARIANTS
-- Exactly ONE file changed: `server/routes/articles_route.py`. No new files. No edits to
-  chat_route.py / ai_assistant_route.py / tests / client.
-- persona_boost branches ONLY on content_preference + emotional_state (never on `persona`).
-- New formula weights sum to 1.00 (0.60 + 0.25 + 0.05 + 0.10).
-- persona_boost return is clamped to [0.0, 1.0]; the demote can never make final negative.
-- matched_tags is a list on EVERY returned article (>=[]), computed post-rank, both title
-  and abstract checked, all comparisons lowercased.
-- abstract projection key present exactly once (Finding 2).
-
-### VERIFICATION (post-coding)
-- Test gate: `python -m unittest discover -s server/tests` → still `Ran 5 tests ... OK`
-  (non-regression; B-4 touches no currently-tested function).
-- `python -c "import ast; ast.parse(open(r'server/routes/articles_route.py').read())"` —
-  file parses clean.
-- Grep the file: confirm `0.60 * content_score`, `0.05 * recency_score`, `0.10 * boost`
-  present; old `0.6 * content_score ... 0.15 * recency_score` line GONE; `"abstract": 1`
-  present exactly once; `matched_tags` assignment present; `def persona_boost(` present;
-  4-arg `rank_articles(` signature present.
-- Spot-check weight sum = 1.00 and recency dropped 0.15→0.05.
-- After coding: `graphify update .` to refresh the graph (Community 8 will gain persona_boost).
-
-### OPTIONAL (orchestrator decision — tests may stay as-is)
-A focused unit test for `persona_boost` / `rank_articles` would add real coverage of the new
-logic (e.g. stories-pref abstract with "narrative" → boost > 0; grieving + purely
-epidemiological abstract → demoted below a support-bearing one; mixed/curious → boost 0).
-If added, it lives in `server/tests/` and the gate count rises from 5. B-2a established the
-gate; this step does NOT require new tests to land. RECOMMENDATION: add the small test if
-cheap, otherwise keep the gate as a non-regression guard.
-
-**Status: IN PROGRESS**
+## B-4: `server/routes/articles_route.py` — article ranking persona_boost + matched_tags — COMPLETE
+Commit: `1be6d5a`. One file (`server/routes/articles_route.py`): Change 0 (verified
+`"abstract": 1` already present at projection, not re-added), Change 1 (persona_boost
+helper + keyword-group constants), Changes 2-4 (rank_articles 4-arg signature, updated
+docstring, new formula 0.60/0.25/0.05/0.10), Change 5 (4-arg call site reading
+emotional_state+content_preference from persona_profile, post-rank matched_tags loop).
+Test gate green (`Ran 5 tests ... OK`), file parses, graphify updated. (Full plan +
+review retained in git history of this file.)
 
 ---
 
-## Upcoming Steps
+## B-5: Guardian API integration (NEW route + blueprint registration + Mongo cache) — IN PROGRESS
 
-- **B-5**: `server/routes/external_content_route.py` (NEW) — Guardian API + MongoDB cache
+**THIS IS THE FINAL REVAMP STEP.**
+
+**Source of truth:** Revamp.md PART 5 (lines 247-281), verified line-by-line.
+**Test gate (must pass, no regressions):** `python -m unittest discover -s server/tests`
+→ currently `Ran 5 tests in 0.001s OK`. B-5 adds no Python-tested function to the gate;
+it is a non-regression guard. Additionally confirm the app still imports/boots.
+
+### INVESTIGATION FINDINGS (authoritative — graphify-oriented, then confirmed from source)
+
+**Finding A — blueprint import + registration pattern (`server/app.py`).**
+- Imports L9-18 follow `from routes.<file> import <bp_name>` (note: import is from
+  `routes.<x>`, NOT `server.routes.<x>` — the server dir is the import root).
+- Registrations L37-46 follow `app.register_blueprint(<bp>, url_prefix="<prefix>")`.
+- The `/api` prefix is shared by `map_bp`, `trends_bp`, `articles_bp`, `ai_assistant_bp`
+  (L37, 44, 45, 46). The endpoint must be `GET /api/external/stories`, so the new blueprint
+  registers with `url_prefix="/api"` and its in-blueprint route path is `/external/stories`.
+  (Final URL = `/api` + `/external/stories` = `/api/external/stories` — matches the C-4
+  contract.)
+
+**Finding B — Mongo collection + index idiom (`server/services/mongo.py`).**
+- Collections are module-level: `<name> = db["<collection>"]` (L44, 53-56, 63-64).
+- Indexes are created inside a `try/except Exception as e: logger.warning(...)` block right
+  after the collection handle (L46-51, L58-61, L66-71).
+- TTL index idiom (EXACT, copy this shape) — token_blocklist L66-69:
+  `token_blocklist_collection.create_index("revoked_at", expireAfterSeconds=86400)`
+  and unique idiom: `create_index("jti", unique=True)`.
+- So `guardian_cache` follows the SAME pattern: collection handle + try/except with a TTL
+  index on `fetched_at` (expireAfterSeconds=3600) and a unique index on `topic`.
+
+**Finding C — route blueprint idiom + deps (`server/routes/articles_route.py`).**
+- Blueprint: `<bp> = Blueprint("<internal_name>", __name__)` (L10).
+- Imports: `from flask import Blueprint, request, jsonify`; service imports from
+  `services.<x>`; `from utils.logger import logger` (L1-8). Logger is the project-standard
+  logging facility — use it for warnings on failure paths.
+- **`requests` IS already a dependency** — Requirements.txt L17 (`requests`), and it is used
+  with a timeout in `server/services/openalex_articles.py` L19
+  (`requests.get(pdf_url, timeout=_PDF_TIMEOUT, stream=True)`). So B-5 uses `requests.get(...,
+  timeout=...)` — NO new dependency added.
+- Env vars read via `os.environ.get(...)` (mongo.py L8-9) with dotenv loaded at module top
+  (`load_dotenv(...)`). dotenv is already loaded process-wide via mongo.py/app.py; reading
+  `os.environ.get("GUARDIAN_API_KEY")` inside the route is consistent and safe.
+
+**Finding D — frontend contract (C-4 `getExternalStories`, `client/src/utils/api.js`
+L177-190) — CONFIRMED.**
+- Calls `fetch(\`${base}/api/external/stories?topic=${encodeURIComponent(topic)}\`)` with
+  **NO Authorization header, NO credentials**. => The route MUST be PUBLIC (no
+  `@jwt_required`). DECISION: no auth decorator on this endpoint. Rationale: the frontend
+  cannot supply a token here, and the data is public journalism (no user-scoped data).
+- Graceful on client side too: `if (!res.ok) return []`, non-array → []. So a server 200
+  with `[]` and a server error both degrade to "stories block doesn't render".
+- The response MUST be a **top-level JSON ARRAY** (not `{stories: [...]}`) — the client does
+  `Array.isArray(data) ? data : []`. So return `jsonify(stories_list)` where `stories_list`
+  is a Python list.
+- Item shape consumed downstream (ResultsPage maps `thumbnail`→`thumbnailUrl`; cards consume
+  `{thumbnailUrl, headline, summary, date, url}`). So each item MUST be exactly:
+  `{headline, summary, thumbnail, url, date, source}` per Revamp.md line 272.
+
+### EXACT FILES TO CHANGE (3 files — within the 5-file limit)
+
+#### FILE 1 (NEW) — `server/routes/external_content_route.py`
+
+Full route outline:
+
+```python
+import os
+import requests
+from flask import Blueprint, request, jsonify
+from datetime import datetime, timezone
+from services.mongo import guardian_cache_collection
+from utils.logger import logger
+
+external_content_bp = Blueprint("external_content", __name__)
+
+GUARDIAN_URL = "https://content.guardianapis.com/search"
+GUARDIAN_TIMEOUT = 8          # seconds (Render-friendly, mirrors openalex timeout idiom)
+CACHE_TTL_SECONDS = 3600      # informational; the Mongo TTL index enforces expiry
+
+
+@external_content_bp.route("/external/stories", methods=["GET"])
+def external_stories():
+    """
+    GET /api/external/stories?topic=<primary_topic>
+    PUBLIC (no auth) — see B-5 Finding D. Returns a JSON array of Guardian story
+    objects, or [] on ANY failure path (missing key, timeout, HTTP error, bad JSON,
+    0 results). NEVER raises to the client. English only (no Hebrew translation).
+    """
+    try:
+        # 1. Normalize topic; empty/missing → [] (graceful)
+        topic = (request.args.get("topic") or "").lower().strip()
+        if not topic:
+            return jsonify([]), 200
+
+        # 2. Cache hit → return stored stories
+        try:
+            cached = guardian_cache_collection.find_one({"topic": topic})
+            if cached and cached.get("stories"):
+                return jsonify(cached["stories"]), 200
+        except Exception as e:
+            logger.warning(f"guardian_cache read failed: {e}")
+            # fall through to live fetch
+
+        # 3. Missing API key → [] (do not raise)
+        api_key = os.environ.get("GUARDIAN_API_KEY")
+        if not api_key:
+            logger.warning("GUARDIAN_API_KEY not set; returning [] for external stories")
+            return jsonify([]), 200
+
+        # 4. Cache miss → query Guardian
+        params = {
+            "q": f"{topic} Israel trauma",
+            "section": "world",
+            "show-fields": "thumbnail,trailText,headline",
+            "page-size": 3,
+            "api-key": api_key,
+        }
+        resp = requests.get(GUARDIAN_URL, params=params, timeout=GUARDIAN_TIMEOUT)
+        resp.raise_for_status()
+        data = resp.json()
+
+        # 5. Parse → list of {headline, summary, thumbnail, url, date, source}
+        results = (data.get("response", {}) or {}).get("results", []) or []
+        stories = []
+        for item in results:
+            fields = item.get("fields", {}) or {}
+            stories.append({
+                "headline": fields.get("headline") or item.get("webTitle", ""),
+                "summary": fields.get("trailText", ""),
+                "thumbnail": fields.get("thumbnail", ""),
+                "url": item.get("webUrl", ""),
+                "date": item.get("webPublicationDate", ""),
+                "source": "The Guardian",
+            })
+
+        # 6. 0 results → return [] WITHOUT caching (retry next request) — Revamp.md L275
+        if not stories:
+            return jsonify([]), 200
+
+        # 7. Upsert into cache with current timestamp
+        try:
+            guardian_cache_collection.update_one(
+                {"topic": topic},
+                {"$set": {
+                    "topic": topic,
+                    "stories": stories,
+                    "fetched_at": datetime.now(timezone.utc),
+                }},
+                upsert=True,
+            )
+        except Exception as e:
+            logger.warning(f"guardian_cache write failed: {e}")
+            # still return the stories — caching is best-effort
+
+        return jsonify(stories), 200
+
+    except Exception as e:
+        # API failure / timeout / bad JSON / anything → [] (never raise to client)
+        logger.warning(f"external_stories failed: {e}")
+        return jsonify([]), 200
+```
+
+Key invariants for FILE 1:
+- Endpoint path inside blueprint is `/external/stories`; the `/api` prefix is added at
+  registration (FILE 2) to form `/api/external/stories`.
+- NO `@jwt_required` (PUBLIC — Finding D).
+- Returns a TOP-LEVEL ARRAY via `jsonify(stories)` (NOT `{stories: ...}`) — Finding D.
+- Item shape EXACTLY `{headline, summary, thumbnail, url, date, source}` (Revamp.md L272).
+- `summary` from `fields.trailText`; `url` from `webUrl`; `date` from `webPublicationDate`;
+  `source` constant `"The Guardian"`; `thumbnail` from `fields.thumbnail`.
+- Every failure path returns `jsonify([]), 200` — never a 4xx/5xx, never an exception:
+  empty topic, cache-read error, missing key, requests timeout/HTTPError, bad JSON,
+  0 results.
+- 0 results is NOT cached (so a later request retries) — Revamp.md L275.
+- `requests.get(..., timeout=GUARDIAN_TIMEOUT)` — uses existing dependency; has a timeout.
+- `fetched_at` stored as timezone-aware UTC datetime (Mongo TTL operates on BSON dates).
+- English only; no translation logic (Revamp.md L258).
+
+#### FILE 2 (EDIT) — `server/app.py`
+
+- Add import alongside the other route imports (after L18):
+  `from routes.external_content_route import external_content_bp`
+- Add registration alongside the other `/api` blueprints (after L46):
+  `app.register_blueprint(external_content_bp, url_prefix="/api")`
+- PRESERVE all existing imports + registrations (L9-46), JWT config, CORS, limiter, the
+  `is_jti_revoked` blocklist wiring.
+
+#### FILE 3 (EDIT) — `server/services/mongo.py`
+
+- Add the collection handle + index block following the EXACT existing idiom (mirror the
+  token_blocklist block L63-71). Place after the existing collection/index blocks (after
+  L71):
+
+```python
+guardian_cache_collection = db["guardian_cache"]
+
+try:
+    # Auto-expire cached Guardian results after 1 hour (Revamp.md PART 5)
+    guardian_cache_collection.create_index("fetched_at", expireAfterSeconds=3600)
+    guardian_cache_collection.create_index("topic", unique=True)
+except Exception as e:
+    logger.warning(f"Failed to create guardian_cache indexes: {e}")
+```
+
+- PRESERVE every existing collection handle (chat/users/calls/trends/articles/
+  token_blocklist/ai_assistant) and every existing index block — append only.
+
+### WHAT TO PRESERVE (global)
+- All existing routes/blueprints + their url_prefixes (app.py L9-46) — append only.
+- All existing collections + indexes (mongo.py) — append only; do not alter TTL/unique
+  setups for chat/articles/token_blocklist.
+- Auth, JWT, CORS, limiter, app config — untouched.
+- No new dependency: `requests` already in Requirements.txt L17.
+- No Hebrew translation; English only.
+
+### INVARIANTS / REVIEW CHECKLIST
+- Exactly 3 files: 1 NEW route + app.py + mongo.py. No client files changed (C-4 already
+  wired the consumer). No tests changed.
+- Route is PUBLIC (no `@jwt_required`) — matches C-4 fetch (no token).
+- Response is a top-level JSON array; item shape `{headline, summary, thumbnail, url, date,
+  source}`.
+- Graceful `[]` on EVERY failure path: empty/missing topic, missing GUARDIAN_API_KEY,
+  cache read error, requests timeout/HTTP error, bad JSON, 0 results. Never raises.
+- 0 results → `[]` and NOT cached.
+- `guardian_cache` has TTL index on `fetched_at` (expireAfterSeconds=3600) AND unique index
+  on `topic`.
+- `requests.get` uses a timeout. No new dependency.
+- Final URL is `/api/external/stories` (prefix `/api` + path `/external/stories`).
+
+### VERIFICATION (post-coding)
+- `python -c "import ast; ast.parse(open(r'server/routes/external_content_route.py').read())"`
+  — new file parses clean.
+- Test gate: `python -m unittest discover -s server/tests` → still `Ran 5 tests ... OK`
+  (non-regression — B-5 touches no tested function).
+- App imports/boots: confirm `from routes.external_content_route import external_content_bp`
+  resolves and `external_content_bp` registers without error (import-time check of app.py).
+- Grep checks: `external_content_bp` defined + imported + registered exactly once;
+  `guardian_cache_collection` defined in mongo.py with both `expireAfterSeconds=3600` and
+  `unique=True`; `@jwt_required` ABSENT from the new route; `jsonify([])` present on each
+  failure branch; item dict has all 6 keys with `source: "The Guardian"`.
+- After coding: `graphify update .` to refresh the graph.
+
+**Status: IN PROGRESS**
