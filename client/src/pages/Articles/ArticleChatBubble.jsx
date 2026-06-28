@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { getApiBase } from "../../config/api.js";
 import { AUTH_TOKEN_KEY, USER_ID_KEY } from "../../config/storageKeys.js";
-import "./ArticleChatBubble.css";
+import styles from "./ArticleChatBubble.module.css";
 
 export default function ArticleChatBubble() {
   const [open, setOpen] = useState(false);
@@ -57,7 +57,7 @@ export default function ArticleChatBubble() {
   return (
     <>
       <button
-        className="acb-bubble"
+        className={styles.bubble}
         onClick={() => setOpen((o) => !o)}
         aria-label="Open article assistant"
         title="Ask about your articles"
@@ -66,34 +66,34 @@ export default function ArticleChatBubble() {
       </button>
 
       {open && (
-        <div className="acb-panel" role="dialog" aria-label="Article assistant">
-          <div className="acb-header">
+        <div className={styles.panel} role="dialog" aria-label="Article assistant">
+          <div className={styles.header}>
             <span>Article Assistant</span>
-            <button className="acb-close" onClick={() => setOpen(false)} aria-label="Close">✕</button>
+            <button className={styles.close} onClick={() => setOpen(false)} aria-label="Close">✕</button>
           </div>
 
-          <div className="acb-messages">
+          <div className={styles.messages}>
             {messages.length === 0 && (
-              <p className="acb-hint">Ask a question about your articles…</p>
+              <p className={styles.hint}>Ask a question about your articles…</p>
             )}
             {messages.map((m, i) => (
-              <div key={i} className={`acb-msg acb-msg--${m.role}`}>
+              <div key={i} className={`${styles.msg} ${m.role === "user" ? styles.msgUser : styles.msgAssistant}`}>
                 {m.content}
               </div>
             ))}
             {loading && (
-              <div className="acb-msg acb-msg--assistant acb-typing">
+              <div className={`${styles.msg} ${styles.msgAssistant} ${styles.typing}`}>
                 <span /><span /><span />
               </div>
             )}
             <div ref={bottomRef} />
           </div>
 
-          <div className="acb-input-row">
+          <div className={styles.inputRow}>
             <input
               ref={inputRef}
               type="text"
-              className="acb-input"
+              className={styles.input}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && send()}
@@ -102,7 +102,7 @@ export default function ArticleChatBubble() {
               maxLength={500}
             />
             <button
-              className="acb-send"
+              className={styles.send}
               onClick={send}
               disabled={!input.trim() || loading}
             >

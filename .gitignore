@@ -1,3 +1,12 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+
+# OS
+.DS_Store
+
 graphify-out/
 .claude/plugins/
 .agents/

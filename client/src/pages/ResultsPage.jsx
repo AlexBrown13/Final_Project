@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import BackendDown from '../components/BackendDown.jsx'
+import Navbar from '../components/Navbar.jsx'
 import BeginnerResults from '../components/results/BeginnerResults.jsx'
 import InformedResults from '../components/results/InformedResults.jsx'
 import ResearcherResults from '../components/results/ResearcherResults.jsx'
@@ -294,19 +295,25 @@ export default function ResultsPage() {
   const profile = personaProfile ? mapProfile(personaProfile, headline, score) : MOCK_PROFILE
   const persona = profile.persona || scoreToPersona(score)
 
+  let personaView
   if (persona === 'beginner') {
-    return (
+    personaView = (
       <BeginnerResults
         profile={profile}
         guardianStories={stories}
         academicArticles={articles}
       />
     )
+  } else if (persona === 'informed') {
+    personaView = <InformedResults profile={profile} guardianStories={stories} academicArticles={articles} />
+  } else {
+    personaView = <ResearcherResults profile={profile} academicArticles={articles} />
   }
 
-  if (persona === 'informed') {
-    return <InformedResults profile={profile} guardianStories={stories} academicArticles={articles} />
-  }
-
-  return <ResearcherResults profile={profile} academicArticles={articles} />
+  return (
+    <>
+      <Navbar />
+      {personaView}
+    </>
+  )
 }
