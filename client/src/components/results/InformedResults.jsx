@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import GuardianCardVertical from './GuardianCardVertical.jsx'
 import AcademicCardTeal from './AcademicCardTeal.jsx'
+import { useDirection } from '../../context/useDirection.js'
+import { resetQuizSession } from '../../utils/api.js'
 
 const HEADLINE = {
   professional: 'As a social worker, you want both the human story and the evidence behind it.',
@@ -70,7 +72,7 @@ export default function InformedResults({ profile, guardianStories = [], academi
   const showSecondResearch = pref !== 'stories'
   const showThirdResearch  = pref === 'research'
 
-  const [dir, setDir] = useState('ltr')
+  const { dir } = useDirection()
   const [topicsOpen, setTopicsOpen] = useState(false)
   const [topics, setTopics] = useState(profile.interestTags || [])
   const [addVal, setAddVal] = useState('')
@@ -119,8 +121,8 @@ export default function InformedResults({ profile, guardianStories = [], academi
           <span style={{ fontSize: 13, color: '#b9c6c2', fontWeight: 500 }}>Results</span>
           <button
             type="button"
-            onClick={() => setDir(d => d === 'ltr' ? 'rtl' : 'ltr')}
-            aria-label="Toggle language direction"
+            onClick={async () => { await resetQuizSession(); window.location.assign('/') }}
+            aria-label={dir === 'ltr' ? 'Retake the quiz' : 'מילוי השאלון מחדש'}
             style={{
               fontFamily: 'inherit',
               fontSize: 13,
@@ -133,7 +135,7 @@ export default function InformedResults({ profile, guardianStories = [], academi
               cursor: 'pointer',
             }}
           >
-            {dir === 'ltr' ? 'עברית' : 'English'}
+            {dir === 'ltr' ? 'Retake quiz' : 'שאלון מחדש'}
           </button>
         </div>
       </nav>

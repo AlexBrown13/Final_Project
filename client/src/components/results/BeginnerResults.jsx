@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import GuardianCard from './GuardianCard.jsx'
 import AcademicCard from './AcademicCard.jsx'
+import { useDirection } from '../../context/useDirection.js'
+import { resetQuizSession } from '../../utils/api.js'
 
 const MOOD_COPY = {
   grieving: {
@@ -57,7 +59,7 @@ export default function BeginnerResults({ profile, guardianStories = [], academi
   const headline = profile.headline || copy.h1
   const eyebrow = copy.eyebrow
 
-  const [dir, setDir] = useState('ltr')
+  const { dir } = useDirection()
   const [topicsOpen, setTopicsOpen] = useState(false)
   const [topics, setTopics] = useState(profile.interestTags || [])
   const [addVal, setAddVal] = useState('')
@@ -92,10 +94,10 @@ export default function BeginnerResults({ profile, guardianStories = [], academi
         <button
           type="button"
           className="p1-lang-toggle"
-          onClick={() => setDir(d => d === 'ltr' ? 'rtl' : 'ltr')}
-          aria-label="Toggle language direction"
+          onClick={async () => { await resetQuizSession(); window.location.assign('/') }}
+          aria-label={dir === 'ltr' ? 'Retake the quiz' : 'מילוי השאלון מחדש'}
         >
-          {dir === 'ltr' ? 'עברית' : 'English'}
+          {dir === 'ltr' ? 'Retake quiz' : 'שאלון מחדש'}
         </button>
       </nav>
 

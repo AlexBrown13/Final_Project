@@ -1,5 +1,12 @@
 import { getApiBase } from "../config/api.js";
-import { AUTH_TOKEN_KEY } from "../config/storageKeys.js";
+import {
+  AUTH_TOKEN_KEY,
+  USER_ID_KEY,
+  QUIZ_MESSAGES_KEY,
+  QUIZ_META_KEY,
+  SCORE_CACHE_KEY,
+  PERSONA_CACHE_KEY,
+} from "../config/storageKeys.js";
 
 async function parseJsonSafe(res) {
   const text = await res.text();
@@ -144,6 +151,26 @@ export async function deleteSession(userId, token) {
   });
   const data = await parseJsonSafe(res);
   return { res, data };
+}
+
+/**
+ * Fully restart the quiz: delete the server-side session (best-effort) and clear
+ * the locally cached quiz transcript, score and persona so a fresh quiz begins.
+ * Caller should hard-navigate to "/" afterwards to reinitialize app state/theme.
+ */
+export async function resetQuizSession() {
+  let userId = null;
+  try { userId = localStorage.getItem(USER_ID_KEY); } catch { /* ignore */ }
+  let token = null;
+  try { token = localStorage.getItem(AUTH_TOKEN_KEY); } catch { /* ignore */ }
+
+  if (userId) {
+    try { await deleteSession(userId, token); } catch { /* best-effort; clear local anyway */ }
+  }
+
+  for (const key of [QUIZ_MESSAGES_KEY, QUIZ_META_KEY, SCORE_CACHE_KEY, PERSONA_CACHE_KEY]) {
+    try { localStorage.removeItem(key); } catch { /* ignore */ }
+  }
 }
 
 /**

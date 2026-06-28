@@ -16,6 +16,7 @@ import {
 import { usePersona } from '../context/usePersona.js'
 import { fetchHealth, getResult, getArticles, getExternalStories } from '../utils/api.js'
 import { getApiBase } from '../config/api.js'
+import { scoreToPersona, normalizePersonaLabel, resolveRenderedPersona } from '../utils/persona.js'
 import styles from './ResultsPage.module.css'
 
 const MOCK_PROFILE = {
@@ -25,13 +26,6 @@ const MOCK_PROFILE = {
   interestTags: ['October 7', 'grief', 'PTSD', 'soldiers', 'memory'],
   primaryTopic: 'grief',
   headline: null,
-}
-
-function normalizePersonaLabel(p) {
-  const s = String(p || '').toLowerCase().trim()
-  if (s.startsWith('research')) return 'researcher'
-  if (s.startsWith('informed')) return 'informed'   // "informed learner" → "informed"
-  return 'beginner'
 }
 
 function mapProfile(personaProfile, headline, score) {
@@ -63,12 +57,6 @@ function normalizeScore(n) {
   const s = Number(n)
   if (s === 2 || s === 3) return s
   return 1
-}
-
-function scoreToPersona(s) {
-  if (s === 3) return 'researcher'
-  if (s === 2) return 'informed'
-  return 'beginner'
 }
 
 export default function ResultsPage() {
@@ -293,7 +281,9 @@ export default function ResultsPage() {
   }
 
   const profile = personaProfile ? mapProfile(personaProfile, headline, score) : MOCK_PROFILE
-  const persona = profile.persona || scoreToPersona(score)
+  // Persona profile is authoritative when present; otherwise derive from score
+  // so a researcher/informed user is never shadowed by MOCK_PROFILE's 'beginner'.
+  const persona = resolveRenderedPersona(personaProfile, score)
 
   let personaView
   if (persona === 'beginner') {

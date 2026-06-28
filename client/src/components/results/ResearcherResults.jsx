@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import ArticleRow from './ArticleRow.jsx'
+import { useDirection } from '../../context/useDirection.js'
+import { resetQuizSession } from '../../utils/api.js'
 
 const HEADLINE = {
   professional: 'The evidence base for trauma in conflict — organised for research.',
@@ -106,7 +108,7 @@ export default function ResearcherResults({ profile, academicArticles = [] }) {
   const headline = profile.headline || HEADLINE[mood] || HEADLINE.neutral
   const prefLabel = PREF_LABEL[pref] || PREF_LABEL.research
 
-  const [dir, setDir] = useState('ltr')
+  const { dir } = useDirection()
   const [topicsOpen, setTopicsOpen] = useState(false)
   const [topics, setTopics] = useState(profile.interestTags || [])
   const [addVal, setAddVal] = useState('')
@@ -187,8 +189,8 @@ export default function ResearcherResults({ profile, academicArticles = [] }) {
           </span>
           <button
             type="button"
-            onClick={() => setDir(d => d === 'ltr' ? 'rtl' : 'ltr')}
-            aria-label="Toggle language direction"
+            onClick={async () => { await resetQuizSession(); window.location.assign('/') }}
+            aria-label={dir === 'ltr' ? 'Retake the quiz' : 'מילוי השאלון מחדש'}
             style={{
               fontFamily: "'IBM Plex Mono', monospace",
               fontSize: 12,
@@ -200,7 +202,7 @@ export default function ResearcherResults({ profile, academicArticles = [] }) {
               cursor: 'pointer',
             }}
           >
-            {dir === 'ltr' ? 'עברית' : 'English'}
+            {dir === 'ltr' ? 'Retake quiz' : 'שאלון מחדש'}
           </button>
         </div>
       </nav>

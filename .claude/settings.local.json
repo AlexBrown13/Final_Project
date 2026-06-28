@@ -80,7 +80,8 @@
       "Bash(echo \"=== compileall exit: $? ===\")",
       "Bash(grep -vE '\\\\.pyc$')",
       "Bash(grep -A 8 \"ArticlePage.jsx$\")",
-      "Bash(grep -A 6 \"ResultsPage.jsx$\")"
+      "Bash(grep -A 6 \"ResultsPage.jsx$\")",
+      "Bash(node persona.test.mjs)"
     ]
   }
 }
