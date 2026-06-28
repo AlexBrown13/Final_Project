@@ -115,8 +115,9 @@ def login():
     if not user or not bcrypt.checkpw(password.encode('utf-8'), user["password"]):
         return jsonify({"error": "Invalid credentials"}), 401
     
+    uid = user.get("user_id") or str(user["_id"])
     access_token = create_access_token(
-        identity=user["user_id"],
+        identity=uid,
         additional_claims={"email": email}
     )
 
@@ -128,7 +129,7 @@ def login():
     score = None
 
     session = chat_collection.find_one(
-        {"auth_user_id": user["user_id"], "completed": True},
+        {"auth_user_id": uid, "completed": True},
         {"score": 1, "persona_profile": 1}
     )
     if not session:
@@ -142,7 +143,7 @@ def login():
                 try:
                     chat_collection.update_one(
                         {"user_id": quiz_user_id, "completed": True},
-                        {"$set": {"auth_user_id": user["user_id"]}}
+                        {"$set": {"auth_user_id": uid}}
                     )
                 except Exception:
                     pass  # non-critical; persona still returned below
@@ -154,7 +155,7 @@ def login():
     return jsonify({
         "message": "Login success",
         "token": access_token,
-        "user_id": user["user_id"],
+        "user_id": uid,
         "score": score,
         "persona_profile": persona_profile,
     }), 200

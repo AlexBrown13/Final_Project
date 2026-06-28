@@ -35,11 +35,12 @@
 │  LLM Call 2 (once, at completion)                                        │
 │    extracts structured persona profile:                                  │
 │    {                                                                     │
-│      persona:           "beginner" | "informed learner" | "researcher"  │
-│      interest_tags:     ["PTSD", "children", "October 7"]               │
-│      preferred_content: "research data and practical support"            │
-│      primary_topic:     "children"                                       │
-│      search_query:      "trauma AND Israel AND children AND ..."         │
+│      persona:            "beginner" | "informed learner" | "researcher" │
+│      emotional_state:    "grieving" | ... | "neutral"                    │
+│      content_preference: "stories" | "research" | "mixed"                │
+│      interest_tags:      ["PTSD", "children", "October 7"]              │
+│      primary_topic:      "children"                                      │
+│      search_query:       "trauma AND Israel AND children AND ..."        │
 │    }                                                                     │
 │    _clean_tags() strips generic tags, deduplicates, caps at 5           │
 │    score derived: beginner→1  informed learner→2  researcher→3          │
@@ -137,7 +138,7 @@
 │  /graphs/domestic-violence → DomesticViolencePage.jsx                   │
 │    All backed by graph_data.py — static JSON datasets compiled from      │
 │    State Comptroller, Ministry of Health, academic sources               │
-│    Rendered by EmbeddedChart.jsx (bar / donut / stacked-area / etc.)    │
+│    Each page renders its charts inline (Recharts/SVG, per chart_type)   │
 │                                                                          │
 │  /trends           → ExploreSearchPage.jsx  GET /api/trends             │
 │    Area + line charts (Recharts) of Google Trends data stored in MongoDB │
@@ -162,13 +163,14 @@ The quiz is a dynamic conversation powered by Groq/LLaMA. Two LLM calls drive it
 ```json
 {
   "persona": "informed learner",
+  "emotional_state": "grieving",
+  "content_preference": "stories",
   "interest_tags": ["PTSD", "children", "October 7"],
-  "preferred_content": "research data and practical support",
   "primary_topic": "children",
   "search_query": "trauma AND Israel AND children AND (PTSD OR anxiety OR treatment)"
 }
 ```
-The `persona` field determines the visual theme. The `interest_tags` and `search_query` drive the article pipeline.
+The `persona` field determines the results layout + theme; `emotional_state` and `content_preference` drive results copy tone, content mix, and article-rank persona boost. The `interest_tags` and `search_query` drive the article pipeline.
 
 **Score derivation:** Derived deterministically from persona — `beginner` → 1, `informed learner` → 2, `researcher` → 3. No separate scoring call.
 
@@ -521,13 +523,13 @@ The calls map visualises historical ERAN/NATAL crisis-line call records stored i
 
 ## 16. Data Visualisation Graph Pages
 
-**Files:** `server/routes/graphs_route.py`, `server/utils/graph_data.py`, `client/src/components/EmbeddedChart.jsx`, `client/src/components/YouTubePlaceholder.jsx`, `client/src/pages/IsraelWarPage.jsx`, `AddictionsPage.jsx`, `HealthPage.jsx`, `SleepPage.jsx`, `TrafficAccidentsPage.jsx`, `DomesticViolencePage.jsx`
+**Files:** `server/routes/graphs_route.py`, `server/utils/graph_data.py`, `client/src/pages/IsraelWarPage.jsx`, `AddictionsPage.jsx`, `HealthPage.jsx`, `SleepPage.jsx`, `TrafficAccidentsPage.jsx`, `DomesticViolencePage.jsx`
 
 Six static data pages serve pre-compiled datasets via `graphs_route.py`. Each endpoint (`/graphs/israel`, `/graphs/addictions`, etc.) imports and returns the matching constant from `graph_data.py` as JSON.
 
-`graph_data.py` contains Python dicts for six topic areas (Israel war mental health, addictions, health system, sleep, traffic accidents, domestic violence). Each entry carries bilingual labels (`labels_he`/`labels_en`), `chart_type` (`bar`, `donut`, `stacked_area`, `stacked_bar`, etc.), numeric `values`, a `source` citation, and bilingual `explain_he`/`explain_en` paragraphs.
+`graph_data.py` contains Python dicts for six topic areas (Israel war mental health, addictions, health system, sleep, traffic accidents, domestic violence). Each entry carries bilingual labels (`labels_he`/`labels_en`), `chart_type` (`risk_curve`, `causal_loop`, `risk_matrix`, `sankey_flow`, `network_graph`, `horizontal_bar`, etc.), numeric `values`, a `source` citation, and bilingual `explain_he`/`explain_en` paragraphs.
 
-`EmbeddedChart.jsx` reads the `chart_type` field and selects the appropriate Recharts component. `YouTubePlaceholder.jsx` renders lazy-loaded YouTube iframes in the score content pages.
+Each graph page renders its charts **inline** (no shared `EmbeddedChart` component): the page defines self-contained Recharts/SVG chart components plus a local `renderChart(chart, locale)` router that switches on `chart_type` — see `AddictionsPage.jsx` for the canonical pattern. (An earlier `EmbeddedChart.jsx` / `YouTubePlaceholder.jsx` design was removed; the current pages embed their own chart renderers.)
 
 The data is static by design — sourced from the 2025 State Comptroller Report, Ministry of Health estimates, and peer-reviewed literature. No DB queries are needed at read time.
 
@@ -552,18 +554,20 @@ A standalone script (run manually or on a cron schedule) that pulls Google Trend
 
 ## 18. Results Page
 
-**Files:** `client/src/pages/ResultsPage.jsx`, `client/src/components/results/BeginnerHero.jsx`, `InformedHero.jsx`, `ResearcherHero.jsx`, `BeginnerPersonaCard.jsx`, `InformedPersonaCard.jsx`, `ResearcherPersonaCard.jsx`, `client/src/components/content/Score1Content.jsx`, `Score2Content.jsx`, `Score3Content.jsx`
+**Files:** `client/src/pages/ResultsPage.jsx`, `client/src/components/results/BeginnerResults.jsx`, `InformedResults.jsx`, `ResearcherResults.jsx`, `client/src/components/results/resultsCopy.js`, `natalData.js`, `NatalCharts.jsx`, plus the card components (`GuardianCard.jsx`, `GuardianCardVertical.jsx`, `AcademicCard.jsx`, `AcademicCardTeal.jsx`, `ArticleRow.jsx`).
 
 `ResultsPage` is the landing page after quiz completion or login redirect. It resolves the score from three sources in priority order:
 1. React Router `location.state.score` — passed directly from the quiz on completion.
 2. `localStorage` (`SCORE_CACHE_KEY`) — survives a hard refresh mid-session.
 3. `GET /result/<user_id>` — fetched from MongoDB when neither of the above is available (e.g. direct URL navigation).
 
-The score (1/2/3) determines which **Hero** component renders at the top and which **PersonaCard** explains the user's profile. These are separate components so each persona can have entirely different markup and copy.
+The resolved **persona** (from `persona_profile.persona`, falling back to score→persona) selects one of three self-contained wrapper components — `BeginnerResults`, `InformedResults`, or `ResearcherResults`. Each owns its entire layout (hero + persona/tags + content sections); there are no separate Hero/PersonaCard/ScoreNContent files. (Earlier `BeginnerHero.jsx` etc. exist in the tree but are **not** imported by the current results components — dead.)
 
-Below the hero, the matching **Score1/2/3Content** component renders the full educational content for that level — bilingual (he/en), with embedded charts (`EmbeddedChart`) and lazy YouTube videos (`YouTubePlaceholder`).
+**Bilingual copy** lives in `resultsCopy.js` (hero copy per persona × locale × `emotional_state`, plus section headings) and in the shared `config/uiStrings.js` table (nav/edit-tags/CTA/"also explore" chrome). Components read `useDirection()` for the active locale.
 
-**Retake flow:** The retake button calls `DELETE /session/<user_id>` (which removes the quiz session and associated articles), clears `sessionStorage` article cache in a `finally` block, then navigates to `/`.
+**Preference-driven content:** `natalData.js` defines `PREF_COUNTS` (per `content_preference`: how many Guardian stories, OWID charts, NATAL research charts, and academic articles to show) plus the hardcoded NATAL Israel-cohort dataset (charts + prose stat blocks, sourced from Mor et al., 2026). `NatalCharts.jsx` renders those charts with the same inline-Recharts/SVG method as the graph pages, tinted per persona. ResultsPage fetches live articles (`getArticles`) and, for non-researcher personas, Guardian stories (`getExternalStories`); each component slices to the preference counts (no backfill).
+
+**Retake flow:** The retake button calls `resetQuizSession()` (deletes the quiz session + clears cached transcript/score/persona) then hard-navigates to `/`.
 
 ---
 

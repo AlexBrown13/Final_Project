@@ -1,6 +1,6 @@
 import re
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, verify_jwt_in_request
 from bson import ObjectId
 from bson.errors import InvalidId
 from services.mongo import articles_collection, chat_collection
@@ -130,12 +130,33 @@ def build_query(tags):
 # ── Routes ──────────────────────────────────────────────────────────────────
 
 @articles_bp.route('/articles', methods=['GET'])
-@jwt_required()
 def get_articles():
+    # PUBLIC (optional JWT). Articles are keyed by whatever id triggered ingestion:
+    # the auth identity for logged-in users, or the quiz-session UUID for guests.
+    # We prefer the JWT identity and fall back to quiz_user_id so guests (and users
+    # whose articles were ingested before they logged in) still see their set.
+    # NOTE: a guest who later logs in will NOT automatically see guest-ingested
+    # articles under their new auth id — they remain under the quiz UUID. Do not
+    # "fix" this by force-rekeying; the RAG chat + this route both fall back to
+    # quiz_user_id, which is the intended boundary.
     try:
-        user_id = get_jwt_identity()
+        try:
+            verify_jwt_in_request(optional=True)
+            user_id = get_jwt_identity()
+        except Exception:
+            user_id = None
 
         quiz_user_id = request.args.get("quiz_user_id")
+        if not user_id:
+            user_id = quiz_user_id
+        # The logged-in identity may have no articles of its own while the quiz
+        # session UUID does (articles were ingested under the quiz id). Prefer the
+        # auth id, but fall back to quiz_user_id when it has no articles — mirrors
+        # the persona lookup below and the article-chat RAG fallback.
+        if quiz_user_id and quiz_user_id != user_id \
+                and not articles_collection.find_one({"user_id": user_id}, {"_id": 1}) \
+                and articles_collection.find_one({"user_id": quiz_user_id}, {"_id": 1}):
+            user_id = quiz_user_id
         session = chat_collection.find_one({"user_id": quiz_user_id}, {"persona_profile": 1}) if quiz_user_id else None
         persona_profile = session.get("persona_profile", {}) if session else {}
         user_tags = (persona_profile.get("interest_tags") or [])
@@ -229,13 +250,18 @@ def update_profile():
 
 
 @articles_bp.route('/articles', methods=['POST'])
-@jwt_required()
 def articles():
     try:
-        user_id = get_jwt_identity()
+        try:
+            verify_jwt_in_request(optional=True)
+            user_id = get_jwt_identity()
+        except Exception:
+            user_id = None
 
         body = request.get_json(silent=True) or {}
         quiz_user_id = body.get("quiz_user_id")
+        if not user_id:
+            user_id = quiz_user_id
 
         persona_profile = {}
         if quiz_user_id:

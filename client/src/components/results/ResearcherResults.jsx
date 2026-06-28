@@ -2,19 +2,19 @@ import { useState } from 'react'
 import ArticleRow from './ArticleRow.jsx'
 import { useDirection } from '../../context/useDirection.js'
 import { resetQuizSession } from '../../utils/api.js'
-
-const HEADLINE = {
-  professional: 'The evidence base for trauma in conflict — organised for research.',
-  curious:      'Dig into the peer-reviewed record on conflict trauma and PTSD.',
-  grieving:     'The science behind what you are going through, gathered for you.',
-  neutral:      'Peer-reviewed research on trauma and mental health — curated for you.',
-}
+import { getHero, getSection } from './resultsCopy.js'
+import { getUiStrings } from '../../config/uiStrings.js'
+import { NATAL_CHARTS, pick, getPrefCounts } from './natalData.js'
+import { NatalChartCard } from './NatalCharts.jsx'
 
 const PREF_LABEL = {
-  research: 'Showing you : research-first',
-  mixed:    'Showing you : research-first',
-  stories:  'Showing you : research-first',
+  en: 'Showing you : research-first',
+  he: 'מוצג לכם : מחקר תחילה',
 }
+
+const N3_CARD_STYLE = { background: '#fff', border: '1px solid #d7e1e4', borderRadius: 8, padding: '16px 18px' }
+const N3_TITLE_STYLE = { fontFamily: "'IBM Plex Sans', sans-serif", fontWeight: 600, fontSize: 14, margin: '0 0 12px', color: '#1b2a31' }
+const N3_SOURCE_STYLE = { fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: '#90a2a9', margin: '12px 0 0' }
 
 function OwidChart({ src, title, caption, attribution, minHeight = 380 }) {
   const [state, setState] = useState('loading')
@@ -101,17 +101,34 @@ function OwidChart({ src, title, caption, attribution, minHeight = 380 }) {
   )
 }
 
-export default function ResearcherResults({ profile, academicArticles = [] }) {
+export default function ResearcherResults({ profile, academicArticles = [], articlesLoading = false }) {
+  const { dir, locale } = useDirection()
   const mood = profile.emotionalState || 'neutral'
   const pref = profile.contentPreference || 'research'
 
-  const headline = profile.headline || HEADLINE[mood] || HEADLINE.neutral
-  const prefLabel = PREF_LABEL[pref] || PREF_LABEL.research
+  const copy = getHero('researcher', locale, mood)
+  const s = getSection('researcher', locale)
+  const ui = getUiStrings(locale)
+  const headline = profile.headline || copy.headline
+  const prefLabel = PREF_LABEL[locale === 'he' ? 'he' : 'en']
 
-  const { dir } = useDirection()
+  // Preference-driven counts (no backfill).
+  const counts = getPrefCounts(pref)
+  const articles = pick(academicArticles, counts.academic)
+  const natalCharts = pick(NATAL_CHARTS, counts.natalCharts)
+  const owidSrcs = [
+    'https://ourworldindata.org/grapher/depressive-disorders-prevalence-ihme',
+    'https://ourworldindata.org/grapher/anxiety-disorders-prevalence',
+    'https://ourworldindata.org/grapher/share-with-mental-and-substance-disorders',
+  ].slice(0, counts.owid)
+
   const [topicsOpen, setTopicsOpen] = useState(false)
   const [topics, setTopics] = useState(profile.interestTags || [])
   const [addVal, setAddVal] = useState('')
+  const [openCharts, setOpenCharts] = useState(() => new Set())
+  const toggleChart = (id) => setOpenCharts(prev => {
+    const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n
+  })
 
   const atMax = topics.length >= 5
 
@@ -168,7 +185,7 @@ export default function ResearcherResults({ profile, academicArticles = [] }) {
             letterSpacing: '.02em',
             color: '#1b2a31',
           }}>
-            trauma_education
+            {ui.resultsBrandResearcher}
           </span>
           <span style={{
             fontFamily: "'IBM Plex Mono', monospace",
@@ -176,7 +193,7 @@ export default function ResearcherResults({ profile, academicArticles = [] }) {
             color: '#90a2a9',
             marginLeft: 6,
           }}>
-            / results
+            / {ui.resultsNavResults.toLowerCase()}
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
@@ -185,12 +202,12 @@ export default function ResearcherResults({ profile, academicArticles = [] }) {
             fontSize: 11,
             color: '#90a2a9',
           }}>
-            researcher mode
+            {ui.resultsResearcherMode}
           </span>
           <button
             type="button"
             onClick={async () => { await resetQuizSession(); window.location.assign('/') }}
-            aria-label={dir === 'ltr' ? 'Retake the quiz' : 'מילוי השאלון מחדש'}
+            aria-label={s.retakeAria}
             style={{
               fontFamily: "'IBM Plex Mono', monospace",
               fontSize: 12,
@@ -202,7 +219,7 @@ export default function ResearcherResults({ profile, academicArticles = [] }) {
               cursor: 'pointer',
             }}
           >
-            {dir === 'ltr' ? 'Retake quiz' : 'שאלון מחדש'}
+            {s.retake}
           </button>
         </div>
       </nav>
@@ -232,7 +249,7 @@ export default function ResearcherResults({ profile, academicArticles = [] }) {
                 textTransform: 'uppercase',
                 color: '#2f6675',
               }}>
-                Researcher
+                {ui.resultsBadgeResearcher}
               </span>
               <span style={{ width: 3, height: 3, borderRadius: '50%', background: '#90a2a9' }} />
               <span style={{
@@ -258,7 +275,7 @@ export default function ResearcherResults({ profile, academicArticles = [] }) {
                 cursor: 'pointer',
               }}
             >
-              edit tags
+              {ui.resultsEditTagsShort}
             </button>
           </div>
 
@@ -376,7 +393,7 @@ export default function ResearcherResults({ profile, academicArticles = [] }) {
                   textTransform: 'uppercase',
                   color: '#2f6675',
                 }}>
-                  edit interest tags
+                  {ui.resultsEditTags}
                 </span>
                 <span style={{
                   fontFamily: "'IBM Plex Mono', monospace",
@@ -430,7 +447,7 @@ export default function ResearcherResults({ profile, academicArticles = [] }) {
                     value={addVal}
                     onChange={e => setAddVal(e.target.value)}
                     onKeyDown={handleAddKey}
-                    placeholder="add tag…"
+                    placeholder={ui.resultsAddTopic}
                     maxLength={40}
                     style={{
                       flex: 1,
@@ -458,7 +475,7 @@ export default function ResearcherResults({ profile, academicArticles = [] }) {
                       cursor: 'pointer',
                     }}
                   >
-                    add
+                    {ui.resultsAddBtn}
                   </button>
                 </div>
               ) : (
@@ -468,7 +485,7 @@ export default function ResearcherResults({ profile, academicArticles = [] }) {
                   fontSize: 11,
                   color: '#90a2a9',
                 }}>
-                  max 5 tags
+                  {ui.resultsMaxTopicsShort}
                 </p>
               )}
               <button
@@ -485,7 +502,7 @@ export default function ResearcherResults({ profile, academicArticles = [] }) {
                   padding: 0,
                 }}
               >
-                [ close ]
+                [ {ui.resultsCloseEdit} ]
               </button>
             </div>
           )}
@@ -513,49 +530,84 @@ export default function ResearcherResults({ profile, academicArticles = [] }) {
               textTransform: 'uppercase',
               color: '#2f6675',
             }}>
-              Epidemiology &middot; OWID
+              {s.owidHead}
             </span>
             <span style={{
               fontFamily: "'IBM Plex Mono', monospace",
               fontSize: 11,
               color: '#90a2a9',
             }}>
-              3 series &middot; GBD / IHME
+              {owidSrcs.length} series &middot; GBD / IHME
             </span>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: '#e7eef0' }}>
-            {/* Chart A */}
-            <div style={{ background: '#fff' }}>
-              <OwidChart
-                src="https://ourworldindata.org/grapher/depressive-disorders-prevalence-ihme"
-                title="Depressive disorders — prevalence"
-                caption="share of population, by country"
-                attribution="ourworldindata.org · IHME GBD 2021"
-                minHeight={380}
-              />
-            </div>
-            {/* Chart B */}
-            <div style={{ background: '#fff' }}>
-              <OwidChart
-                src="https://ourworldindata.org/grapher/anxiety-disorders-prevalence"
-                title="Anxiety disorders — prevalence"
-                caption="share of population, by country"
-                attribution="ourworldindata.org · IHME GBD 2021"
-                minHeight={380}
-              />
-            </div>
-            {/* Chart C — full width */}
-            <div style={{ background: '#fff', gridColumn: '1 / -1' }}>
-              <OwidChart
-                src="https://ourworldindata.org/grapher/share-with-mental-and-substance-disorders"
-                title="Disease burden from mental & substance-use disorders"
-                caption="share of total DALYs, global — long-run series"
-                attribution="ourworldindata.org · IHME Global Burden of Disease 2021"
-                minHeight={460}
-              />
-            </div>
+            {owidSrcs.map((src, i) => (
+              <div key={src} style={{ background: '#fff', gridColumn: i === 2 ? '1 / -1' : 'auto' }}>
+                <OwidChart
+                  src={src}
+                  title={s.owidHead}
+                  caption={s.owidSub}
+                  attribution="ourworldindata.org · IHME GBD 2021"
+                  minHeight={i === 2 ? 460 : 380}
+                />
+              </div>
+            ))}
           </div>
         </section>
+
+        {/* NATAL ISRAEL COHORT RESEARCH (count-driven charts) */}
+        {natalCharts.length > 0 && (
+          <section style={{
+            border: '1px solid #d7e1e4',
+            borderRadius: 8,
+            background: '#fff',
+            marginBottom: 26,
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '12px 20px',
+              borderBottom: '1px solid #e7eef0',
+            }}>
+              <span style={{
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: 11,
+                letterSpacing: '.14em',
+                textTransform: 'uppercase',
+                color: '#2f6675',
+              }}>
+                {s.researchHead}
+              </span>
+              <span style={{
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: 11,
+                color: '#90a2a9',
+              }}>
+                {s.researchSub}
+              </span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 1, background: '#e7eef0' }}>
+              {natalCharts.map((chart) => (
+                <div key={chart.id} style={{ background: '#fff' }}>
+                  <NatalChartCard
+                    chart={chart}
+                    locale={locale}
+                    tone="dark"
+                    cardStyle={N3_CARD_STYLE}
+                    titleStyle={N3_TITLE_STYLE}
+                    sourceStyle={N3_SOURCE_STYLE}
+                    explainOpen={openCharts.has(chart.id)}
+                    onToggle={() => toggleChart(chart.id)}
+                    readMoreLabel={s.readMore}
+                    readLessLabel={s.readLess}
+                  />
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* ARTICLE RESULTS STACK */}
         <section className="p3-reveal" style={{
@@ -579,7 +631,7 @@ export default function ResearcherResults({ profile, academicArticles = [] }) {
               textTransform: 'uppercase',
               color: '#2f6675',
             }}>
-              Articles &middot; {academicArticles.length} matched
+              {s.academicHead} &middot; {articles.length}
             </span>
             <span style={{
               fontFamily: "'IBM Plex Mono', monospace",
@@ -590,12 +642,12 @@ export default function ResearcherResults({ profile, academicArticles = [] }) {
             </span>
           </div>
 
-          {academicArticles.length > 0 ? (
-            academicArticles.map((article, i) => (
+          {articles.length > 0 ? (
+            articles.map((article, i) => (
               <ArticleRow key={i} index={String(i + 1).padStart(2, '0')} article={article} />
             ))
-          ) : (
-            /* Skeleton placeholders when no articles yet */
+          ) : articlesLoading ? (
+            /* Skeleton placeholders only while a fetch/ingest is in flight */
             <>
               {[0, 1, 2].map(i => (
                 <div key={i} className="p3-skel" style={{
@@ -605,6 +657,15 @@ export default function ResearcherResults({ profile, academicArticles = [] }) {
                 }} />
               ))}
             </>
+          ) : (
+            <p style={{
+              margin: '16px 20px',
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: 12,
+              color: '#90a2a9',
+            }}>
+              {s.academicEmpty}
+            </p>
           )}
 
           {/* CTA to /articles */}
@@ -639,7 +700,7 @@ export default function ResearcherResults({ profile, academicArticles = [] }) {
             textTransform: 'uppercase',
             color: '#90a2a9',
           }}>
-            also:
+            {ui.resultsExploreHead}:
           </span>
           <a
             href="/map"
@@ -651,7 +712,7 @@ export default function ResearcherResults({ profile, academicArticles = [] }) {
               textDecoration: 'none',
             }}
           >
-            interactive_map
+            {ui.resultsExploreMap}
           </a>
           <a
             href="/trends"
@@ -663,7 +724,7 @@ export default function ResearcherResults({ profile, academicArticles = [] }) {
               textDecoration: 'none',
             }}
           >
-            trends
+            {ui.resultsExploreTrends}
           </a>
           <a
             href="/graphs/israel"
@@ -675,7 +736,7 @@ export default function ResearcherResults({ profile, academicArticles = [] }) {
               textDecoration: 'none',
             }}
           >
-            data_graphs
+            {ui.resultsExploreGraphs}
           </a>
         </section>
 

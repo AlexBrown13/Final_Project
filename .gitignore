@@ -4,6 +4,12 @@ __pycache__/
 *.pyo
 .venv/
 
+# Secrets / env
+.env
+*.env
+server/.env
+client/.env
+
 # OS
 .DS_Store
 

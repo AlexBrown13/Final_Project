@@ -74,6 +74,7 @@ export default function ResultsPage() {
   const [personaProfile, setPersonaProfile] = useState(null)
   const [headline, setHeadline] = useState(null)
   const [articles, setArticles] = useState([])
+  const [articlesLoading, setArticlesLoading] = useState(true)
   const [stories, setStories] = useState([])
   const [loadError, setLoadError] = useState(null)
 
@@ -99,17 +100,16 @@ export default function ResultsPage() {
   useEffect(() => {
     if (!routeFromQuiz || !score) return
     const token = localStorage.getItem(AUTH_TOKEN_KEY)
-    if (!token) return
     const quizUserId = localStorage.getItem(USER_ID_KEY)
+    if (!quizUserId) return
     ;(async () => {
       try {
         const base = getApiBase()
+        const headers = { 'Content-Type': 'application/json' }
+        if (token) headers['Authorization'] = `Bearer ${token}`
         await fetch(`${base}/api/articles`, {
           method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
+          headers,
           body: JSON.stringify({ quiz_user_id: quizUserId }),
         })
       } catch (err) {
@@ -193,10 +193,36 @@ export default function ResultsPage() {
       try {
         let quizUserId
         try { quizUserId = localStorage.getItem(USER_ID_KEY) } catch { quizUserId = null }
-        const { articles: raw } = await getArticles(quizUserId)
+        if (!cancelled) setArticlesLoading(true)
+
+        let { articles: raw } = await getArticles(quizUserId)
+
+        // No articles stored yet for this user (e.g. logged in or refreshed
+        // without coming straight from the quiz). Trigger a one-off ingest, then
+        // re-read. POST is graceful server-side; we still show what we get.
+        if (raw.length === 0 && quizUserId) {
+          try {
+            const base = getApiBase()
+            const token = localStorage.getItem(AUTH_TOKEN_KEY)
+            const headers = { 'Content-Type': 'application/json' }
+            if (token) headers['Authorization'] = `Bearer ${token}`
+            await fetch(`${base}/api/articles`, {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({ quiz_user_id: quizUserId }),
+            })
+            if (!cancelled) {
+              const retry = await getArticles(quizUserId)
+              raw = retry.articles
+            }
+          } catch { /* keep raw as [] */ }
+        }
+
         if (!cancelled) setArticles(raw.map(mapArticle))
       } catch {
         if (!cancelled) setArticles([])
+      } finally {
+        if (!cancelled) setArticlesLoading(false)
       }
 
       if (mappedProfile.persona !== 'researcher' && mappedProfile.primaryTopic) {
@@ -292,12 +318,13 @@ export default function ResultsPage() {
         profile={profile}
         guardianStories={stories}
         academicArticles={articles}
+        articlesLoading={articlesLoading}
       />
     )
   } else if (persona === 'informed') {
-    personaView = <InformedResults profile={profile} guardianStories={stories} academicArticles={articles} />
+    personaView = <InformedResults profile={profile} guardianStories={stories} academicArticles={articles} articlesLoading={articlesLoading} />
   } else {
-    personaView = <ResearcherResults profile={profile} academicArticles={articles} />
+    personaView = <ResearcherResults profile={profile} academicArticles={articles} articlesLoading={articlesLoading} />
   }
 
   return (

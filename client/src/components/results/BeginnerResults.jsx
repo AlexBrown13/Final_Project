@@ -3,24 +3,19 @@ import GuardianCard from './GuardianCard.jsx'
 import AcademicCard from './AcademicCard.jsx'
 import { useDirection } from '../../context/useDirection.js'
 import { resetQuizSession } from '../../utils/api.js'
+import { getHero, getSection } from './resultsCopy.js'
+import { getUiStrings } from '../../config/uiStrings.js'
+import { NATAL_CHARTS, NATAL_TEXT_BLOCKS, pick, getPrefCounts } from './natalData.js'
+import { NatalChartCard, NatalTextBlock } from './NatalCharts.jsx'
 
-const MOOD_COPY = {
-  grieving: {
-    eyebrow: 'A gentle place to understand',
-    h1: 'Understanding what your loved one carried — at your own pace.',
-    sub: 'This space was put together with care — stories from people who have been there, and research written in plain language. You can read as little or as much as feels right.',
-  },
-  curious: {
-    eyebrow: 'A place to explore, at your pace',
-    h1: 'Making sense of this — one story at a time.',
-    sub: 'There is a lot out there. We have gathered what we think will actually help — human stories alongside the evidence that explains them.',
-  },
-  distressed: {
-    eyebrow: "You're in a safe place",
-    h1: "Take a breath. We'll go gently, together.",
-    sub: "You don't have to read anything right now. When you're ready, everything here is waiting for you.",
-  },
-}
+const NATAL_CARD_STYLE = { background: '#fffdf9', border: '1px solid #ece4d6', borderRadius: 16, padding: '20px 22px' }
+const NATAL_TITLE_STYLE = { fontFamily: "'Newsreader', serif", fontWeight: 500, fontSize: 18, margin: '0 0 12px', color: '#3f3a32' }
+const NATAL_SOURCE_STYLE = { fontFamily: 'ui-monospace, monospace', fontSize: 11, color: '#9b937f', margin: '12px 0 0' }
+const TEXT_CARD_STYLE = { background: '#f3efe6', border: '1px solid #e6ddcf', borderLeft: '4px solid #7da984', borderRadius: '0 14px 14px 0', padding: '20px 24px' }
+const TEXT_STAT_STYLE = { fontFamily: "'Newsreader', serif", fontWeight: 600, fontSize: 34, color: '#7da984', lineHeight: 1 }
+const TEXT_LABEL_STYLE = { fontFamily: "'Newsreader', serif", fontSize: 18, fontWeight: 500, color: '#3f4639', margin: '8px 0 8px' }
+const TEXT_BODY_STYLE = { fontSize: 15, lineHeight: 1.6, color: '#6b6457', margin: 0 }
+const TEXT_SOURCE_STYLE = { fontFamily: 'ui-monospace, monospace', fontSize: 11, color: '#9b937f', margin: '12px 0 0' }
 
 function SkeletonShimmer({ height = 480 }) {
   return <div className="p1-skel" style={{ height }} />
@@ -52,17 +47,35 @@ function OwidFrame({ src, height = 480 }) {
   )
 }
 
-export default function BeginnerResults({ profile, guardianStories = [], academicArticles = [] }) {
+export default function BeginnerResults({ profile, guardianStories = [], academicArticles = [], articlesLoading = false }) {
+  const { dir, locale } = useDirection()
   const mood = profile.emotionalState || 'grieving'
-  const copy = MOOD_COPY[mood] || MOOD_COPY.grieving
+  const pref = profile.contentPreference || 'mixed'
+  const copy = getHero('beginner', locale, mood)
+  const s = getSection('beginner', locale)
+  const ui = getUiStrings(locale)
 
-  const headline = profile.headline || copy.h1
+  const headline = profile.headline || copy.headline
   const eyebrow = copy.eyebrow
 
-  const { dir } = useDirection()
+  // Preference-driven counts (no backfill — show what exists).
+  const counts = getPrefCounts(pref)
+  const stories = pick(guardianStories, counts.guardian)
+  const articles = pick(academicArticles, counts.academic)
+  const natalCharts = pick(NATAL_CHARTS, counts.natalCharts)
+  const natalTexts = pick(NATAL_TEXT_BLOCKS, counts.natalCharts)
+  const owidSrcs = [
+    'https://ourworldindata.org/grapher/anxiety-disorders-prevalence',
+    'https://ourworldindata.org/grapher/depressive-disorders-prevalence-ihme',
+  ].slice(0, counts.owid)
+
   const [topicsOpen, setTopicsOpen] = useState(false)
   const [topics, setTopics] = useState(profile.interestTags || [])
   const [addVal, setAddVal] = useState('')
+  const [openCharts, setOpenCharts] = useState(() => new Set())
+  const toggleChart = (id) => setOpenCharts(prev => {
+    const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n
+  })
 
   const atMax = topics.length >= 5
 
@@ -89,15 +102,15 @@ export default function BeginnerResults({ profile, guardianStories = [], academi
       <nav className="p1-nav">
         <a href="/" className="p1-nav-wordmark">
           <span className="p1-nav-dot" aria-hidden="true" />
-          trauma education
+          {ui.resultsBrand}
         </a>
         <button
           type="button"
           className="p1-lang-toggle"
           onClick={async () => { await resetQuizSession(); window.location.assign('/') }}
-          aria-label={dir === 'ltr' ? 'Retake the quiz' : 'מילוי השאלון מחדש'}
+          aria-label={s.retakeAria}
         >
-          {dir === 'ltr' ? 'Retake quiz' : 'שאלון מחדש'}
+          {s.retake}
         </button>
       </nav>
 
@@ -109,7 +122,7 @@ export default function BeginnerResults({ profile, guardianStories = [], academi
             {eyebrow}
           </div>
           <h1 className="p1-h1">{headline}</h1>
-          <p className="p1-subcopy">{copy.sub}</p>
+          <p className="p1-subcopy">{copy.subcopy}</p>
           <div className="p1-tags-row">
             {topics.map(t => (
               <span key={t} className="p1-tag">
@@ -130,14 +143,14 @@ export default function BeginnerResults({ profile, guardianStories = [], academi
               onClick={() => setTopicsOpen(o => !o)}
               aria-expanded={topicsOpen}
             >
-              adjust your topics
+              {s.adjust}
             </button>
           </div>
 
           {/* Inline adjust panel */}
           {topicsOpen && (
             <div className="p1-topics-panel">
-              <h3>Your topics</h3>
+              <h3>{ui.resultsTopicsPanelTitle}</h3>
               <div className="p1-topics-tags">
                 {topics.map(t => (
                   <span key={t} className="p1-tag">
@@ -158,18 +171,18 @@ export default function BeginnerResults({ profile, guardianStories = [], academi
                   <input
                     type="text"
                     className="p1-add-input"
-                    placeholder="Add a topic…"
+                    placeholder={ui.resultsAddTopic}
                     value={addVal}
                     onChange={e => setAddVal(e.target.value)}
                     onKeyDown={handleAddKey}
                     maxLength={40}
                   />
                   <button type="button" className="p1-add-btn" onClick={addTopic}>
-                    Add
+                    {ui.resultsAddBtn}
                   </button>
                 </div>
               ) : (
-                <p className="p1-max-msg">You can follow up to five topics.</p>
+                <p className="p1-max-msg">{ui.resultsMaxTopics}</p>
               )}
             </div>
           )}
@@ -178,44 +191,90 @@ export default function BeginnerResults({ profile, guardianStories = [], academi
         {/* Support card — conditional */}
         {showSupport && (
           <div className="p1-support-card">
-            <p>If today feels heavy, you don't have to sit with it alone.</p>
-            <p>
-              ERAN's emotional first-aid line is open any hour. Call <strong>1201</strong>.
-            </p>
+            <p>{s.supportTitle}</p>
+            <p>{s.supportBody}</p>
           </div>
         )}
 
         <hr className="p1-divider" />
 
         {/* Guardian stories */}
-        {guardianStories.length > 0 && (
+        {stories.length > 0 && (
           <section className="p1-section">
-            <h2 className="p1-section-head">Stories from people who understand</h2>
-            <p className="p1-section-sub">Personal accounts and journalism, gathered with care.</p>
+            <h2 className="p1-section-head">{s.storiesHead}</h2>
+            <p className="p1-section-sub">{s.storiesSub}</p>
             <div className="p1-guardian-grid">
-              {guardianStories.map((s, i) => (
-                <GuardianCard key={i} {...s} />
+              {stories.map((story, i) => (
+                <GuardianCard key={i} {...story} />
               ))}
             </div>
           </section>
         )}
 
-        {/* OWID chart */}
-        <section className="p1-section p1-owid-section" style={{ marginTop: 40 }}>
-          <h2 className="p1-section-head" style={{ marginBottom: 6 }}>You are not alone in this</h2>
-          <p className="p1-section-sub">Global data on anxiety and trauma prevalence.</p>
-          <OwidFrame src="https://ourworldindata.org/grapher/anxiety-disorders-prevalence" />
-        </section>
+        {/* OWID charts */}
+        {owidSrcs.length > 0 && (
+          <section className="p1-section p1-owid-section" style={{ marginTop: 40 }}>
+            <h2 className="p1-section-head" style={{ marginBottom: 6 }}>{s.owidHead}</h2>
+            <p className="p1-section-sub">{s.owidSub}</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+              {owidSrcs.map((src) => <OwidFrame key={src} src={src} />)}
+            </div>
+          </section>
+        )}
+
+        {/* NATAL research — charts + gentle text blocks (preference-driven count) */}
+        {(natalCharts.length > 0 || natalTexts.length > 0) && (
+          <section className="p1-section" style={{ marginTop: 40 }}>
+            <h2 className="p1-section-head">{s.researchHead}</h2>
+            <p className="p1-section-sub">{s.researchSub}</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 18 }}>
+              {natalCharts.map((chart) => (
+                <NatalChartCard
+                  key={chart.id}
+                  chart={chart}
+                  locale={locale}
+                  tone="warm"
+                  cardStyle={NATAL_CARD_STYLE}
+                  titleStyle={NATAL_TITLE_STYLE}
+                  sourceStyle={NATAL_SOURCE_STYLE}
+                  explainOpen={openCharts.has(chart.id)}
+                  onToggle={() => toggleChart(chart.id)}
+                  readMoreLabel={s.readMore}
+                  readLessLabel={s.readLess}
+                />
+              ))}
+              {natalTexts.map((block) => (
+                <NatalTextBlock
+                  key={block.id}
+                  block={block}
+                  locale={locale}
+                  tone="warm"
+                  cardStyle={TEXT_CARD_STYLE}
+                  statStyle={TEXT_STAT_STYLE}
+                  labelStyle={TEXT_LABEL_STYLE}
+                  bodyStyle={TEXT_BODY_STYLE}
+                  sourceStyle={TEXT_SOURCE_STYLE}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Academic previews */}
-        {academicArticles.length > 0 && (
+        {(articles.length > 0 || articlesLoading) && (
           <section className="p1-section" style={{ marginTop: 40 }}>
-            <h2 className="p1-section-head">Reading, made approachable</h2>
-            <p className="p1-section-sub">Research that matters, explained without the jargon.</p>
+            <h2 className="p1-section-head">{s.academicHead}</h2>
+            <p className="p1-section-sub">{s.academicSub}</p>
             <div className="p1-academic-list">
-              {academicArticles.map((a, i) => (
-                <AcademicCard key={i} {...a} />
-              ))}
+              {articles.length > 0 ? (
+                articles.map((a, i) => (
+                  <AcademicCard key={i} {...a} />
+                ))
+              ) : (
+                [0, 1].map(i => (
+                  <div key={i} className="p1-skel" style={{ height: 120, borderRadius: 12 }} />
+                ))
+              )}
             </div>
           </section>
         )}
@@ -224,35 +283,35 @@ export default function BeginnerResults({ profile, guardianStories = [], academi
         <section className="p1-section" style={{ marginTop: 40 }}>
           <div className="p1-cta">
             <div className="p1-cta-text">
-              <h2>There is more waiting for you</h2>
-              <p>A curated reading list, built around your topics.</p>
+              <h2>{s.ctaHead}</h2>
+              <p>{s.ctaSub}</p>
             </div>
             <a href="/articles" className="p1-cta-btn">
-              See your full reading list
+              {s.ctaBtn}
             </a>
           </div>
         </section>
 
         {/* Also explore */}
-        <nav className="p1-explore" aria-label="Also explore">
-          <p className="p1-explore-heading">Also explore</p>
+        <nav className="p1-explore" aria-label={s.exploreHead}>
+          <p className="p1-explore-heading">{s.exploreHead}</p>
           <ul className="p1-explore-list">
             <li className="p1-explore-item">
               <a href="/map" className="p1-explore-link">
-                <span className="p1-explore-name">Interactive Map</span>
-                <span className="p1-explore-desc">See how trauma affects communities across regions</span>
+                <span className="p1-explore-name">{ui.resultsExploreMap}</span>
+                <span className="p1-explore-desc">{ui.resultsExploreMapDesc}</span>
               </a>
             </li>
             <li className="p1-explore-item">
               <a href="/trends" className="p1-explore-link">
-                <span className="p1-explore-name">Trends</span>
-                <span className="p1-explore-desc">How awareness and research have grown over time</span>
+                <span className="p1-explore-name">{ui.resultsExploreTrends}</span>
+                <span className="p1-explore-desc">{ui.resultsExploreTrendsDesc}</span>
               </a>
             </li>
             <li className="p1-explore-item">
               <a href="/graphs/israel" className="p1-explore-link">
-                <span className="p1-explore-name">Data Graphs</span>
-                <span className="p1-explore-desc">Explore the numbers behind the stories</span>
+                <span className="p1-explore-name">{ui.resultsExploreGraphs}</span>
+                <span className="p1-explore-desc">{ui.resultsExploreGraphsDesc}</span>
               </a>
             </li>
           </ul>

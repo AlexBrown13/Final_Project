@@ -25,8 +25,11 @@ def ai_assistant():
             logger.error("AI-Assistant invalid user identify")
             return jsonify({"error": "Invalid user identity"}), 400
 
-        # Extract user message from request body
-        message = request.get_json().get("message")
+        # Extract user message from request body (guard against missing/!JSON body)
+        body = request.get_json(silent=True) or {}
+        message = (body.get("message") or "").strip()
+        if not message:
+            return jsonify({"error": "Message is required"}), 400
 
         # AI assistant service
         main(user_id, question=message)
@@ -52,18 +55,29 @@ def article_chat():
         if len(question) > 1000:
             return jsonify({"error": "Question too long"}), 400
 
-        # Fetch the user's stored articles (cached for 5 min to avoid a DB
-        # round-trip on every chat message within a session)
-        cached = _articles_cache.get(user_id)
+        # Resolve the id the articles are actually stored under. Articles may be
+        # keyed by the auth identity OR by the quiz-session UUID (guest-ingested
+        # sets). Mirror the persona fallback below: prefer auth user_id, but if it
+        # has no articles, fall back to quiz_user_id so the RAG context isn't empty.
+        quiz_user_id = body.get("quiz_user_id")
+        articles_user_id = user_id
+        if not articles_collection.find_one({"user_id": user_id}, {"_id": 1}):
+            if quiz_user_id and quiz_user_id != user_id and \
+                    articles_collection.find_one({"user_id": quiz_user_id}, {"_id": 1}):
+                articles_user_id = quiz_user_id
+
+        # Fetch the stored articles (cached for 5 min to avoid a DB round-trip on
+        # every chat message within a session). Cache keyed by the effective id.
+        cached = _articles_cache.get(articles_user_id)
         if cached and time.monotonic() - cached[0] < _ARTICLES_CACHE_TTL:
             articles = cached[1]
         else:
             cursor = articles_collection.find(
-                {"user_id": user_id},
+                {"user_id": articles_user_id},
                 {"title": 1, "abstract": 1, "year": 1, "authors": 1, "_id": 0}
             )
             articles = list(cursor)
-            _articles_cache[user_id] = (time.monotonic(), articles)
+            _articles_cache[articles_user_id] = (time.monotonic(), articles)
 
         # Fetch persona for tone calibration.
         # Primary: look up by the authenticated JWT identity (secure, no IDOR).
@@ -71,10 +85,8 @@ def article_chat():
         # separate quiz-session UUID (current data model).
         persona = "informed learner"
         session = chat_collection.find_one({"user_id": user_id}, {"persona_profile": 1})
-        if not session:
-            quiz_user_id = body.get("quiz_user_id")
-            if quiz_user_id and quiz_user_id != user_id:
-                session = chat_collection.find_one({"user_id": quiz_user_id}, {"persona_profile": 1})
+        if not session and quiz_user_id and quiz_user_id != user_id:
+            session = chat_collection.find_one({"user_id": quiz_user_id}, {"persona_profile": 1})
         profile = (session.get("persona_profile") or {}) if session else {}
         persona = profile.get("persona", "informed learner")
         emotional_state = profile.get("emotional_state", "curious")

@@ -181,11 +181,9 @@ export async function getArticles(quizUserId) {
   try {
     const base = getApiBase();
     const token = localStorage.getItem(AUTH_TOKEN_KEY);
-    if (!token) return { articles: [], persona_profile: null };
     const qs = quizUserId ? `?quiz_user_id=${encodeURIComponent(quizUserId)}` : "";
-    const res = await fetch(`${base}/api/articles${qs}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const res = await fetch(`${base}/api/articles${qs}`, { headers });
     if (!res.ok) return { articles: [], persona_profile: null };
     const data = await parseJsonSafe(res);
     return {

@@ -28,27 +28,30 @@ export default function ArticlePage() {
   const userId = localStorage.getItem(USER_ID_KEY);
   const score = localStorage.getItem(SCORE_CACHE_KEY);
 
+  // Guests are allowed: the articles API is public and falls back to quiz_user_id.
+  // Only bounce to the quiz if there is no quiz identity at all (can't show anything).
   useEffect(() => {
-    if (!token) navigate("/auth/login", { replace: true });
-  }, [token, navigate]);
+    if (!userId) navigate("/", { replace: true });
+  }, [userId, navigate]);
 
   // If score isn't cached locally, verify against the DB before redirecting.
-  // Covers fresh sessions, new devices, or cleared localStorage.
+  // Covers fresh sessions, new devices, or cleared localStorage. Works for guests
+  // too (getResult is keyed by quiz user_id, no token required).
   useEffect(() => {
-    if (!token || !userId || score) return;
+    if (!userId || score) return;
     let cancelled = false;
     getResult(userId).then(({ res, data }) => {
       if (cancelled) return;
       if (res.ok && data?.completed && data?.score != null) {
-        try { localStorage.setItem(SCORE_CACHE_KEY, String(data.score)); } catch {}
+        try { localStorage.setItem(SCORE_CACHE_KEY, String(data.score)); } catch { /* ignore */ }
       } else {
-        navigate("/quiz", { replace: true });
+        navigate("/", { replace: true });
       }
     }).catch(() => {
-      if (!cancelled) navigate("/quiz", { replace: true });
+      if (!cancelled) navigate("/", { replace: true });
     });
     return () => { cancelled = true; };
-  }, [token, userId, score, navigate]);
+  }, [userId, score, navigate]);
 
   // Seed edit tags from persona when it loads
   useEffect(() => {
@@ -110,7 +113,7 @@ export default function ArticlePage() {
 
   const fetchArticles = useCallback(async ({ bustCache = false } = {}) => {
     const ui = getUiStrings(locale);
-    if (!token || !userId) { setError(ui.articlesErrorAuth); return; }
+    if (!userId) { setError(ui.articlesErrorAuth); return; }
 
     // Serve from sessionStorage if fresh and not explicitly busting
     if (!bustCache && cacheKey) {
@@ -131,10 +134,9 @@ export default function ArticlePage() {
     setError("");
 
     const base = getApiBase();
-    const authHeaders = {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    };
+    // Token is optional — the articles API is public and falls back to quiz_user_id.
+    const authHeaders = { "Content-Type": "application/json" };
+    if (token) authHeaders.Authorization = `Bearer ${token}`;
 
     try {
       const params = new URLSearchParams({ quiz_user_id: userId });
@@ -192,8 +194,8 @@ export default function ArticlePage() {
   }, [token, userId, locale, redirectToLogin, cacheKey]);
 
   useEffect(() => {
-    if (token && userId) fetchArticles();
-  }, [token, userId, fetchArticles]);
+    if (userId) fetchArticles();
+  }, [userId, fetchArticles]);
 
   const saveProfile = async () => {
     if (!editTags.length) return;

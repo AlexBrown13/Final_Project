@@ -3,18 +3,28 @@ import GuardianCardVertical from './GuardianCardVertical.jsx'
 import AcademicCardTeal from './AcademicCardTeal.jsx'
 import { useDirection } from '../../context/useDirection.js'
 import { resetQuizSession } from '../../utils/api.js'
+import { getHero, getSection } from './resultsCopy.js'
+import { getUiStrings } from '../../config/uiStrings.js'
+import { NATAL_CHARTS, pick, getPrefCounts } from './natalData.js'
+import { NatalChartCard } from './NatalCharts.jsx'
 
-const HEADLINE = {
-  professional: 'As a social worker, you want both the human story and the evidence behind it.',
-  curious:      'A balanced look at PTSD — the stories and the evidence, side by side.',
-  grieving:     'This work is personal as well as professional. Here is the human side, and the evidence.',
-}
+const N2_CARD_STYLE = { background: '#fff', border: '1px solid #e0e4e1', borderRadius: 12, padding: '18px 20px' }
+const N2_TITLE_STYLE = { fontFamily: "'Source Serif 4', serif", fontWeight: 600, fontSize: 16, margin: '0 0 12px', color: '#232a28' }
+const N2_SOURCE_STYLE = { fontFamily: 'ui-monospace, monospace', fontSize: 11, color: '#8a938f', margin: '12px 0 0' }
 
 const PREF_LABEL = {
-  mixed:    'Showing you : a balanced mix of stories and research',
-  stories:  'Showing you : stories, with supporting research',
-  research: 'Showing you : research, with human context',
+  en: {
+    mixed:    'Showing you : a balanced mix of stories and research',
+    stories:  'Showing you : stories, with supporting research',
+    research: 'Showing you : research, with human context',
+  },
+  he: {
+    mixed:    'מוצג לכם : תמהיל מאוזן של סיפורים ומחקר',
+    stories:  'מוצג לכם : סיפורים, עם מחקר תומך',
+    research: 'מוצג לכם : מחקר, עם הקשר אנושי',
+  },
 }
+
 
 function OwidChart({ src, title, caption, attribution }) {
   const [state, setState] = useState('loading')
@@ -61,18 +71,34 @@ function OwidChart({ src, title, caption, attribution }) {
   )
 }
 
-export default function InformedResults({ profile, guardianStories = [], academicArticles = [] }) {
+export default function InformedResults({ profile, guardianStories = [], academicArticles = [], articlesLoading = false }) {
+  const { dir, locale } = useDirection()
   const mood = profile.emotionalState || 'professional'
   const pref = profile.contentPreference || 'mixed'
 
-  const headline = profile.headline || HEADLINE[mood] || HEADLINE.professional
-  const prefLabel = PREF_LABEL[pref] || PREF_LABEL.mixed
+  const copy = getHero('informed', locale, mood)
+  const s = getSection('informed', locale)
+  const ui = getUiStrings(locale)
+  const headline = profile.headline || copy.headline
+  const prefTable = PREF_LABEL[locale === 'he' ? 'he' : 'en']
+  const prefLabel = prefTable[pref] || prefTable.mixed
 
-  const showSecondStory    = pref !== 'research'
-  const showSecondResearch = pref !== 'stories'
-  const showThirdResearch  = pref === 'research'
+  // Preference-driven counts (no backfill).
+  const counts = getPrefCounts(pref)
+  const stories = pick(guardianStories, counts.guardian)
+  const articles = pick(academicArticles, counts.academic)
+  const natalCharts = pick(NATAL_CHARTS, counts.natalCharts)
+  const owidSrcs = [
+    'https://ourworldindata.org/grapher/share-with-mental-and-substance-disorders',
+    'https://ourworldindata.org/grapher/depressive-disorders-prevalence-ihme',
+    'https://ourworldindata.org/grapher/anxiety-disorders-prevalence',
+  ].slice(0, counts.owid)
 
-  const { dir } = useDirection()
+  const [openCharts, setOpenCharts] = useState(() => new Set())
+  const toggleChart = (id) => setOpenCharts(prev => {
+    const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n
+  })
+
   const [topicsOpen, setTopicsOpen] = useState(false)
   const [topics, setTopics] = useState(profile.interestTags || [])
   const [addVal, setAddVal] = useState('')
@@ -115,14 +141,14 @@ export default function InformedResults({ profile, guardianStories = [], academi
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
           <div style={{ width: 24, height: 24, borderRadius: 5, background: '#9bb0aa' }} />
-          <span style={{ fontSize: 18, fontWeight: 600, letterSpacing: '-0.01em' }}>trauma education</span>
+          <span style={{ fontSize: 18, fontWeight: 600, letterSpacing: '-0.01em' }}>{ui.resultsBrand}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
-          <span style={{ fontSize: 13, color: '#b9c6c2', fontWeight: 500 }}>Results</span>
+          <span style={{ fontSize: 13, color: '#b9c6c2', fontWeight: 500 }}>{ui.resultsNavResults}</span>
           <button
             type="button"
             onClick={async () => { await resetQuizSession(); window.location.assign('/') }}
-            aria-label={dir === 'ltr' ? 'Retake the quiz' : 'מילוי השאלון מחדש'}
+            aria-label={s.retakeAria}
             style={{
               fontFamily: 'inherit',
               fontSize: 13,
@@ -135,7 +161,7 @@ export default function InformedResults({ profile, guardianStories = [], academi
               cursor: 'pointer',
             }}
           >
-            {dir === 'ltr' ? 'Retake quiz' : 'שאלון מחדש'}
+            {s.retake}
           </button>
         </div>
       </nav>
@@ -153,11 +179,11 @@ export default function InformedResults({ profile, guardianStories = [], academi
               textTransform: 'uppercase',
               color: '#b9c6c2',
             }}>
-              Informed Learner
+              {ui.resultsBadgeInformed}
             </span>
             <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#7da984' }} />
             <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: '.04em', color: '#9bb0aa' }}>
-              Primary topic &mdash; {profile.primaryTopic || 'PTSD'}
+              {ui.resultsPrimaryTopic} &mdash; {profile.primaryTopic || 'PTSD'}
             </span>
           </div>
 
@@ -223,7 +249,7 @@ export default function InformedResults({ profile, guardianStories = [], academi
                   fontFamily: 'inherit',
                 }}
               >
-                adjust
+                {ui.resultsEditTagsShort}
               </button>
             </div>
           </div>
@@ -239,7 +265,7 @@ export default function InformedResults({ profile, guardianStories = [], academi
               maxWidth: 580,
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 13 }}>
-                <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: '.02em' }}>EDIT INTEREST TAGS</span>
+                <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: '.02em', textTransform: 'uppercase' }}>{ui.resultsEditTags}</span>
                 <span style={{ fontSize: 13, color: '#8a938f' }}>{topics.length} / 5</span>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
@@ -287,7 +313,7 @@ export default function InformedResults({ profile, guardianStories = [], academi
                     value={addVal}
                     onChange={e => setAddVal(e.target.value)}
                     onKeyDown={handleAddKey}
-                    placeholder="add a tag…"
+                    placeholder={ui.resultsAddTopic}
                     maxLength={40}
                     style={{
                       flex: 1,
@@ -316,12 +342,12 @@ export default function InformedResults({ profile, guardianStories = [], academi
                       cursor: 'pointer',
                     }}
                   >
-                    Add
+                    {ui.resultsAddBtn}
                   </button>
                 </div>
               ) : (
                 <p style={{ margin: 0, fontSize: 13, color: '#8a938f' }}>
-                  Maximum of five tags. Remove one to add another.
+                  {ui.resultsMaxTopics}
                 </p>
               )}
               <button
@@ -338,7 +364,7 @@ export default function InformedResults({ profile, guardianStories = [], academi
                   padding: 0,
                 }}
               >
-                close
+                {ui.resultsCloseEdit}
               </button>
             </div>
           )}
@@ -363,17 +389,14 @@ export default function InformedResults({ profile, guardianStories = [], academi
             }}>
               <span style={{ width: 16, height: 16, borderRadius: 3, background: '#052962' }} />
               <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase' }}>
-                Stories &middot; The Guardian
+                {s.storiesHead}
               </span>
             </div>
             <div className="p2-feedcol" style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
-              {guardianStories.length > 0 ? (
-                <>
-                  <GuardianCardVertical story={guardianStories[0]} />
-                  {showSecondStory && guardianStories[1] && (
-                    <GuardianCardVertical story={guardianStories[1]} />
-                  )}
-                </>
+              {stories.length > 0 ? (
+                stories.map((story, i) => (
+                  <GuardianCardVertical key={i} story={story} />
+                ))
               ) : (
                 /* placeholder card when no stories yet */
                 <article className="p2-card" style={{
@@ -411,22 +434,16 @@ export default function InformedResults({ profile, guardianStories = [], academi
                 flexShrink: 0,
               }} />
               <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase' }}>
-                Research &middot; peer-reviewed
+                {s.academicHead}
               </span>
             </div>
             <div className="p2-feedcol" style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
-              {academicArticles.length > 0 ? (
-                <>
-                  <AcademicCardTeal article={academicArticles[0]} />
-                  {showSecondResearch && academicArticles[1] && (
-                    <AcademicCardTeal article={academicArticles[1]} />
-                  )}
-                  {showThirdResearch && academicArticles[2] && (
-                    <AcademicCardTeal article={academicArticles[2]} />
-                  )}
-                </>
-              ) : (
-                /* placeholder card when no articles yet */
+              {articles.length > 0 ? (
+                articles.map((article, i) => (
+                  <AcademicCardTeal key={i} article={article} />
+                ))
+              ) : articlesLoading ? (
+                /* skeleton only while a fetch/ingest is in flight */
                 <article className="p2-card" style={{
                   background: '#eef1ee',
                   border: '1px solid #dde3df',
@@ -439,46 +456,68 @@ export default function InformedResults({ profile, guardianStories = [], academi
                   <div className="p2-skel" style={{ height: 12, width: '55%', borderRadius: 4, marginBottom: 12 }} />
                   <div className="p2-skel" style={{ height: 14, width: '100%', borderRadius: 4 }} />
                 </article>
+              ) : (
+                <p style={{ fontSize: 14, color: '#7a847f', margin: 0 }}>{s.academicEmpty}</p>
               )}
             </div>
           </div>
         </div>
 
-        {/* OWID SECTION */}
-        <section style={{ marginTop: 48 }}>
-          <div style={{ marginBottom: 18 }}>
-            <span style={{
-              fontSize: 12,
-              fontWeight: 700,
-              letterSpacing: '.1em',
-              textTransform: 'uppercase',
-              color: '#7a847f',
-            }}>
-              Data context
-            </span>
-            <h2 style={{ fontSize: 21, fontWeight: 600, margin: '7px 0 4px', letterSpacing: '-0.01em', color: '#232a28' }}>
-              Mental health in the wider picture
-            </h2>
-            <p style={{ fontSize: 14, color: '#5c6561', margin: 0, maxWidth: '62ch' }}>
-              Two views to set the populations you work with against the global picture &mdash; overall burden,
-              and how depression prevalence compares across countries.
-            </p>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 22 }}>
-            <OwidChart
-              src="https://ourworldindata.org/grapher/share-with-mental-and-substance-disorders"
-              title="Living with a mental or substance-use disorder"
-              caption="Share of population, global picture."
-              attribution="Source: Our World in Data · Global Burden of Disease."
-            />
-            <OwidChart
-              src="https://ourworldindata.org/grapher/depressive-disorders-prevalence-ihme"
-              title="Depression prevalence, by country"
-              caption="Where Israel sits in an international comparison."
-              attribution="Source: Our World in Data · IHME GBD 2021."
-            />
-          </div>
-        </section>
+        {/* OWID SECTION (count-driven) */}
+        {owidSrcs.length > 0 && (
+          <section style={{ marginTop: 48 }}>
+            <div style={{ marginBottom: 18 }}>
+              <h2 style={{ fontSize: 21, fontWeight: 600, margin: '7px 0 4px', letterSpacing: '-0.01em', color: '#232a28' }}>
+                {s.owidHead}
+              </h2>
+              <p style={{ fontSize: 14, color: '#5c6561', margin: 0, maxWidth: '62ch' }}>
+                {s.owidSub}
+              </p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 22 }}>
+              {owidSrcs.map((src) => (
+                <OwidChart
+                  key={src}
+                  src={src}
+                  title={s.owidHead}
+                  caption={s.owidSub}
+                  attribution="Source: Our World in Data · IHME GBD 2021."
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* NATAL ISRAEL COHORT RESEARCH (count-driven charts) */}
+        {natalCharts.length > 0 && (
+          <section style={{ marginTop: 48 }}>
+            <div style={{ marginBottom: 18 }}>
+              <h2 style={{ fontSize: 21, fontWeight: 600, margin: '7px 0 4px', letterSpacing: '-0.01em', color: '#232a28' }}>
+                {s.researchHead}
+              </h2>
+              <p style={{ fontSize: 14, color: '#5c6561', margin: 0, maxWidth: '62ch' }}>
+                {s.researchSub}
+              </p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 18 }}>
+              {natalCharts.map((chart) => (
+                <NatalChartCard
+                  key={chart.id}
+                  chart={chart}
+                  locale={locale}
+                  tone="teal"
+                  cardStyle={N2_CARD_STYLE}
+                  titleStyle={N2_TITLE_STYLE}
+                  sourceStyle={N2_SOURCE_STYLE}
+                  explainOpen={openCharts.has(chart.id)}
+                  onToggle={() => toggleChart(chart.id)}
+                  readMoreLabel={s.readMore}
+                  readLessLabel={s.readLess}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* CTA */}
         <section style={{
@@ -494,10 +533,10 @@ export default function InformedResults({ profile, guardianStories = [], academi
         }}>
           <div>
             <h2 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 6px', letterSpacing: '-0.01em' }}>
-              Your complete personalized reading list
+              {ui.resultsCtaHead}
             </h2>
             <p style={{ fontSize: 15, color: '#cdd9d5', margin: 0 }}>
-              Stories and research, organized around the tags you follow.
+              {ui.resultsCtaSub}
             </p>
           </div>
           <a
@@ -514,7 +553,7 @@ export default function InformedResults({ profile, guardianStories = [], academi
               whiteSpace: 'nowrap',
             }}
           >
-            See your curated article set &rarr;
+            {ui.resultsCtaBtn}
           </a>
         </section>
 
@@ -528,7 +567,7 @@ export default function InformedResults({ profile, guardianStories = [], academi
             color: '#9aa39e',
             margin: '0 0 16px',
           }}>
-            Also explore
+            {ui.resultsExploreHead}
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
             <a
@@ -545,10 +584,10 @@ export default function InformedResults({ profile, guardianStories = [], academi
               }}
             >
               <span style={{ fontSize: 15, fontWeight: 600, display: 'block', marginBottom: 5 }}>
-                Interactive Map
+                {ui.resultsExploreMap}
               </span>
               <span style={{ fontSize: 13, color: '#7a847f', lineHeight: 1.45 }}>
-                Crisis-line call records across Israeli cities, over time.
+                {ui.resultsExploreMapDesc}
               </span>
             </a>
             <a
@@ -565,10 +604,10 @@ export default function InformedResults({ profile, guardianStories = [], academi
               }}
             >
               <span style={{ fontSize: 15, fontWeight: 600, display: 'block', marginBottom: 5 }}>
-                Trends
+                {ui.resultsExploreTrends}
               </span>
               <span style={{ fontSize: 13, color: '#7a847f', lineHeight: 1.45 }}>
-                Search interest in trauma terms across Israel.
+                {ui.resultsExploreTrendsDesc}
               </span>
             </a>
             <a
@@ -585,10 +624,10 @@ export default function InformedResults({ profile, guardianStories = [], academi
               }}
             >
               <span style={{ fontSize: 15, fontWeight: 600, display: 'block', marginBottom: 5 }}>
-                Data Graphs
+                {ui.resultsExploreGraphs}
               </span>
               <span style={{ fontSize: 13, color: '#7a847f', lineHeight: 1.45 }}>
-                Addictions, sleep, domestic violence, system load.
+                {ui.resultsExploreGraphsDesc}
               </span>
             </a>
           </div>
