@@ -5,6 +5,7 @@ from services.ai_assistant import main
 from services.groq import client_groq
 from services.mongo import articles_collection, chat_collection
 from utils.logger import logger
+from extensions import limiter
 
 # Simple per-user article cache: {user_id: (fetched_at, articles_list)}
 _articles_cache: dict = {}
@@ -12,6 +13,21 @@ _ARTICLES_CACHE_TTL = 5 * 60  # seconds
 
 
 ai_assistant_bp = Blueprint("ai_assistant", __name__)
+
+# Static, token-cheap awareness of the rest of the platform so the assistant can
+# point users to other sections when relevant. This is NOT a data source — the
+# assistant must not invent figures from these pages; for specifics it defers to
+# the user's articles or tells them to open the page.
+PLATFORM_OVERVIEW = (
+    "About this platform — you may direct the user to these other sections when it helps:\n"
+    "- Articles (/articles): the user's personalized academic reading list (the articles below).\n"
+    "- Interactive Map (/map): crisis-hotline (ERAN/NATAL) call patterns across Israeli cities over time.\n"
+    "- Trends (/trends): Google Trends data for trauma-related searches in Israel.\n"
+    "- Data Graphs (/graphs/israel, /graphs/addictions, /graphs/health, /graphs/sleep, "
+    "/graphs/traffic, /graphs/domestic-violence): curated charts on mental health, addictions, "
+    "sleep, traffic accidents, and domestic violence, sourced from the State Comptroller Report, "
+    "Ministry of Health, and peer-reviewed literature."
+)
 
 
 @ai_assistant_bp.route('/ai/assistant', methods=['POST'])
@@ -43,6 +59,7 @@ def ai_assistant():
 
 @ai_assistant_bp.route('/article-chat', methods=['POST'])
 @jwt_required()
+@limiter.limit("40 per hour")
 def article_chat():
     try:
         user_id = get_jwt_identity()
@@ -141,7 +158,11 @@ def article_chat():
             f"- Content preference: {content_preference}\n\n"
             f"Tone: {tone}\n"
             f"Emotional guidance: {emotional_guidance}\n\n"
-            f"Answer only based on the articles below. If the question is unrelated, say so briefly.\n\n"
+            f"{PLATFORM_OVERVIEW}\n\n"
+            f"Ground factual answers in the articles below. You may briefly point the user to one "
+            f"of the platform sections above when it fits their question, but do not invent data "
+            f"from those sections. If a question is unrelated to trauma or this platform, say so "
+            f"briefly.\n\n"
             f"Articles:\n{articles_context}"
         )
 
