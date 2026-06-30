@@ -7,7 +7,7 @@ import { getUiStrings } from "../../config/uiStrings.js";
 import { AUTH_TOKEN_KEY, USER_ID_KEY, SCORE_CACHE_KEY } from "../../config/storageKeys.js";
 import { getResult, trackArticleClick } from "../../utils/api.js";
 import ArticleChatBubble from "./ArticleChatBubble.jsx";
-import "./ArticlePage.css";
+import styles from "./ArticlePage.module.css";
 
 export default function ArticlePage() {
   const navigate = useNavigate();
@@ -28,27 +28,30 @@ export default function ArticlePage() {
   const userId = localStorage.getItem(USER_ID_KEY);
   const score = localStorage.getItem(SCORE_CACHE_KEY);
 
+  // Guests are allowed: the articles API is public and falls back to quiz_user_id.
+  // Only bounce to the quiz if there is no quiz identity at all (can't show anything).
   useEffect(() => {
-    if (!token) navigate("/auth/login", { replace: true });
-  }, [token, navigate]);
+    if (!userId) navigate("/", { replace: true });
+  }, [userId, navigate]);
 
   // If score isn't cached locally, verify against the DB before redirecting.
-  // Covers fresh sessions, new devices, or cleared localStorage.
+  // Covers fresh sessions, new devices, or cleared localStorage. Works for guests
+  // too (getResult is keyed by quiz user_id, no token required).
   useEffect(() => {
-    if (!token || !userId || score) return;
+    if (!userId || score) return;
     let cancelled = false;
     getResult(userId).then(({ res, data }) => {
       if (cancelled) return;
       if (res.ok && data?.completed && data?.score != null) {
-        try { localStorage.setItem(SCORE_CACHE_KEY, String(data.score)); } catch {}
+        try { localStorage.setItem(SCORE_CACHE_KEY, String(data.score)); } catch { /* ignore */ }
       } else {
-        navigate("/quiz", { replace: true });
+        navigate("/", { replace: true });
       }
     }).catch(() => {
-      if (!cancelled) navigate("/quiz", { replace: true });
+      if (!cancelled) navigate("/", { replace: true });
     });
     return () => { cancelled = true; };
-  }, [token, userId, score, navigate]);
+  }, [userId, score, navigate]);
 
   // Seed edit tags from persona when it loads
   useEffect(() => {
@@ -105,18 +108,35 @@ export default function ArticlePage() {
 
   const getArticleUrlValue = (article) => article?.url ?? article?.doi ?? null;
 
-  const fetchArticles = useCallback(async () => {
+  const cacheKey = userId ? `articles_cache_${userId}` : null;
+  const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+  const fetchArticles = useCallback(async ({ bustCache = false } = {}) => {
     const ui = getUiStrings(locale);
-    if (!token || !userId) { setError(ui.articlesErrorAuth); return; }
+    if (!userId) { setError(ui.articlesErrorAuth); return; }
+
+    // Serve from sessionStorage if fresh and not explicitly busting
+    if (!bustCache && cacheKey) {
+      try {
+        const raw = sessionStorage.getItem(cacheKey);
+        if (raw) {
+          const { articles: cached, personaProfile: cachedProfile, ts } = JSON.parse(raw);
+          if (Date.now() - ts < CACHE_TTL) {
+            setArticles(cached);
+            setPersonaProfile(cachedProfile ?? null);
+            return;
+          }
+        }
+      } catch { /* ignore */ }
+    }
 
     setLoading(true);
     setError("");
 
     const base = getApiBase();
-    const authHeaders = {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    };
+    // Token is optional — the articles API is public and falls back to quiz_user_id.
+    const authHeaders = { "Content-Type": "application/json" };
+    if (token) authHeaders.Authorization = `Bearer ${token}`;
 
     try {
       const params = new URLSearchParams({ quiz_user_id: userId });
@@ -151,22 +171,31 @@ export default function ArticlePage() {
         if (res2.status === 401) { redirectToLogin(); return; }
 
         const data2 = await res2.json();
-        setArticles(Array.isArray(data2.articles) ? data2.articles : []);
-        setPersonaProfile(data2.persona_profile ?? null);
+        const freshArticles = Array.isArray(data2.articles) ? data2.articles : [];
+        const freshProfile = data2.persona_profile ?? null;
+        setArticles(freshArticles);
+        setPersonaProfile(freshProfile);
+        if (cacheKey && freshProfile?.interest_tags?.length) {
+          try { sessionStorage.setItem(cacheKey, JSON.stringify({ articles: freshArticles, personaProfile: freshProfile, ts: Date.now() })); } catch { /* ignore */ }
+        }
       } else {
+        const profile = data.persona_profile ?? null;
         setArticles(normalizedArticles);
-        setPersonaProfile(data.persona_profile ?? null);
+        setPersonaProfile(profile);
+        if (cacheKey && profile?.interest_tags?.length) {
+          try { sessionStorage.setItem(cacheKey, JSON.stringify({ articles: normalizedArticles, personaProfile: profile, ts: Date.now() })); } catch { /* ignore */ }
+        }
       }
     } catch (err) {
       setError(err.message || ui.articlesErrorFetch);
     } finally {
       setLoading(false);
     }
-  }, [token, userId, locale, redirectToLogin]);
+  }, [token, userId, locale, redirectToLogin, cacheKey]);
 
   useEffect(() => {
-    if (token && userId) fetchArticles();
-  }, [token, userId, fetchArticles]);
+    if (userId) fetchArticles();
+  }, [userId, fetchArticles]);
 
   const saveProfile = async () => {
     if (!editTags.length) return;
@@ -191,7 +220,8 @@ export default function ArticlePage() {
         throw new Error(data?.error || s.profileSaveError);
       }
 
-      await fetchArticles();
+      if (cacheKey) { try { sessionStorage.removeItem(cacheKey); } catch { /* ignore */ } }
+      await fetchArticles({ bustCache: true });
       setActiveTab("articles");
     } catch (err) {
       setProfileError(err.message || s.profileSaveError);
@@ -201,40 +231,53 @@ export default function ArticlePage() {
   };
 
   return (
-    <div className="article-reader-page">
+    <div className={styles.articleReaderPage}>
       <Navbar />
-      <main className="article-reader-container" lang={locale} dir={dir}>
-        <div className="article-reader-header">
-          <div className="article-reader-title-block">
+      <main className={styles.articleReaderContainer} lang={locale} dir={dir}>
+        <div className={styles.articleReaderHeader}>
+          <div className={styles.articleReaderTitleBlock}>
             <h1>{s.articlesTitle}</h1>
           </div>
         </div>
 
-        <div className="tab-bar">
+        <div className={styles.tabBar}>
           <button
             type="button"
-            className={`tab-btn${activeTab === "articles" ? " active" : ""}`}
+            className={`${styles.tabBtn}${activeTab === "articles" ? ` ${styles.active}` : ""}`}
             onClick={() => setActiveTab("articles")}
           >
             {s.tabArticles}
           </button>
           <button
             type="button"
-            className={`tab-btn${activeTab === "profile" ? " active" : ""}`}
+            className={`${styles.tabBtn}${activeTab === "profile" ? ` ${styles.active}` : ""}`}
             onClick={() => setActiveTab("profile")}
           >
             {s.tabProfile}
           </button>
         </div>
 
-        {error && <p className="feedback-banner feedback-error">{error}</p>}
+        {error && <p className={`${styles.feedbackBanner} ${styles.feedbackError}`}>{error}</p>}
 
         {activeTab === "articles" && (
           <>
-            {!loading && articles.length === 0 && !error && (
-              <p className="empty-state">{s.articlesEmpty}</p>
+            {loading && (
+              <section className={styles.articleList}>
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className={styles.articleSkeleton}>
+                    <div className={`${styles.skeletonLine} ${styles.skeletonLineTitle}`} />
+                    <div className={`${styles.skeletonLine} ${styles.skeletonLineAuthor}`} />
+                    <div className={`${styles.skeletonLine} ${styles.skeletonLineText}`} />
+                    <div className={`${styles.skeletonLine} ${styles.skeletonLineTextShort}`} />
+                    <div className={`${styles.skeletonLine} ${styles.skeletonLineText}`} />
+                  </div>
+                ))}
+              </section>
             )}
-            <section className="article-list">
+            {!loading && articles.length === 0 && !error && (
+              <p className={styles.emptyState}>{s.articlesEmpty}</p>
+            )}
+            <section className={styles.articleList}>
               {articles.map((article) => {
                 const urlValue = getArticleUrlValue(article);
                 const articleHref = getArticleUrlHref(urlValue);
@@ -242,19 +285,19 @@ export default function ArticlePage() {
                 return (
                   <article
                     key={article._id || article.openalex_id || `${article.title}-${article.year}`}
-                    className="article-card"
+                    className={styles.articleCard}
                   >
-                    <div className="article-top">
-                      <h2 className="article-title" dir="auto">
+                    <div className={styles.articleTop}>
+                      <h2 className={styles.articleTitle} dir="auto">
                         {article.title || s.articlesNoTitle}
                       </h2>
-                      <span className="article-year-pill">
+                      <span className={styles.articleYearPill}>
                         {article.year || s.articlesYearNa}
                       </span>
                     </div>
 
                     {article.authors && (
-                      <p className="article-authors" dir="auto">
+                      <p className={styles.articleAuthors} dir="auto">
                         <strong>{s.articlesAuthors}:</strong>{" "}
                         {getAuthorNames(article)}
                       </p>
@@ -262,16 +305,16 @@ export default function ArticlePage() {
 
                     {article.journal && (
                       <p dir="auto">
-                        <span className="meta-label">{s.articlesJournal}:</span>
+                        <span className={styles.metaLabel}>{s.articlesJournal}:</span>
                         {article.journal}
                       </p>
                     )}
 
-                    <p className="meta-row-article-url">
-                      <span className="meta-label">{s.articlesUrl}:</span>
+                    <p className={styles.metaRowArticleUrl}>
+                      <span className={styles.metaLabel}>{s.articlesUrl}:</span>
                       {articleHref ? (
                         <a
-                          className="article-url-link"
+                          className={styles.articleUrlLink}
                           href={articleHref}
                           target="_blank"
                           rel="noreferrer"
@@ -285,7 +328,7 @@ export default function ArticlePage() {
 
                     {hasPdf && (
                       <a
-                        className="pdf-btn"
+                        className={styles.pdfBtn}
                         href={article.pdf_url}
                         target="_blank"
                         rel="noreferrer"
@@ -295,9 +338,9 @@ export default function ArticlePage() {
                       </a>
                     )}
 
-                    <div className="abstract-block">
-                      <p className="abstract-label">{s.articlesAbstract}</p>
-                      <p className="abstract-text" dir="auto">
+                    <div className={styles.abstractBlock}>
+                      <p className={styles.abstractLabel}>{s.articlesAbstract}</p>
+                      <p className={styles.abstractText} dir="auto">
                         {getAbstractPreview(article)}
                       </p>
                     </div>
@@ -309,48 +352,48 @@ export default function ArticlePage() {
         )}
 
         {activeTab === "profile" && (
-          <div className="profile-form">
+          <div className={styles.profileForm}>
             {personaProfile ? (
               <>
                 {personaProfile.persona && (
-                  <div className="profile-field">
-                    <span className="profile-label">{s.profilePersonaLabel}</span>
-                    <span className="profile-value">
-                      <span className="persona-badge">{personaProfile.persona}</span>
+                  <div className={styles.profileField}>
+                    <span className={styles.profileLabel}>{s.profilePersonaLabel}</span>
+                    <span className={styles.profileValue}>
+                      <span className={styles.personaBadge}>{personaProfile.persona}</span>
                     </span>
                   </div>
                 )}
 
                 {Array.isArray(personaProfile.interest_tags) && personaProfile.interest_tags.length > 0 && (
-                  <div className="profile-field">
-                    <span className="profile-label">{s.profileTagsLabel}</span>
-                    <div className="tag-list">
+                  <div className={styles.profileField}>
+                    <span className={styles.profileLabel}>{s.profileTagsLabel}</span>
+                    <div className={styles.tagList}>
                       {personaProfile.interest_tags.map((tag) => (
-                        <span key={tag} className="tag-chip">{tag}</span>
+                        <span key={tag} className={styles.tagChip}>{tag}</span>
                       ))}
                     </div>
                   </div>
                 )}
 
                 {personaProfile.preferred_content && (
-                  <div className="profile-field">
-                    <span className="profile-label">{s.profilePreferredLabel}</span>
-                    <span className="profile-value">{personaProfile.preferred_content}</span>
+                  <div className={styles.profileField}>
+                    <span className={styles.profileLabel}>{s.profilePreferredLabel}</span>
+                    <span className={styles.profileValue}>{personaProfile.preferred_content}</span>
                   </div>
                 )}
               </>
             ) : null}
 
-            <div className="profile-field">
-              <span className="profile-label">{s.profileQueryLabel}</span>
-              <p className="profile-hint">{s.profileQueryHint}</p>
-              <div className="tag-input-wrap">
+            <div className={styles.profileField}>
+              <span className={styles.profileLabel}>{s.profileQueryLabel}</span>
+              <p className={styles.profileHint}>{s.profileQueryHint}</p>
+              <div className={styles.tagInputWrap}>
                 {editTags.map((tag) => (
-                  <span key={tag} className="tag-chip tag-chip-editable">
+                  <span key={tag} className={`${styles.tagChip} ${styles.tagChipEditable}`}>
                     {tag}
                     <button
                       type="button"
-                      className="tag-remove"
+                      className={styles.tagRemove}
                       onClick={() => removeTag(tag)}
                       aria-label={`Remove ${tag}`}
                     >
@@ -360,7 +403,7 @@ export default function ArticlePage() {
                 ))}
                 <input
                   type="text"
-                  className="tag-text-input"
+                  className={styles.tagTextInput}
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={handleTagKey}
@@ -372,12 +415,12 @@ export default function ArticlePage() {
             </div>
 
             {profileError && (
-              <p className="feedback-banner feedback-error">{profileError}</p>
+              <p className={`${styles.feedbackBanner} ${styles.feedbackError}`}>{profileError}</p>
             )}
 
             <button
               type="button"
-              className="profile-save-btn"
+              className={styles.profileSaveBtn}
               onClick={saveProfile}
               disabled={profileSaving || editTags.length === 0}
             >

@@ -1,5 +1,12 @@
 import { getApiBase } from "../config/api.js";
-import { AUTH_TOKEN_KEY } from "../config/storageKeys.js";
+import {
+  AUTH_TOKEN_KEY,
+  USER_ID_KEY,
+  QUIZ_MESSAGES_KEY,
+  QUIZ_META_KEY,
+  SCORE_CACHE_KEY,
+  PERSONA_CACHE_KEY,
+} from "../config/storageKeys.js";
 
 async function parseJsonSafe(res) {
   const text = await res.text();
@@ -102,9 +109,12 @@ export async function logoutUser(token) {
  */
 export async function postChat(userId, message, messages = [], locale = "en") {
   const base = getApiBase();
+  const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
+  const headers = { "Content-Type": "application/json" };
+  if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
   const res = await fetch(`${base}/chat`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify({ user_id: userId, message, messages, locale }),
   });
   const data = await parseJsonSafe(res);
@@ -141,6 +151,48 @@ export async function deleteSession(userId, token) {
   });
   const data = await parseJsonSafe(res);
   return { res, data };
+}
+
+/**
+ * Fully restart the quiz: delete the server-side session (best-effort) and clear
+ * the locally cached quiz transcript, score and persona so a fresh quiz begins.
+ * Caller should hard-navigate to "/" afterwards to reinitialize app state/theme.
+ */
+export async function resetQuizSession() {
+  let userId = null;
+  try { userId = localStorage.getItem(USER_ID_KEY); } catch { /* ignore */ }
+  let token = null;
+  try { token = localStorage.getItem(AUTH_TOKEN_KEY); } catch { /* ignore */ }
+
+  if (userId) {
+    try { await deleteSession(userId, token); } catch { /* best-effort; clear local anyway */ }
+  }
+
+  for (const key of [QUIZ_MESSAGES_KEY, QUIZ_META_KEY, SCORE_CACHE_KEY, PERSONA_CACHE_KEY]) {
+    try { localStorage.removeItem(key); } catch { /* ignore */ }
+  }
+}
+
+/**
+ * GET /api/articles — ranked academic articles for the logged-in user.
+ * Graceful: never throws; returns { articles: [], persona_profile: null } on any error.
+ */
+export async function getArticles(quizUserId) {
+  try {
+    const base = getApiBase();
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+    const qs = quizUserId ? `?quiz_user_id=${encodeURIComponent(quizUserId)}` : "";
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const res = await fetch(`${base}/api/articles${qs}`, { headers });
+    if (!res.ok) return { articles: [], persona_profile: null };
+    const data = await parseJsonSafe(res);
+    return {
+      articles: Array.isArray(data.articles) ? data.articles : [],
+      persona_profile: data.persona_profile ?? null,
+    };
+  } catch {
+    return { articles: [], persona_profile: null };
+  }
 }
 
 /**

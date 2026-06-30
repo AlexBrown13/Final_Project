@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+
+# Secrets / env
+.env
+*.env
+server/.env
+client/.env
+
+# OS
+.DS_Store
+
+graphify-out/
+.claude/plugins/
+.agents/
+.claude/settings.local.json
+~/
+.claude/skills/
+skills-lock.json
+.claude/settings.local.json
+status.log

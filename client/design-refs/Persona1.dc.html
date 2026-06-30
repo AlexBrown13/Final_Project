@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0;}
+  @keyframes p1shimmer{0%{background-position:-360px 0;}100%{background-position:360px 0;}}
+  .p1-stripe{background-image:repeating-linear-gradient(135deg,#e6ddcf 0 10px,#efe8db 10px 20px);}
+  .p1-skel{background:linear-gradient(90deg,#ece6da 0%,#f5f1e8 50%,#ece6da 100%);background-size:720px 100%;animation:p1shimmer 1.6s infinite linear;}
+  .p1-link{transition:color .15s ease, gap .15s ease;}
+  .p1-card{transition:box-shadow .2s ease, transform .2s ease;}
+  .p1-card:hover{box-shadow:0 14px 38px -22px rgba(60,50,35,.45);transform:translateY(-2px);}
+  @keyframes p1fade{from{opacity:0;}to{opacity:1;}}
+  @keyframes p1rise{from{opacity:0;transform:translateY(var(--rise,22px));}to{opacity:1;transform:none;}}
+  /* mood = grieving (default): slow, gentle, far rise */
+  .p1-root{--dur:.85s;--st:.2s;--rise:22px;--rbase:.95s;--rstep:.14s;}
+  /* mood = curious: livelier, quicker, closer rise */
+  .p1-root[data-mood="curious"]{--dur:.6s;--st:.12s;--rise:14px;--rbase:.6s;--rstep:.1s;}
+  /* mood = distressed: near-instant, no movement, no shimmer */
+  .p1-root[data-mood="distressed"]{--dur:.4s;--st:.06s;--rise:0px;--rbase:.32s;--rstep:.05s;}
+  .p1-root[data-mood="distressed"] .p1-skel{animation:none;background:#ece6da;}
+  .p1-nav{animation:p1fade .7s ease both;}
+  .p1-hero>*{opacity:0;animation:p1rise var(--dur,.85s) cubic-bezier(.22,.61,.36,1) both;}
+  .p1-hero>*:nth-child(1){animation-delay:calc(var(--st,.2s)*1);}
+  .p1-hero>*:nth-child(2){animation-delay:calc(var(--st,.2s)*2);}
+  .p1-hero>*:nth-child(3){animation-delay:calc(var(--st,.2s)*3);}
+  .p1-hero>*:nth-child(4){animation-delay:calc(var(--st,.2s)*4);}
+  .p1-hero>*:nth-child(5){animation-delay:calc(var(--st,.2s)*5);}
+  .p1-hero>*:nth-child(6){animation-delay:calc(var(--st,.2s)*6);}
+  .p1-reveal>*{opacity:0;animation:p1rise var(--dur,.85s) cubic-bezier(.22,.61,.36,1) both;}
+  .p1-reveal>*:nth-child(1){animation:none;opacity:1;transform:none;}
+  .p1-reveal>*:nth-child(2){animation-delay:var(--rbase,.95s);}
+  .p1-reveal>*:nth-child(3){animation-delay:calc(var(--rbase,.95s) + var(--rstep,.14s)*1);}
+  .p1-reveal>*:nth-child(4){animation-delay:calc(var(--rbase,.95s) + var(--rstep,.14s)*2);}
+  .p1-reveal>*:nth-child(5){animation-delay:calc(var(--rbase,.95s) + var(--rstep,.14s)*3);}
+  .p1-reveal>*:nth-child(6){animation-delay:calc(var(--rbase,.95s) + var(--rstep,.14s)*4);}
+  .p1-reveal>*:nth-child(7){animation-delay:calc(var(--rbase,.95s) + var(--rstep,.14s)*5);}
+  @media (prefers-reduced-motion: reduce){.p1-nav,.p1-hero>*,.p1-reveal>*{animation:none!important;opacity:1!important;transform:none!important;}}
+</style>
+</helmet>
+<div class="p1-root" data-mood="{{ mood }}" dir="{{ dir }}" style="font-family:'Source Sans 3',-apple-system,sans-serif;background:#faf8f4;color:#2c2823;min-height:100vh;font-size:17px;line-height:1.6;">
+
+  <!-- NAV -->
+  <nav class="p1-nav" style="display:flex;align-items:center;justify-content:space-between;padding:20px 40px;border-bottom:1px solid #ece4d6;position:sticky;top:0;background:rgba(250,248,244,.88);backdrop-filter:blur(8px);z-index:20;">
+    <div style="display:flex;align-items:center;gap:11px;">
+      <div style="width:26px;height:26px;border-radius:50%;background:#7da984;opacity:.9;"></div>
+      <span style="font-family:'Newsreader',serif;font-size:20px;font-weight:500;letter-spacing:.2px;color:#2c2823;">trauma education</span>
+    </div>
+    <button onClick="{{ onToggleLang }}" style="font-family:'Source Sans 3',sans-serif;font-size:14px;font-weight:500;color:#5d6b58;background:transparent;border:1px solid #d4cdbe;border-radius:999px;padding:7px 16px;cursor:pointer;">{{ langLabel }}</button>
+  </nav>
+
+  <main class="p1-reveal" style="max-width:860px;margin:0 auto;padding:0 40px;">
+
+    <!-- HERO -->
+    <header class="p1-hero" style="padding:78px 0 26px;">
+      <div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:26px;">
+        <span style="width:7px;height:7px;border-radius:50%;background:#7da984;"></span>
+        <span style="font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#7d8a76;">{{ eyebrow }}</span>
+      </div>
+      <h1 style="font-family:'Newsreader',serif;font-weight:500;font-size:46px;line-height:1.22;letter-spacing:-.01em;margin:0 0 22px;max-width:20ch;text-wrap:pretty;">{{ headline }}</h1>
+      <p style="font-size:19px;line-height:1.62;color:#564f45;max-width:54ch;margin:0 0 30px;">{{ subcopy }}</p>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+        <sc-for list="{{ topics }}" as="t" hint-placeholder-count="5">
+          <span style="display:inline-flex;align-items:center;background:#e1ebe2;color:#3f5a45;border-radius:999px;padding:7px 15px;font-size:14px;font-weight:500;">{{ t }}</span>
+        </sc-for>
+        <button onClick="{{ openTopics }}" class="p1-link" style="display:inline-flex;align-items:center;gap:6px;background:transparent;border:none;color:#8a9483;font-size:14px;cursor:pointer;padding:7px 4px;text-decoration:underline;text-underline-offset:3px;text-decoration-color:#cdd6c6;">adjust your topics</button>
+      </div>
+
+      <!-- SUPPORT RESOURCE (grieving / distressed only) -->
+      <sc-if value="{{ showSupport }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:26px;display:flex;gap:16px;align-items:flex-start;background:#eef3ee;border:1px solid #d8e3d9;border-radius:16px;padding:20px 22px;max-width:600px;">
+          <div style="width:6px;align-self:stretch;border-radius:99px;background:#7da984;flex-shrink:0;"></div>
+          <div>
+            <p style="margin:0 0 5px;font-family:'Newsreader',serif;font-size:18px;font-weight:500;color:#3f4639;">If today feels heavy, you don&rsquo;t have to sit with it alone.</p>
+            <p style="margin:0;font-size:15px;line-height:1.55;color:#5d6b58;">ERAN&rsquo;s emotional first-aid line is open any hour, in Hebrew, Arabic, English and Russian. Call <strong style="color:#3f5a45;">1201</strong> &mdash; someone will listen, with no need to explain why.</p>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ADJUST TOPICS PANEL -->
+      <sc-if value="{{ topicsOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:22px;background:#fff;border:1px solid #e6ddcf;border-radius:16px;padding:22px 24px;max-width:560px;box-shadow:0 10px 30px -24px rgba(60,50,35,.5);">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;">
+            <span style="font-size:15px;font-weight:600;color:#3f4639;">Your topics</span>
+            <span style="font-size:13px;color:#9aa090;">{{ topicCount }} of 5</span>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+            <sc-for list="{{ editTopics }}" as="t" hint-placeholder-count="5">
+              <span style="display:inline-flex;align-items:center;gap:7px;background:#eef3ee;color:#3f5a45;border-radius:999px;padding:6px 8px 6px 14px;font-size:14px;font-weight:500;">
+                {{ t.label }}
+                <button onClick="{{ t.onRemove }}" aria-label="remove" style="width:18px;height:18px;border-radius:50%;border:none;background:#cfdcd0;color:#3f5a45;font-size:12px;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">&times;</button>
+              </span>
+            </sc-for>
+          </div>
+          <sc-if value="{{ canAdd }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;gap:8px;">
+              <input value="{{ addVal }}" onChange="{{ onAddChange }}" onKeyDown="{{ onAddKey }}" placeholder="add a topic&hellip;" style="flex:1;font-family:inherit;font-size:14px;border:1px solid #ddd5c6;border-radius:10px;padding:9px 13px;background:#faf8f4;color:#2c2823;outline:none;" />
+              <button onClick="{{ onAddTopic }}" style="font-family:inherit;font-size:14px;font-weight:600;background:#7da984;color:#fff;border:none;border-radius:10px;padding:9px 18px;cursor:pointer;">Add</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ atMax }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:0;font-size:13px;color:#9aa090;">You can follow up to five topics. Remove one to add another.</p>
+          </sc-if>
+          <button onClick="{{ closeTopics }}" style="margin-top:16px;background:transparent;border:none;color:#8a9483;font-size:13px;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:0;">done</button>
+        </div>
+      </sc-if>
+    </header>
+
+    <hr style="border:none;border-top:1px solid #ece4d6;margin:42px 0;" />
+
+    <!-- GUARDIAN STORIES -->
+    <section>
+      <h2 style="font-family:'Newsreader',serif;font-weight:500;font-size:27px;margin:0 0 6px;">Stories from people who understand</h2>
+      <p style="color:#7d7567;font-size:16px;margin:0 0 28px;">Real journalism from The Guardian, chosen for what you&rsquo;re holding right now.</p>
+
+      <div style="display:flex;flex-direction:column;gap:22px;">
+        <!-- Guardian card 1 -->
+        <article class="p1-card" style="display:flex;gap:0;background:#fff;border:1px solid #ece4d6;border-radius:18px;overflow:hidden;">
+          <div class="p1-stripe" style="width:230px;flex-shrink:0;position:relative;">
+            <span style="position:absolute;inset:auto 0 12px;text-align:center;font-family:ui-monospace,monospace;font-size:10px;letter-spacing:.1em;color:#9b937f;text-transform:uppercase;">guardian image</span>
+          </div>
+          <div style="padding:22px 26px;">
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:11px;">
+              <span style="width:16px;height:16px;border-radius:3px;background:#052962;display:inline-block;"></span>
+              <span style="font-size:13px;font-weight:600;color:#052962;">The Guardian</span>
+              <span style="color:#c3bcae;">&middot;</span>
+              <span style="font-size:13px;color:#9b937f;">14 Oct 2024</span>
+            </div>
+            <h3 dir="auto" style="font-family:'Newsreader',serif;font-weight:500;font-size:22px;line-height:1.4;margin:0 0 9px;">&rsquo;אני עדיין שומעת את זה&lsquo;: ניצולי מסיבת נובה מספרים על החיים עם מה שראו באותו בוקר באוקטובר</h3>
+            <p dir="auto" style="font-size:15px;color:#6b6457;line-height:1.6;margin:0 0 14px;">חודשים אחרי, מי שנמלטו מתארים לילות ללא שינה, הבזקי זיכרון פתאומיים, והדרך האטית בחזרה אל ימים רגילים.</p>
+            <a href="#" class="p1-link" style="display:inline-flex;align-items:center;gap:6px;color:#3f5a45;font-size:14px;font-weight:600;text-decoration:none;">Read at The Guardian &rarr;</a>
+          </div>
+        </article>
+        <!-- Guardian card 2 -->
+        <article class="p1-card" style="display:flex;background:#fff;border:1px solid #ece4d6;border-radius:18px;overflow:hidden;">
+          <div class="p1-stripe" style="width:230px;flex-shrink:0;position:relative;">
+            <span style="position:absolute;inset:auto 0 12px;text-align:center;font-family:ui-monospace,monospace;font-size:10px;letter-spacing:.1em;color:#9b937f;text-transform:uppercase;">guardian image</span>
+          </div>
+          <div style="padding:22px 26px;">
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:11px;">
+              <span style="width:16px;height:16px;border-radius:3px;background:#052962;display:inline-block;"></span>
+              <span style="font-size:13px;font-weight:600;color:#052962;">The Guardian</span>
+              <span style="color:#c3bcae;">&middot;</span>
+              <span style="font-size:13px;color:#9b937f;">2 Mar 2025</span>
+            </div>
+            <h3 dir="auto" style="font-family:'Newsreader',serif;font-weight:500;font-size:22px;line-height:1.3;margin:0 0 9px;">The families of fallen soldiers who are learning to grieve together</h3>
+            <p dir="auto" style="font-size:15px;color:#6b6457;line-height:1.55;margin:0 0 14px;">Around shared tables and quiet rooms, bereaved parents are finding that the weight feels a little more bearable when it is carried alongside others.</p>
+            <a href="#" class="p1-link" style="display:inline-flex;align-items:center;gap:6px;color:#3f5a45;font-size:14px;font-weight:600;text-decoration:none;">Read at The Guardian &rarr;</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- OWID CHART -->
+    <section style="margin-top:54px;background:#e1ebe2;border-radius:20px;padding:34px;">
+      <h2 style="font-family:'Newsreader',serif;font-weight:500;font-size:24px;margin:0 0 4px;color:#2f3b31;">You are not alone in this</h2>
+      <p style="color:#5d6b58;font-size:15px;margin:0 0 22px;max-width:60ch;">Across the world, a great many people live with anxiety and trauma. Seeing how common it is can make your own experience feel less isolating.</p>
+      <div style="position:relative;background:#fff;border-radius:14px;overflow:hidden;min-height:480px;border:1px solid #d3e0d5;">
+        <sc-if value="{{ owidLoading }}" hint-placeholder-val="{{ true }}">
+          <div style="position:absolute;inset:0;padding:26px;">
+            <div class="p1-skel" style="height:22px;width:55%;border-radius:6px;margin-bottom:24px;"></div>
+            <div class="p1-skel" style="height:340px;width:100%;border-radius:10px;"></div>
+            <p style="text-align:center;color:#9aa090;font-size:13px;margin-top:18px;">Loading chart from Our World in Data&hellip;</p>
+          </div>
+        </sc-if>
+        <sc-if value="{{ owidFailed }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:480px;text-align:center;padding:40px;">
+            <p style="font-size:16px;color:#5d6b58;max-width:42ch;margin:0;">The chart couldn&rsquo;t load right now. That&rsquo;s all right &mdash; the stories above are here whenever you&rsquo;re ready.</p>
+          </div>
+        </sc-if>
+        <iframe src="https://ourworldindata.org/grapher/anxiety-disorders-prevalence" loading="lazy" onLoad="{{ onOwidLoad }}" onError="{{ onOwidError }}" style="width:100%;height:480px;border:none;display:block;{{ owidFrameVis }}"></iframe>
+      </div>
+      <p style="font-size:13px;color:#7d8a76;margin:14px 0 0;">Source: Our World in Data &mdash; share of population with anxiety disorders.</p>
+    </section>
+
+    <!-- ACADEMIC -->
+    <section style="margin-top:54px;">
+      <h2 style="font-family:'Newsreader',serif;font-weight:500;font-size:27px;margin:0 0 6px;">Reading, made approachable</h2>
+      <p style="color:#7d7567;font-size:16px;margin:0 0 28px;">Research on grief and trauma &mdash; in plain terms, with the parts that match your topics highlighted.</p>
+
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <!-- Academic card 1 -->
+        <article style="background:#f3efe6;border:1px solid #e6ddcf;border-left:4px solid #7da984;border-radius:0 14px 14px 0;padding:22px 26px;">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px;">
+            <span style="font-family:ui-monospace,monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#7da984;font-weight:600;">Research &middot; peer-reviewed</span>
+          </div>
+          <h3 style="font-family:'Newsreader',serif;font-weight:500;font-size:21px;line-height:1.32;margin:0 0 8px;">Post-traumatic stress and prolonged grief in bereaved parents</h3>
+          <p style="font-size:13.5px;color:#8a826f;margin:0 0 12px;">R. Cohen &middot; Journal of Traumatic Stress &middot; 2023</p>
+          <p style="font-size:15px;color:#6b6457;line-height:1.55;margin:0 0 14px;">Parents who lose a child to sudden violence often experience grief and trauma at the same time. This review describes what that looks like and what tends to help.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;">
+            <div style="display:flex;flex-wrap:wrap;gap:7px;align-items:center;">
+              <span style="font-size:12px;color:#9aa090;">matched&nbsp;:</span>
+              <span style="border:1px solid #b9cdbc;color:#3f5a45;border-radius:999px;padding:3px 11px;font-size:12px;font-weight:500;">grief</span>
+              <span style="border:1px solid #b9cdbc;color:#3f5a45;border-radius:999px;padding:3px 11px;font-size:12px;font-weight:500;">PTSD</span>
+            </div>
+            <a href="#" class="p1-link" style="display:inline-flex;align-items:center;gap:6px;color:#3f5a45;font-size:14px;font-weight:600;text-decoration:none;white-space:nowrap;">Read this, gently &rarr;</a>
+          </div>
+        </article>
+        <!-- Academic card 2 -->
+        <article style="background:#f3efe6;border:1px solid #e6ddcf;border-left:4px solid #7da984;border-radius:0 14px 14px 0;padding:22px 26px;">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px;">
+            <span style="font-family:ui-monospace,monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#7da984;font-weight:600;">Research &middot; peer-reviewed</span>
+          </div>
+          <h3 style="font-family:'Newsreader',serif;font-weight:500;font-size:21px;line-height:1.32;margin:0 0 8px;">Memory and meaning-making after the sudden loss of a loved one</h3>
+          <p style="font-size:13.5px;color:#8a826f;margin:0 0 12px;">M. Levin &middot; Death Studies &middot; 2022</p>
+          <p style="font-size:15px;color:#6b6457;line-height:1.55;margin:0 0 14px;">How people hold on to, and slowly reshape, their memories of someone they have lost &mdash; and why returning to those memories can be part of healing.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;">
+            <div style="display:flex;flex-wrap:wrap;gap:7px;align-items:center;">
+              <span style="font-size:12px;color:#9aa090;">matched&nbsp;:</span>
+              <span style="border:1px solid #b9cdbc;color:#3f5a45;border-radius:999px;padding:3px 11px;font-size:12px;font-weight:500;">grief</span>
+              <span style="border:1px solid #b9cdbc;color:#3f5a45;border-radius:999px;padding:3px 11px;font-size:12px;font-weight:500;">memory</span>
+            </div>
+            <a href="#" class="p1-link" style="display:inline-flex;align-items:center;gap:6px;color:#3f5a45;font-size:14px;font-weight:600;text-decoration:none;white-space:nowrap;">Read this, gently &rarr;</a>
+          </div>
+        </article>
+        <!-- Academic card 3 -->
+        <article style="background:#f3efe6;border:1px solid #e6ddcf;border-left:4px solid #7da984;border-radius:0 14px 14px 0;padding:22px 26px;">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px;">
+            <span style="font-family:ui-monospace,monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#7da984;font-weight:600;">Research &middot; peer-reviewed</span>
+          </div>
+          <h3 style="font-family:'Newsreader',serif;font-weight:500;font-size:21px;line-height:1.32;margin:0 0 8px;">Acute stress responses among civilians exposed to a mass-casualty attack</h3>
+          <p style="font-size:13.5px;color:#8a826f;margin:0 0 12px;">D. Friedman &middot; European Journal of Psychotraumatology &middot; 2024</p>
+          <p style="font-size:15px;color:#6b6457;line-height:1.55;margin:0 0 14px;">What the body and mind do in the first days and weeks after a frightening event, and which early signs are a normal part of coping rather than cause for alarm.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;">
+            <div style="display:flex;flex-wrap:wrap;gap:7px;align-items:center;">
+              <span style="font-size:12px;color:#9aa090;">matched&nbsp;:</span>
+              <span style="border:1px solid #b9cdbc;color:#3f5a45;border-radius:999px;padding:3px 11px;font-size:12px;font-weight:500;">October 7</span>
+              <span style="border:1px solid #b9cdbc;color:#3f5a45;border-radius:999px;padding:3px 11px;font-size:12px;font-weight:500;">PTSD</span>
+            </div>
+            <a href="#" class="p1-link" style="display:inline-flex;align-items:center;gap:6px;color:#3f5a45;font-size:14px;font-weight:600;text-decoration:none;white-space:nowrap;">Read this, gently &rarr;</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section style="margin-top:58px;background:#7da984;border-radius:22px;padding:46px 40px;text-align:center;">
+      <h2 style="font-family:'Newsreader',serif;font-weight:500;font-size:28px;color:#fff;margin:0 0 10px;">Your full reading list is ready when you are</h2>
+      <p style="color:#eaf2ea;font-size:16px;margin:0 0 24px;max-width:48ch;margin-inline:auto;">We&rsquo;ll keep it here. Nothing disappears, and there&rsquo;s no rush.</p>
+      <a href="#" style="display:inline-block;background:#fff;color:#3f5a45;font-size:16px;font-weight:600;text-decoration:none;border-radius:999px;padding:13px 30px;">See your full reading list</a>
+    </section>
+
+    <!-- ALSO EXPLORE -->
+    <section style="margin-top:52px;padding-bottom:80px;">
+      <p style="font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#9aa090;margin:0 0 18px;">If you&rsquo;d like, you can also explore</p>
+      <div style="display:flex;flex-direction:column;gap:2px;">
+        <a href="#" class="p1-link" style="display:flex;align-items:baseline;gap:12px;padding:15px 4px;border-bottom:1px solid #ece4d6;text-decoration:none;color:#3f4639;">
+          <span style="font-family:'Newsreader',serif;font-size:18px;font-weight:500;flex-shrink:0;">Interactive Map</span>
+          <span style="font-size:14px;color:#8a826f;">where and when people reached out for help across Israel</span>
+        </a>
+        <a href="#" class="p1-link" style="display:flex;align-items:baseline;gap:12px;padding:15px 4px;border-bottom:1px solid #ece4d6;text-decoration:none;color:#3f4639;">
+          <span style="font-family:'Newsreader',serif;font-size:18px;font-weight:500;flex-shrink:0;">Trends</span>
+          <span style="font-size:14px;color:#8a826f;">what others have been searching for, and when</span>
+        </a>
+        <a href="#" class="p1-link" style="display:flex;align-items:baseline;gap:12px;padding:15px 4px;border-bottom:1px solid #ece4d6;text-decoration:none;color:#3f4639;">
+          <span style="font-family:'Newsreader',serif;font-size:18px;font-weight:500;flex-shrink:0;">Data Graphs</span>
+          <span style="font-size:14px;color:#8a826f;">gentle overviews of sleep, health, and recovery</span>
+        </a>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;emotionalState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;grieving&quot;,&quot;curious&quot;,&quot;distressed&quot;],&quot;default&quot;:&quot;grieving&quot;,&quot;tsType&quot;:&quot;\&quot;grieving\&quot; | \&quot;curious\&quot; | \&quot;distressed\&quot;&quot;}}">
+class Component extends DCLogic {
+  state = {
+    dir: 'ltr',
+    owid: 'loading',
+    topicsOpen: false,
+    topics: ['October 7', 'grief', 'PTSD', 'soldiers', 'memory'],
+    addVal: '',
+    moodOverride: null
+  };
+  COPY = {
+    grieving: {
+      eyebrow: 'A gentle place to understand',
+      headline: 'Understanding what your son carried \u2014 at your own pace.',
+      subcopy: 'There is no right way to do this, and no timeline. We\u2019ve gathered a few stories and findings that may help you make sense of what he lived through. Take what helps. Leave the rest.'
+    },
+    curious: {
+      eyebrow: 'A place to explore, at your pace',
+      headline: 'Making sense of October 7 \u2014 one story at a time.',
+      subcopy: 'You don\u2019t need any background to begin. We\u2019ve gathered stories and findings to help you understand what so many people are living through. Follow whatever draws you in.'
+    },
+    distressed: {
+      eyebrow: 'You\u2019re in a safe place',
+      headline: 'Take a breath. We\u2019ll go gently, together.',
+      subcopy: 'There\u2019s nothing you need to do right now. When you\u2019re ready, a few stories and findings are here \u2014 and they\u2019ll wait for you. There is no rush at all.'
+    }
+  };
+  removeTopic(t) { this.setState(s => ({ topics: s.topics.filter(x => x !== t) })); }
+  addTopic() {
+    const v = (this.state.addVal || '').trim();
+    if (!v) return;
+    this.setState(s => (s.topics.length >= 5 || s.topics.includes(v))
+      ? { addVal: '' }
+      : { topics: [...s.topics, v], addVal: '' });
+  }
+  renderVals() {
+    const topics = this.state.topics;
+    const mood = this.state.moodOverride || this.props.emotionalState || 'grieving';
+    const copy = this.COPY[mood] || this.COPY.grieving;
+    return {
+      mood,
+      showSupport: mood === 'grieving' || mood === 'distressed',
+      eyebrow: copy.eyebrow,
+      headline: copy.headline,
+      subcopy: copy.subcopy,
+      dir: this.state.dir,
+      langLabel: this.state.dir === 'ltr' ? '\u05e2\u05d1\u05e8\u05d9\u05ea' : 'English',
+      onToggleLang: () => this.setState(s => ({ dir: s.dir === 'ltr' ? 'rtl' : 'ltr' })),
+      topics,
+      topicCount: topics.length,
+      editTopics: topics.map(t => ({ label: t, onRemove: () => this.removeTopic(t) })),
+      topicsOpen: this.state.topicsOpen,
+      openTopics: () => this.setState({ topicsOpen: true }),
+      closeTopics: () => this.setState({ topicsOpen: false }),
+      canAdd: topics.length < 5,
+      atMax: topics.length >= 5,
+      addVal: this.state.addVal,
+      onAddChange: (e) => this.setState({ addVal: e.target.value }),
+      onAddKey: (e) => { if (e.key === 'Enter') { e.preventDefault(); this.addTopic(); } },
+      onAddTopic: () => this.addTopic(),
+      owidLoading: this.state.owid === 'loading',
+      owidFailed: this.state.owid === 'failed',
+      owidFrameVis: this.state.owid === 'ready' ? '' : 'opacity:0;position:absolute;inset:0;',
+      onOwidLoad: () => this.setState({ owid: 'ready' }),
+      onOwidError: () => this.setState({ owid: 'failed' })
+    };
+  }
+}
+</script>
+</body>
+</html>

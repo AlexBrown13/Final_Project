@@ -1,16 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import Navbar from '../components/Navbar.jsx'
 import BackendDown from '../components/BackendDown.jsx'
-import Score1Content from '../components/content/Score1Content.jsx'
-import Score2Content from '../components/content/Score2Content.jsx'
-import Score3Content from '../components/content/Score3Content.jsx'
-import BeginnerHero from '../components/results/BeginnerHero.jsx'
-import InformedHero from '../components/results/InformedHero.jsx'
-import ResearcherHero from '../components/results/ResearcherHero.jsx'
-import BeginnerPersonaCard from '../components/results/BeginnerPersonaCard.jsx'
-import InformedPersonaCard from '../components/results/InformedPersonaCard.jsx'
-import ResearcherPersonaCard from '../components/results/ResearcherPersonaCard.jsx'
+import Navbar from '../components/Navbar.jsx'
+import BeginnerResults from '../components/results/BeginnerResults.jsx'
+import InformedResults from '../components/results/InformedResults.jsx'
+import ResearcherResults from '../components/results/ResearcherResults.jsx'
 import '../components/results/results-components.css'
 import {
   USER_ID_KEY,
@@ -19,11 +13,46 @@ import {
   SCORE_CACHE_KEY,
   AUTH_TOKEN_KEY,
 } from '../config/storageKeys.js'
-import { useDirection } from '../context/useDirection.js'
 import { usePersona } from '../context/usePersona.js'
-import { fetchHealth, getResult, deleteSession } from '../utils/api.js'
+import { fetchHealth, getResult, getArticles } from '../utils/api.js'
+import { CURATED_STORIES } from '../components/results/storiesData.js'
 import { getApiBase } from '../config/api.js'
+import { scoreToPersona, normalizePersonaLabel, resolveRenderedPersona } from '../utils/persona.js'
 import styles from './ResultsPage.module.css'
+
+const MOCK_PROFILE = {
+  persona: 'beginner',
+  emotionalState: 'grieving',
+  contentPreference: 'stories',
+  interestTags: ['October 7', 'grief', 'PTSD', 'soldiers', 'memory'],
+  primaryTopic: 'grief',
+  headline: null,
+}
+
+function mapProfile(personaProfile, headline, score) {
+  const p = personaProfile || {}
+  return {
+    persona: normalizePersonaLabel(p.persona) || scoreToPersona(score),
+    emotionalState: p.emotional_state || undefined,
+    contentPreference: p.content_preference || undefined,
+    interestTags: Array.isArray(p.interest_tags) ? p.interest_tags : [],
+    primaryTopic: p.primary_topic || '',
+    headline: headline || undefined,
+  }
+}
+
+function mapArticle(a) {
+  return {
+    title: a.title || '',
+    year: a.year ?? '',
+    journal: a.journal || '',
+    firstAuthor: Array.isArray(a.authors) ? (a.authors[0] || '') : (a.authors || ''),
+    abstract: a.abstract || '',
+    doi: a.doi || '',
+    url: a.url || a.pdf_url || '',
+    matchedTags: Array.isArray(a.matched_tags) ? a.matched_tags : [],
+  }
+}
 
 function normalizeScore(n) {
   const s = Number(n)
@@ -31,40 +60,24 @@ function normalizeScore(n) {
   return 1
 }
 
-function scoreToPersona(s) {
-  if (s === 3) return 'researcher'
-  if (s === 2) return 'informed learner'
-  return 'beginner'
-}
-
-function clearQuizLocalState() {
-  try {
-    localStorage.removeItem(QUIZ_MESSAGES_KEY)
-    localStorage.removeItem(QUIZ_META_KEY)
-    localStorage.removeItem(SCORE_CACHE_KEY)
-  } catch {
-    /* ignore */
-  }
-}
-
 export default function ResultsPage() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { dir, locale } = useDirection()
   const { setPersona } = usePersona()
-  const rtl = dir === 'rtl'
 
   const routeScore =
     location.state?.score != null ? normalizeScore(location.state.score) : null
   const routePersona = location.state?.persona_profile ?? null
-  // true only when navigating from a freshly completed quiz — not from login redirect
   const routeFromQuiz = location.state?.fromQuiz === true
 
   const [health, setHealth] = useState(null)
   const [fetchedScore, setFetchedScore] = useState(null)
   const [personaProfile, setPersonaProfile] = useState(null)
+  const [headline, setHeadline] = useState(null)
+  const [articles, setArticles] = useState([])
+  const [articlesLoading, setArticlesLoading] = useState(true)
+  const [stories, setStories] = useState([])
   const [loadError, setLoadError] = useState(null)
-  const [retakeBusy, setRetakeBusy] = useState(false)
 
   const score = routeScore ?? fetchedScore
   const effectiveLoadError = routeScore != null ? null : loadError
@@ -75,9 +88,7 @@ export default function ResultsPage() {
       const { ok } = await fetchHealth()
       if (!cancelled) setHealth(ok)
     })()
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [])
 
   const recheckHealth = () => {
@@ -87,25 +98,19 @@ export default function ResultsPage() {
     })()
   }
 
-  // Fetch articles from OpenAlex only when the quiz was JUST completed.
-  // On login the user already has articles in the DB — no need to re-query OpenAlex.
   useEffect(() => {
     if (!routeFromQuiz || !score) return
-
     const token = localStorage.getItem(AUTH_TOKEN_KEY)
-    if (!token) return
-
     const quizUserId = localStorage.getItem(USER_ID_KEY)
-
+    if (!quizUserId) return
     ;(async () => {
       try {
         const base = getApiBase()
+        const headers = { 'Content-Type': 'application/json' }
+        if (token) headers['Authorization'] = `Bearer ${token}`
         await fetch(`${base}/api/articles`, {
           method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
+          headers,
           body: JSON.stringify({ quiz_user_id: quizUserId }),
         })
       } catch (err) {
@@ -124,22 +129,18 @@ export default function ResultsPage() {
     if (routePersona) {
       setPersonaProfile(routePersona)
     }
+    if (location.state?.headline != null) {
+      setHeadline(location.state.headline)
+    }
     setPersona(routePersona?.persona || scoreToPersona(routeScore))
   }, [routeScore, routePersona])
 
   useEffect(() => {
-    if (routeScore != null) {
-      return
-    }
-
+    if (routeScore != null) return
     let cancelled = false
     const run = async () => {
       let userId
-      try {
-        userId = localStorage.getItem(USER_ID_KEY)
-      } catch {
-        userId = null
-      }
+      try { userId = localStorage.getItem(USER_ID_KEY) } catch { userId = null }
 
       if (!userId) {
         if (!cancelled) setLoadError('no-user')
@@ -154,26 +155,15 @@ export default function ResultsPage() {
         setLoadError(null)
         setFetchedScore(s)
         setPersonaProfile(data.persona_profile ?? null)
+        setHeadline(data.headline ?? null)
         setPersona(data.persona_profile?.persona || scoreToPersona(s))
-        try {
-          localStorage.setItem(SCORE_CACHE_KEY, String(s))
-        } catch {
-          /* ignore */
-        }
+        try { localStorage.setItem(SCORE_CACHE_KEY, String(s)) } catch { /* ignore */ }
         return
       }
 
-      if (res.status === 400 && data?.completed === false) {
-        setLoadError('incomplete')
-        return
-      }
-
+      if (res.status === 400 && data?.completed === false) { setLoadError('incomplete'); return }
       if (res.status === 404) {
-        try {
-          localStorage.removeItem(SCORE_CACHE_KEY)
-        } catch {
-          /* ignore */
-        }
+        try { localStorage.removeItem(SCORE_CACHE_KEY) } catch { /* ignore */ }
         setLoadError('incomplete')
         return
       }
@@ -187,38 +177,68 @@ export default function ResultsPage() {
           setPersona(scoreToPersona(s))
           return
         }
-      } catch {
-        /* ignore */
-      }
+      } catch { /* ignore */ }
 
       setLoadError('unknown')
     }
-
     run()
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [routeScore])
 
-  const onRetake = async () => {
-    setRetakeBusy(true)
-    try {
-      const userId = localStorage.getItem(USER_ID_KEY)
-      const token = localStorage.getItem(AUTH_TOKEN_KEY)
-      if (userId) await deleteSession(userId, token)
-    } catch {
-      /* ignore */
-    }
-    clearQuizLocalState()
-    setRetakeBusy(false)
-    navigate('/', { replace: true })
-  }
+  useEffect(() => {
+    if (score == null) return
+    let cancelled = false
+    ;(async () => {
+      const mappedProfile = mapProfile(personaProfile, headline, score)
+
+      try {
+        let quizUserId
+        try { quizUserId = localStorage.getItem(USER_ID_KEY) } catch { quizUserId = null }
+        if (!cancelled) setArticlesLoading(true)
+
+        let { articles: raw } = await getArticles(quizUserId)
+
+        // No articles stored yet for this user (e.g. logged in or refreshed
+        // without coming straight from the quiz). Trigger a one-off ingest, then
+        // re-read. POST is graceful server-side; we still show what we get.
+        if (raw.length === 0 && quizUserId) {
+          try {
+            const base = getApiBase()
+            const token = localStorage.getItem(AUTH_TOKEN_KEY)
+            const headers = { 'Content-Type': 'application/json' }
+            if (token) headers['Authorization'] = `Bearer ${token}`
+            await fetch(`${base}/api/articles`, {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({ quiz_user_id: quizUserId }),
+            })
+            if (!cancelled) {
+              const retry = await getArticles(quizUserId)
+              raw = retry.articles
+            }
+          } catch { /* keep raw as [] */ }
+        }
+
+        if (!cancelled) setArticles(raw.map(mapArticle))
+      } catch {
+        if (!cancelled) setArticles([])
+      } finally {
+        if (!cancelled) setArticlesLoading(false)
+      }
+
+      // Curated, hand-vetted stories — hard-coded, no fetch, no topic match.
+      // Researchers get none; the cards localize each story to the active language.
+      if (mappedProfile.persona !== 'researcher') {
+        if (!cancelled) setStories(CURATED_STORIES)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [personaProfile, headline, score])
 
   if (health === null) {
     return (
       <div className={styles.page}>
-        <Navbar />
-        <main className={styles.main} lang={locale}>
+        <main className={styles.main}>
           <p className={styles.muted}>בודקים חיבור לשרת… / Checking server…</p>
         </main>
       </div>
@@ -228,35 +248,25 @@ export default function ResultsPage() {
   if (health === false) {
     return (
       <div className={styles.page}>
-        <Navbar />
-        <BackendDown onRetry={recheckHealth} dir={dir} />
+        <BackendDown onRetry={recheckHealth} />
       </div>
     )
   }
 
-  if (
-    effectiveLoadError === 'incomplete' ||
-    effectiveLoadError === 'no-user'
-  ) {
+  if (effectiveLoadError === 'incomplete' || effectiveLoadError === 'no-user') {
     return (
-      <div className={styles.page} data-score="2">
-        <Navbar />
-        <main className={styles.main} lang={locale}>
+      <div className={styles.page}>
+        <main className={styles.main}>
           <div className={styles.notice}>
             <h1 className={styles.noticeTitle}>נתוני שאלון חסרים</h1>
             <p className={styles.noticeBody} lang="en">
-              Complete the guided quiz first so we can tailor this page for
-              you.
+              Complete the guided quiz first so we can tailor this page for you.
             </p>
             <p className={styles.noticeBody}>
               יש להשלים תחילה את השאלון המודרך כדי שנוכל להתאים את התוכן.
             </p>
-            <button
-              type="button"
-              className={styles.primaryBtn}
-              onClick={() => navigate('/')}
-            >
-              {rtl ? 'לשאלון' : 'Go to quiz'}
+            <button type="button" className={styles.primaryBtn} onClick={() => navigate('/')}>
+              Go to quiz
             </button>
           </div>
         </main>
@@ -266,28 +276,17 @@ export default function ResultsPage() {
 
   if (score == null && effectiveLoadError === 'unknown') {
     return (
-      <div className={styles.page} data-score="2">
-        <Navbar />
-        <main className={styles.main} lang={locale}>
+      <div className={styles.page}>
+        <main className={styles.main}>
           <div className={styles.notice}>
             <h1 className={styles.noticeTitle}>לא הצלחנו לטעון את התוצאה</h1>
-            <p className={styles.noticeBody} lang="en">
-              Please try again, or return to the quiz.
-            </p>
+            <p className={styles.noticeBody} lang="en">Please try again, or return to the quiz.</p>
             <p className={styles.noticeBody}>אפשר לנסות שוב או לחזור לשאלון.</p>
-            <button
-              type="button"
-              className={styles.primaryBtn}
-              onClick={() => window.location.reload()}
-            >
-              {rtl ? 'רענון' : 'Refresh'}
+            <button type="button" className={styles.primaryBtn} onClick={() => window.location.reload()}>
+              Refresh
             </button>
-            <button
-              type="button"
-              className={styles.secondaryBtn}
-              onClick={() => navigate('/')}
-            >
-              {rtl ? 'לשאלון' : 'Quiz'}
+            <button type="button" className={styles.secondaryBtn} onClick={() => navigate('/')}>
+              Quiz
             </button>
           </div>
         </main>
@@ -298,36 +297,38 @@ export default function ResultsPage() {
   if (score == null) {
     return (
       <div className={styles.page}>
-        <Navbar />
-        <main className={styles.main} lang={locale}>
+        <main className={styles.main}>
           <p className={styles.muted}>טוענים תוכן מותאם… / Loading…</p>
         </main>
       </div>
     )
   }
 
-  const Content =
-    score === 1 ? Score1Content : score === 2 ? Score2Content : Score3Content
-  const Hero =
-    score === 1 ? BeginnerHero : score === 2 ? InformedHero : ResearcherHero
-  const PersonaCard =
-    score === 1 ? BeginnerPersonaCard : score === 2 ? InformedPersonaCard : ResearcherPersonaCard
+  const profile = personaProfile ? mapProfile(personaProfile, headline, score) : MOCK_PROFILE
+  // Persona profile is authoritative when present; otherwise derive from score
+  // so a researcher/informed user is never shadowed by MOCK_PROFILE's 'beginner'.
+  const persona = resolveRenderedPersona(personaProfile, score)
+
+  let personaView
+  if (persona === 'beginner') {
+    personaView = (
+      <BeginnerResults
+        profile={profile}
+        guardianStories={stories}
+        academicArticles={articles}
+        articlesLoading={articlesLoading}
+      />
+    )
+  } else if (persona === 'informed') {
+    personaView = <InformedResults profile={profile} guardianStories={stories} academicArticles={articles} articlesLoading={articlesLoading} />
+  } else {
+    personaView = <ResearcherResults profile={profile} academicArticles={articles} articlesLoading={articlesLoading} />
+  }
 
   return (
-    <div className={styles.page} data-score={String(score)}>
+    <>
       <Navbar />
-      <main className={styles.main} lang={locale}>
-        <Hero
-          onRetake={onRetake}
-          retakeBusy={retakeBusy}
-          rtl={rtl}
-          personaProfile={personaProfile}
-        />
-        {personaProfile && (
-          <PersonaCard profile={personaProfile} rtl={rtl} />
-        )}
-        <Content dir={dir} />
-      </main>
-    </div>
+      {personaView}
+    </>
   )
 }

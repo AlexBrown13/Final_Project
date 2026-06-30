@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { getApiBase } from "../../config/api.js";
-import { AUTH_TOKEN_KEY } from "../../config/storageKeys.js";
-import "./ArticleChatBubble.css";
+import { AUTH_TOKEN_KEY, USER_ID_KEY } from "../../config/storageKeys.js";
+import styles from "./ArticleChatBubble.module.css";
 
 export default function ArticleChatBubble() {
   const [open, setOpen] = useState(false);
@@ -11,18 +12,19 @@ export default function ArticleChatBubble() {
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
+  const token = localStorage.getItem(AUTH_TOKEN_KEY);
+  const quizUserId = localStorage.getItem(USER_ID_KEY);
+  const loggedIn = Boolean(token);
+
   useEffect(() => {
-    if (open) {
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-      inputRef.current?.focus();
-    }
-  }, [messages, open]);
+    if (!open || !loggedIn) return;
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    inputRef.current?.focus();
+  }, [messages, open, loggedIn]);
 
   const send = async () => {
     const q = input.trim();
     if (!q || loading) return;
-
-    const token = localStorage.getItem(AUTH_TOKEN_KEY);
     const next = [...messages, { role: "user", content: q }];
     setMessages(next);
     setInput("");
@@ -35,7 +37,7 @@ export default function ArticleChatBubble() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ question: q, history: messages }),
+        body: JSON.stringify({ question: q, history: messages, quiz_user_id: quizUserId }),
       });
       const data = await res.json();
       setMessages((prev) => [
@@ -55,7 +57,7 @@ export default function ArticleChatBubble() {
   return (
     <>
       <button
-        className="acb-bubble"
+        className={styles.bubble}
         onClick={() => setOpen((o) => !o)}
         aria-label="Open article assistant"
         title="Ask about your articles"
@@ -64,49 +66,65 @@ export default function ArticleChatBubble() {
       </button>
 
       {open && (
-        <div className="acb-panel" role="dialog" aria-label="Article assistant">
-          <div className="acb-header">
+        <div className={styles.panel} role="dialog" aria-label="Article assistant">
+          <div className={styles.header}>
             <span>Article Assistant</span>
-            <button className="acb-close" onClick={() => setOpen(false)} aria-label="Close">✕</button>
+            <button className={styles.close} onClick={() => setOpen(false)} aria-label="Close">✕</button>
           </div>
 
-          <div className="acb-messages">
-            {messages.length === 0 && (
-              <p className="acb-hint">Ask a question about your articles…</p>
-            )}
-            {messages.map((m, i) => (
-              <div key={i} className={`acb-msg acb-msg--${m.role}`}>
-                {m.content}
+          {loggedIn ? (
+            <>
+              <div className={styles.messages}>
+                {messages.length === 0 && (
+                  <p className={styles.hint}>Ask a question about your articles…</p>
+                )}
+                {messages.map((m, i) => (
+                  <div key={i} className={`${styles.msg} ${m.role === "user" ? styles.msgUser : styles.msgAssistant}`}>
+                    {m.content}
+                  </div>
+                ))}
+                {loading && (
+                  <div className={`${styles.msg} ${styles.msgAssistant} ${styles.typing}`}>
+                    <span /><span /><span />
+                  </div>
+                )}
+                <div ref={bottomRef} />
               </div>
-            ))}
-            {loading && (
-              <div className="acb-msg acb-msg--assistant acb-typing">
-                <span /><span /><span />
-              </div>
-            )}
-            <div ref={bottomRef} />
-          </div>
 
-          <div className="acb-input-row">
-            <input
-              ref={inputRef}
-              type="text"
-              className="acb-input"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && send()}
-              placeholder="Ask about your articles…"
-              disabled={loading}
-              maxLength={500}
-            />
-            <button
-              className="acb-send"
-              onClick={send}
-              disabled={!input.trim() || loading}
-            >
-              Send
-            </button>
-          </div>
+              <div className={styles.inputRow}>
+                <input
+                  ref={inputRef}
+                  type="text"
+                  className={styles.input}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && send()}
+                  placeholder="Ask about your articles…"
+                  disabled={loading}
+                  maxLength={500}
+                />
+                <button
+                  className={styles.send}
+                  onClick={send}
+                  disabled={!input.trim() || loading}
+                >
+                  Send
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className={styles.messages}>
+              <p className={styles.hint}>Log in to chat with a personalized AI about your articles.</p>
+              <Link
+                to="/auth/login"
+                className={styles.send}
+                style={{ textDecoration: "none", textAlign: "center", alignSelf: "center" }}
+                onClick={() => setOpen(false)}
+              >
+                Log in
+              </Link>
+            </div>
+          )}
         </div>
       )}
     </>

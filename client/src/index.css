@@ -2,63 +2,63 @@
 
 /* ── Persona themes ──────────────────────────────────────────────────── */
 
-/* Default + Beginner: Mint Cream background, Muted Teal accents */
+/* Default + Beginner: warm cream background, sage-green accents (matches p1 landing) */
 :root {
-  --color-bg: #e1ebe2;
-  --color-surface: #f8f9fa;
+  --color-bg: #faf8f4;
+  --color-surface: #ffffff;
   --color-primary: #7da984;
-  --color-primary-hover: #5a8863;
-  --color-text: #2d3f3a;
-  --color-muted: #6b857a;
-  --color-border: #c2d8c6;
-  --color-nav-bg: #f8f9fa;
-  --color-nav-border: rgba(125, 169, 132, 0.25);
+  --color-primary-hover: #3f5a45;
+  --color-text: #2c2823;
+  --color-muted: #6b6457;
+  --color-border: #e6ddcf;
+  --color-nav-bg: #fbf8f2;
+  --color-nav-border: rgba(125, 169, 132, 0.22);
   --radius: 14px;
   --shadow: 0 4px 20px rgba(125, 169, 132, 0.15);
-  --color-callout: #d4e4d8;
-  --color-bubble-ai: #d4e4d8;
-  --color-bubble-user: #c0d5c5;
+  --color-callout: #eef3ee;
+  --color-bubble-ai: #eef3ee;
+  --color-bubble-user: #e1ebe2;
 }
 
 /* Typography scaling — all rem values in the app scale automatically */
 html { font-size: 17px; }
 html[data-persona="informed-learner"] { font-size: 15px; }
-html[data-persona="researcher"] { font-size: 13px; }
+html[data-persona="researcher"] { font-size: 15px; }
 
-/* Informed learner: Granite — more serious, denser */
+/* Informed learner: Granite — more serious, denser (matches p2 landing) */
 html[data-persona="informed-learner"] {
-  --color-bg: #f0f5f2;
-  --color-surface: #f8f9fa;
+  --color-bg: #f4f5f3;
+  --color-surface: #ffffff;
   --color-primary: #4b645f;
-  --color-primary-hover: #374d49;
-  --color-text: #263830;
-  --color-muted: #5a726c;
-  --color-border: #bccec9;
-  --color-nav-bg: #f8f9fa;
+  --color-primary-hover: #3a4a45;
+  --color-text: #232a28;
+  --color-muted: #7a847f;
+  --color-border: #e0e4e1;
+  --color-nav-bg: #f8faf9;
   --color-nav-border: rgba(75, 100, 95, 0.2);
   --radius: 10px;
   --shadow: 0 2px 12px rgba(75, 100, 95, 0.12);
-  --color-callout: #d8e8e4;
-  --color-bubble-ai: #d8e8e4;
-  --color-bubble-user: #c8ddd8;
+  --color-callout: #eef1ee;
+  --color-bubble-ai: #eef1ee;
+  --color-bubble-user: #dde3df;
 }
 
-/* Researcher: Light Blue — clinical, professional, data-driven */
+/* Researcher: cool clinical blue — professional, data-driven (matches p3 landing) */
 html[data-persona="researcher"] {
-  --color-bg: #eaf4f7;
-  --color-surface: #f8f9fa;
-  --color-primary: #4a8fa3;
-  --color-primary-hover: #3a7a8c;
-  --color-text: #1e3d4a;
-  --color-muted: #4a7585;
-  --color-border: #9ec4d0;
-  --color-nav-bg: #f8f9fa;
-  --color-nav-border: rgba(158, 196, 208, 0.3);
+  --color-bg: #f7fafb;
+  --color-surface: #ffffff;
+  --color-primary: #2f6675;
+  --color-primary-hover: #244f5b;
+  --color-text: #1b2a31;
+  --color-muted: #5f747c;
+  --color-border: #d7e1e4;
+  --color-nav-bg: #f7fafb;
+  --color-nav-border: rgba(47, 102, 117, 0.22);
   --radius: 4px;
-  --shadow: 0 2px 8px rgba(158, 196, 208, 0.2);
-  --color-callout: #d2eaf1;
-  --color-bubble-ai: #d2eaf1;
-  --color-bubble-user: #b8dde8;
+  --shadow: 0 2px 8px rgba(47, 102, 117, 0.18);
+  --color-callout: #e7f0f3;
+  --color-bubble-ai: #e7f0f3;
+  --color-bubble-user: #d7e1e4;
 }
 /* ─────────────────────────────────────────────────────────────────────── */
 

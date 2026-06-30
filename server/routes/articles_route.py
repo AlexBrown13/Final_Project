@@ -1,9 +1,6 @@
 import re
-import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, verify_jwt_in_request
 from bson import ObjectId
 from bson.errors import InvalidId
 from services.mongo import articles_collection, chat_collection
@@ -37,52 +34,84 @@ def sanitize_tags(raw):
     return cleaned, None
 
 
-def rank_articles(articles: list, user_tags: list) -> list:
-    """
-    Rank articles using TF-IDF + cosine similarity for content relevance,
-    combined with click engagement and recency signals.
+# ── Persona boost keyword groups (Revamp.md PART 4, lines 220-224) ────────────
+_STORIES_KEYWORDS = ("case study", "narrative", "interview", "testimony",
+                     "survivor", "personal account", "qualitative")
+_RESEARCH_KEYWORDS = ("prevalence", "epidemiological", "randomized", "meta-analysis",
+                      "systematic review", "cohort", "longitudinal")
+_SUPPORT_KEYWORDS = ("support", "intervention", "treatment", "therapy",
+                     "recovery", "coping", "resilience")
+_PROFESSIONAL_KEYWORDS = ("clinical", "framework", "protocol", "evidence-based",
+                          "intervention", "efficacy")
+# Abstracts that are "purely epidemiological" get demoted for grieving/distressed users.
+_EPIDEMIOLOGICAL_KEYWORDS = ("prevalence", "epidemiological", "incidence",
+                             "meta-analysis", "systematic review", "cohort")
 
-    TF-IDF builds a term-frequency/inverse-document-frequency matrix over all
-    article texts. Cosine similarity then measures the angle between each
-    article vector and the user query vector — articles closer in direction
-    to the query rank higher regardless of document length.
+
+def persona_boost(abstract: str, emotional_state: str, content_preference: str) -> float:
+    """
+    Bounded [0.0, 1.0] persona-fit score from case-insensitive keyword matching on the
+    article abstract (NO ML). Per Revamp.md PART 4 (lines 220-224). content_preference and
+    emotional_state independently contribute; the demote rule subtracts for grieving/
+    distressed users when the abstract is purely epidemiological.
+    """
+    text = (abstract or "").lower()
+    if not text:
+        return 0.0
+
+    boost = 0.0
+
+    # content_preference contribution (0.5 if any group keyword present)
+    if content_preference == "stories" and any(k in text for k in _STORIES_KEYWORDS):
+        boost += 0.5
+    elif content_preference == "research" and any(k in text for k in _RESEARCH_KEYWORDS):
+        boost += 0.5
+
+    # emotional_state contribution (0.5 if any group keyword present)
+    if emotional_state in ("grieving", "distressed"):
+        if any(k in text for k in _SUPPORT_KEYWORDS):
+            boost += 0.5
+        # demote purely epidemiological abstracts for vulnerable users
+        if any(k in text for k in _EPIDEMIOLOGICAL_KEYWORDS) \
+                and not any(k in text for k in _SUPPORT_KEYWORDS):
+            boost -= 0.5
+    elif emotional_state == "professional":
+        if any(k in text for k in _PROFESSIONAL_KEYWORDS):
+            boost += 0.5
+
+    # bound to [0.0, 1.0]
+    return max(0.0, min(boost, 1.0))
+
+
+def rank_articles(articles: list, user_tags: list,
+                  emotional_state: str = "curious",
+                  content_preference: str = "mixed") -> list:
+    """
+    Sort articles using the content_score stored at ingestion time, combined
+    with live click engagement, recency, and a persona-fit boost. No ML inference
+    on reads — persona_boost is case-insensitive keyword matching on the abstract.
 
     Final score:
-      0.6 × cosine similarity (TF-IDF content relevance)
-      0.25 × click engagement (normalised, capped at 10 clicks)
-      0.15 × recency          (publication year, 2000–2026 range)
+      0.60 × content_score  (BM25+embedding, computed once at ingestion)
+      0.25 × click score    (normalised, capped at 10 clicks)
+      0.05 × recency        (publication year, 2000–2026 range)
+      0.10 × persona_boost  (keyword match on abstract vs emotional_state +
+                             content_preference, bounded [0.0, 1.0], no ML)
     """
     if not articles:
         return articles
 
-    docs = [
-        " ".join([(a.get("title") or ""), (a.get("abstract") or "")])
-        for a in articles
-    ]
-    query = " ".join(user_tags) if user_tags else "trauma Israel mental health"
-
-    try:
-        vectorizer = TfidfVectorizer(
-            stop_words="english",
-            ngram_range=(1, 2),
-            sublinear_tf=True,
-        )
-        corpus = docs + [query]
-        tfidf_matrix = vectorizer.fit_transform(corpus)
-        query_vec = tfidf_matrix[-1]
-        doc_matrix = tfidf_matrix[:-1]
-        similarities = cosine_similarity(query_vec, doc_matrix).flatten()
-    except Exception as e:
-        logger.warning(f"TF-IDF ranking failed, falling back to recency: {e}")
-        similarities = np.zeros(len(articles))
-
     scored = []
-    for i, article in enumerate(articles):
-        content_score = float(similarities[i])
+    for article in articles:
+        content_score = float(article.get("content_score") or 0.0)
         click_score = min(article.get("click_count", 0) / 10.0, 1.0)
         year = article.get("year") or 2000
         recency_score = max(0.0, min((int(year) - 2000) / 26.0, 1.0))
-        final = 0.6 * content_score + 0.25 * click_score + 0.15 * recency_score
+        boost = persona_boost(article.get("abstract"), emotional_state, content_preference)
+        final = (0.60 * content_score
+                 + 0.25 * click_score
+                 + 0.05 * recency_score
+                 + 0.10 * boost)
         scored.append((final, article))
 
     scored.sort(key=lambda x: x[0], reverse=True)
@@ -101,12 +130,33 @@ def build_query(tags):
 # ── Routes ──────────────────────────────────────────────────────────────────
 
 @articles_bp.route('/articles', methods=['GET'])
-@jwt_required()
 def get_articles():
+    # PUBLIC (optional JWT). Articles are keyed by whatever id triggered ingestion:
+    # the auth identity for logged-in users, or the quiz-session UUID for guests.
+    # We prefer the JWT identity and fall back to quiz_user_id so guests (and users
+    # whose articles were ingested before they logged in) still see their set.
+    # NOTE: a guest who later logs in will NOT automatically see guest-ingested
+    # articles under their new auth id — they remain under the quiz UUID. Do not
+    # "fix" this by force-rekeying; the RAG chat + this route both fall back to
+    # quiz_user_id, which is the intended boundary.
     try:
-        user_id = get_jwt_identity()
+        try:
+            verify_jwt_in_request(optional=True)
+            user_id = get_jwt_identity()
+        except Exception:
+            user_id = None
 
         quiz_user_id = request.args.get("quiz_user_id")
+        if not user_id:
+            user_id = quiz_user_id
+        # The logged-in identity may have no articles of its own while the quiz
+        # session UUID does (articles were ingested under the quiz id). Prefer the
+        # auth id, but fall back to quiz_user_id when it has no articles — mirrors
+        # the persona lookup below and the article-chat RAG fallback.
+        if quiz_user_id and quiz_user_id != user_id \
+                and not articles_collection.find_one({"user_id": user_id}, {"_id": 1}) \
+                and articles_collection.find_one({"user_id": quiz_user_id}, {"_id": 1}):
+            user_id = quiz_user_id
         session = chat_collection.find_one({"user_id": quiz_user_id}, {"persona_profile": 1}) if quiz_user_id else None
         persona_profile = session.get("persona_profile", {}) if session else {}
         user_tags = (persona_profile.get("interest_tags") or [])
@@ -124,6 +174,7 @@ def get_articles():
                 "abstract": 1,
                 "authors": 1,
                 "click_count": 1,
+                "content_score": 1,
             }
         )
 
@@ -132,7 +183,19 @@ def get_articles():
             article["_id"] = str(article["_id"])
             articles.append(article)
 
-        articles = rank_articles(articles, user_tags)
+        articles = rank_articles(
+            articles, user_tags,
+            emotional_state=persona_profile.get("emotional_state", "curious"),
+            content_preference=persona_profile.get("content_preference", "mixed"),
+        )
+
+        for article in articles:
+            title = (article.get("title") or "").lower()
+            abstract = (article.get("abstract") or "").lower()
+            article["matched_tags"] = [
+                tag for tag in user_tags
+                if tag.lower() in title or tag.lower() in abstract
+            ]
 
         return jsonify({"articles": articles, "persona_profile": persona_profile}), 200
     except Exception as e:
@@ -187,13 +250,18 @@ def update_profile():
 
 
 @articles_bp.route('/articles', methods=['POST'])
-@jwt_required()
 def articles():
     try:
-        user_id = get_jwt_identity()
+        try:
+            verify_jwt_in_request(optional=True)
+            user_id = get_jwt_identity()
+        except Exception:
+            user_id = None
 
         body = request.get_json(silent=True) or {}
         quiz_user_id = body.get("quiz_user_id")
+        if not user_id:
+            user_id = quiz_user_id
 
         persona_profile = {}
         if quiz_user_id:

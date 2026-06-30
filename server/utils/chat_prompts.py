@@ -47,14 +47,15 @@ Persona definitions — read carefully before choosing:
 - Motivated by personal experience, emotional connection, or general curiosity
 - Asks "what is trauma" level questions; unfamiliar with clinical terminology
 - Wants accessible explanations, personal stories, and practical support resources
-- Signals: "I went through something", "I want to understand", "for myself", "a family member"
+- Signals: "I went through something", "I want to understand", "for myself", "a family member",
+  "I'm new to this", "I don't know much", "I'm just curious", "I heard about it", "I want to learn"
 
 "informed learner"
 - Some background: student, educator, social worker, journalist, or engaged layperson
 - Knows basic concepts (trauma, PTSD, resilience) but lacks clinical or research depth
 - Interested in BOTH human stories and some data or research
 - Wants to apply knowledge — to help others, complete coursework, or inform their work
-- Signals: "I study", "I work with people", "I teach", "for my job", "I want to learn more"
+- Signals: "I study", "I work with people", "I teach", "for my job", "I work in mental health"
 
 "researcher"
 - Strong academic or clinical background: psychologist, researcher, doctor, policy analyst
@@ -64,14 +65,16 @@ Persona definitions — read carefully before choosing:
 - Signals: "I'm researching", "for my thesis", "clinical data", "epidemiological", "October 7 prevalence"
 
 Edge-case rules:
+- If the user says they are new, unfamiliar, or just curious with no professional context → always "beginner"
 - A social worker or educator who knows some terms but focuses on human stories → "informed learner"
-- Someone who uses academic words they cannot define or explain → "beginner" or "informed learner"
+- Someone who uses academic words they cannot define or explain → "beginner"
 - A professional writing casually → judge by WHAT they want (depth + data = researcher), not style
-- When in doubt between "beginner" and "informed learner" → choose "informed learner"
+- When in doubt between "beginner" and "informed learner" → choose "beginner" unless the user
+  clearly demonstrated prior knowledge or a professional/academic context
 - When in doubt between "informed learner" and "researcher" → choose "informed learner" unless
   the user clearly stated research, clinical, or academic goals
 
-Provide only valid JSON with these five fields:
+Provide only valid JSON with these seven fields:
 - persona: one of "beginner", "informed learner", "researcher"
 - interest_tags: list of 3–5 specific topic tags derived from the user's answers.
   Tags must be concrete and differentiating — specific enough to distinguish one article from another.
@@ -86,6 +89,23 @@ Provide only valid JSON with these five fields:
 - primary_topic: the single most specific topic or group this user cares about most
   (e.g. "children", "veterans", "PTSD treatment", "October 7", "resilience", "domestic violence")
   — this is used to personalize the order and emphasis of content shown to the user
+- emotional_state: one of "grieving", "distressed", "curious", "professional", "neutral"
+  Infer the user's emotional posture toward the topic from tone and word choice:
+  "grieving" = personal loss, a family member, October 7 personally, bereavement;
+  "distressed" = current active struggle, overwhelm, or crisis language (sub-threshold —
+  distress.py already intercepts above-threshold crisis);
+  "curious" = exploratory, intellectual, enthusiastic about learning, broad questions;
+  "professional" = detached clinical framing, third-person ("my clients", "the population I work with"),
+  no personal emotional language;
+  "neutral" = no strong signal, matter-of-fact (default, most common case).
+  This drives the AI assistant's response tone (B-3) and content framing.
+  Must be one of the five exact strings listed (closed enum).
+- content_preference: one of "stories", "research", "mixed"
+  The machine-readable form of preferred_content. "stories" = human accounts, personal testimonies,
+  accessible journalism; "research" = data, statistics, academic papers, clinical frameworks;
+  "mixed" = both, or unclear. This companion to the free-text preferred_content (which is PRESERVED)
+  drives article mix and persona_boost (B-4).
+  Must be one of the three exact strings listed (closed enum).
 - search_query: an effective OpenAlex search query (see rules below)
 
 Search query rules:
@@ -100,7 +120,7 @@ Search query rules:
 
 Rules:
 - Return only valid JSON with no markdown fences or extra explanation
-- All five fields are required — do not omit any
+- All seven fields are required — do not omit any
 """
 
 # Language-specific openers shown directly to the user as the first question.

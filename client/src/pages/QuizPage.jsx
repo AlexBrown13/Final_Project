@@ -145,7 +145,7 @@ export default function QuizPage() {
           return;
         }
         if (data?.completed && data.score != null) {
-          goResults(Number(data.score));
+          goResults(Number(data.score), data.persona_profile || null);
           return;
         }
       }
@@ -186,7 +186,7 @@ export default function QuizPage() {
         const userId = getOrCreateUserId();
         const { res, data } = await getResult(userId);
         if (res.ok && data.completed && data.score != null) {
-          goResults(Number(data.score));
+          goResults(Number(data.score), data.persona_profile || null);
           return;
         }
 

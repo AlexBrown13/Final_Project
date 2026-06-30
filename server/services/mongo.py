@@ -46,6 +46,7 @@ chat_collection = db["conversation"]
 try:
     chat_collection.create_index("user_id", unique=True)
     chat_collection.create_index("completed")
+    chat_collection.create_index("auth_user_id", sparse=True)
 except Exception as e:
     logger.warning(f"Failed to create chat collection indexes: {e}")
 
@@ -53,6 +54,12 @@ users_collection = db["users"]
 calls_collection = db['calls']
 trends_collection = db["trends"]
 articles_collection = db["articles"]
+
+try:
+    articles_collection.create_index([("user_id", 1), ("openalex_id", 1)], unique=True)
+except Exception as e:
+    logger.warning(f"Failed to create articles collection indexes: {e}")
+
 token_blocklist_collection = db["token_blocklist"]
 ai_assistant_collection = db["ai_assistant"]
 

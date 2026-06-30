@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0;}
+  @keyframes p2shimmer{0%{background-position:-360px 0;}100%{background-position:360px 0;}}
+  .p2-skel{background:linear-gradient(90deg,#e3e7e4 0%,#eef1ee 50%,#e3e7e4 100%);background-size:720px 100%;animation:p2shimmer 1.6s infinite linear;}
+  .p2-stripe{background-image:repeating-linear-gradient(135deg,#d6ddd9 0 10px,#dfe5e1 10px 20px);}
+  .p2-card{transition:border-color .18s ease, box-shadow .18s ease;}
+  .p2-card:hover{border-color:#4b645f;box-shadow:0 10px 30px -24px rgba(35,42,40,.5);}
+  .p2-link:hover{color:#4b645f;}
+  @keyframes p2fade{from{opacity:0;}to{opacity:1;}}
+  @keyframes p2rise{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+  .p2-nav{animation:p2fade .5s ease both;}
+  .p2-hero>*{opacity:0;animation:p2rise .6s cubic-bezier(.2,.6,.3,1) both;}
+  .p2-hero>*:nth-child(1){animation-delay:.1s;}
+  .p2-hero>*:nth-child(2){animation-delay:.24s;}
+  .p2-hero>*:nth-child(3){animation-delay:.38s;}
+  .p2-hero>*:nth-child(4){animation-delay:.5s;}
+  .p2-reveal>*{opacity:0;animation:p2rise .6s cubic-bezier(.2,.6,.3,1) both;}
+  .p2-reveal>*:nth-child(1){animation:none;opacity:1;transform:none;}
+  .p2-reveal>*:nth-child(2){animation-delay:.78s;}
+  .p2-reveal>*:nth-child(3){animation-delay:.92s;}
+  .p2-reveal>*:nth-child(4){animation-delay:1.04s;}
+  .p2-feed-head{opacity:0;animation:p2rise .55s cubic-bezier(.2,.6,.3,1) both;animation-delay:.34s;}
+  .p2-feedcol>article{opacity:0;animation:p2rise .55s cubic-bezier(.2,.6,.3,1) both;}
+  .p2-feedcol>article:nth-child(1){animation-delay:.46s;}
+  .p2-feedcol>article:nth-child(2){animation-delay:.6s;}
+  @media (prefers-reduced-motion: reduce){.p2-nav,.p2-hero>*,.p2-reveal>*,.p2-feed-head,.p2-feedcol>article{animation:none!important;opacity:1!important;transform:none!important;}}
+</style>
+</helmet>
+<div dir="{{ dir }}" style="font-family:'Archivo',-apple-system,sans-serif;background:#f4f5f3;color:#232a28;min-height:100vh;font-size:16px;line-height:1.55;">
+
+  <!-- NAV -->
+  <nav class="p2-nav" style="display:flex;align-items:center;justify-content:space-between;padding:16px 44px;background:#4b645f;color:#fff;">
+    <div style="display:flex;align-items:center;gap:11px;">
+      <div style="width:24px;height:24px;border-radius:5px;background:#9bb0aa;"></div>
+      <span style="font-size:18px;font-weight:600;letter-spacing:-.01em;">trauma education</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:22px;">
+      <span style="font-size:13px;color:#b9c6c2;font-weight:500;">Results</span>
+      <button onClick="{{ onToggleLang }}" style="font-family:inherit;font-size:13px;font-weight:600;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:6px 14px;cursor:pointer;">{{ langLabel }}</button>
+    </div>
+  </nav>
+
+  <!-- HERO BAND -->
+  <header style="background:#4b645f;color:#fff;padding:14px 44px 52px;">
+    <div class="p2-hero" style="max-width:1120px;margin:0 auto;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">
+        <span style="font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#b9c6c2;">Informed Learner</span>
+        <span style="width:4px;height:4px;border-radius:50%;background:#7da984;"></span>
+        <span style="font-size:12px;font-weight:600;letter-spacing:.04em;color:#9bb0aa;">Primary topic &mdash; PTSD</span>
+      </div>
+      <h1 style="font-family:'Source Serif 4',serif;font-weight:500;font-size:38px;line-height:1.25;letter-spacing:-.01em;margin:0 0 24px;max-width:24ch;text-wrap:pretty;">{{ headline }}</h1>
+      <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:center;">
+        <div style="display:inline-flex;align-items:center;gap:9px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:9px 15px;">
+          <span style="width:7px;height:7px;border-radius:50%;background:#7da984;"></span>
+          <span style="font-size:13px;font-weight:600;color:#eaf0ee;">{{ prefLabel }}</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <sc-for list="{{ topics }}" as="t" hint-placeholder-count="5">
+            <span style="display:inline-flex;align-items:center;background:rgba(255,255,255,.14);color:#fff;border-radius:6px;padding:6px 13px;font-size:13px;font-weight:500;">{{ t }}</span>
+          </sc-for>
+          <button onClick="{{ openTopics }}" class="p2-link" style="background:transparent;border:1px dashed rgba(255,255,255,.4);border-radius:6px;color:#cdd9d5;font-size:13px;cursor:pointer;padding:6px 13px;font-family:inherit;">adjust</button>
+        </div>
+      </div>
+
+      <!-- ADJUST PANEL -->
+      <sc-if value="{{ topicsOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:18px;background:#fff;color:#232a28;border-radius:10px;padding:20px 22px;max-width:580px;">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:13px;">
+            <span style="font-size:14px;font-weight:700;letter-spacing:.02em;">EDIT INTEREST TAGS</span>
+            <span style="font-size:13px;color:#8a938f;">{{ topicCount }} / 5</span>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+            <sc-for list="{{ editTopics }}" as="t" hint-placeholder-count="5">
+              <span style="display:inline-flex;align-items:center;gap:7px;background:#eef1ee;color:#3a4a45;border-radius:6px;padding:6px 8px 6px 13px;font-size:13px;font-weight:500;">
+                {{ t.label }}
+                <button onClick="{{ t.onRemove }}" aria-label="remove" style="width:17px;height:17px;border-radius:4px;border:none;background:#cbd5d1;color:#3a4a45;font-size:12px;cursor:pointer;line-height:1;">&times;</button>
+              </span>
+            </sc-for>
+          </div>
+          <sc-if value="{{ canAdd }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;gap:8px;">
+              <input value="{{ addVal }}" onChange="{{ onAddChange }}" onKeyDown="{{ onAddKey }}" placeholder="add a tag&hellip;" style="flex:1;font-family:inherit;font-size:13px;border:1px solid #d4dcd8;border-radius:7px;padding:9px 12px;background:#f8faf9;color:#232a28;outline:none;" />
+              <button onClick="{{ onAddTopic }}" style="font-family:inherit;font-size:13px;font-weight:600;background:#4b645f;color:#fff;border:none;border-radius:7px;padding:9px 18px;cursor:pointer;">Add</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ atMax }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:0;font-size:13px;color:#8a938f;">Maximum of five tags. Remove one to add another.</p>
+          </sc-if>
+          <button onClick="{{ closeTopics }}" style="margin-top:14px;background:transparent;border:none;color:#7a847f;font-size:13px;cursor:pointer;text-decoration:underline;padding:0;">close</button>
+        </div>
+      </sc-if>
+    </div>
+  </header>
+
+  <main class="p2-reveal" style="max-width:1120px;margin:0 auto;padding:44px;">
+
+    <!-- BALANCED TWO-COLUMN FEED -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:34px;">
+
+      <!-- STORIES COLUMN -->
+      <div>
+        <div class="p2-feed-head" style="display:flex;align-items:center;gap:10px;padding-bottom:13px;border-bottom:2px solid #4b645f;margin-bottom:22px;">
+          <span style="width:16px;height:16px;border-radius:3px;background:#052962;"></span>
+          <span style="font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;">Stories &middot; The Guardian</span>
+        </div>
+        <div class="p2-feedcol" style="display:flex;flex-direction:column;gap:22px;">
+          <article class="p2-card" style="background:#fff;border:1px solid #e0e4e1;border-radius:12px;overflow:hidden;">
+            <div class="p2-stripe" style="height:148px;position:relative;">
+              <span style="position:absolute;inset:auto 0 10px;text-align:center;font-family:ui-monospace,monospace;font-size:10px;letter-spacing:.1em;color:#8a938f;text-transform:uppercase;">guardian image</span>
+            </div>
+            <div style="padding:18px 20px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                <span style="font-size:12px;font-weight:700;color:#052962;">The Guardian</span>
+                <span style="color:#c3ccc8;">&middot;</span>
+                <span style="font-size:12px;color:#8a938f;">28 Jan 2025</span>
+              </div>
+              <h3 dir="auto" style="font-size:18px;font-weight:600;line-height:1.45;margin:0 0 9px;letter-spacing:-.01em;">המטפלים בטראומה בישראל קורסים תחת העומס &mdash; ובשקט מטפלים זה בזה כדי להחזיק מעמד</h3>
+              <p dir="auto" style="font-size:14px;color:#5c6561;line-height:1.6;margin:0 0 13px;">קלינאים מתארים כיצד הם נושאים את האבל של המטופלים שלהם לצד שלהם, ואת הרשתות הלא־פורמליות ששומרות על המקצוע מעל המים.</p>
+              <a href="#" class="p2-link" style="font-size:13px;font-weight:600;color:#4b645f;text-decoration:none;">Read at The Guardian &rarr;</a>
+            </div>
+          </article>
+          <sc-if value="{{ showSecondStory }}" hint-placeholder-val="{{ true }}">
+          <article class="p2-card" style="background:#fff;border:1px solid #e0e4e1;border-radius:12px;overflow:hidden;">
+            <div class="p2-stripe" style="height:148px;position:relative;">
+              <span style="position:absolute;inset:auto 0 10px;text-align:center;font-family:ui-monospace,monospace;font-size:10px;letter-spacing:.1em;color:#8a938f;text-transform:uppercase;">guardian image</span>
+            </div>
+            <div style="padding:18px 20px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                <span style="font-size:12px;font-weight:700;color:#052962;">The Guardian</span>
+                <span style="color:#c3ccc8;">&middot;</span>
+                <span style="font-size:12px;color:#8a938f;">9 Dec 2024</span>
+              </div>
+              <h3 dir="auto" style="font-size:18px;font-weight:600;line-height:1.34;margin:0 0 9px;letter-spacing:-.01em;">After the sirens: how teachers are helping children name their fear</h3>
+              <p dir="auto" style="font-size:14px;color:#5c6561;line-height:1.5;margin:0 0 13px;">In classrooms across the country, simple routines and shared language are giving young students a way to talk about what frightens them.</p>
+              <a href="#" class="p2-link" style="font-size:13px;font-weight:600;color:#4b645f;text-decoration:none;">Read at The Guardian &rarr;</a>
+            </div>
+          </article>
+          </sc-if>
+        </div>
+      </div>
+
+      <!-- RESEARCH COLUMN -->
+      <div>
+        <div class="p2-feed-head" style="display:flex;align-items:center;gap:10px;padding-bottom:13px;border-bottom:2px solid #7da984;margin-bottom:22px;">
+          <span style="width:16px;height:16px;border-radius:50%;border:3px solid #7da984;"></span>
+          <span style="font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;">Research &middot; peer-reviewed</span>
+        </div>
+        <div class="p2-feedcol" style="display:flex;flex-direction:column;gap:22px;">
+          <article class="p2-card" style="background:#eef1ee;border:1px solid #dde3df;border-top:3px solid #7da984;border-radius:0 0 12px 12px;padding:20px 22px;">
+            <span style="font-family:ui-monospace,monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#7a8a82;font-weight:600;">Journal article</span>
+            <h3 style="font-family:'Source Serif 4',serif;font-size:19px;font-weight:600;line-height:1.32;margin:8px 0 10px;">Evidence-based interventions for PTSD in conflict-exposed populations</h3>
+            <p style="font-size:12.5px;color:#7a847f;margin:0 0 11px;font-weight:500;">S. Mizrahi &middot; Clinical Psychology Review &middot; 2024</p>
+            <p style="font-size:14px;color:#5c6561;line-height:1.5;margin:0 0 14px;">A systematic comparison of trauma-focused therapies, with attention to which approaches hold up in settings of ongoing rather than past threat.</p>
+            <div style="display:flex;flex-wrap:wrap;gap:7px;align-items:center;">
+              <span style="font-size:11px;color:#9aa39e;">matched</span>
+              <span style="background:#dce8de;color:#3a5a42;border-radius:4px;padding:3px 10px;font-size:12px;font-weight:600;">PTSD</span>
+              <span style="background:#dce8de;color:#3a5a42;border-radius:4px;padding:3px 10px;font-size:12px;font-weight:600;">treatment</span>
+            </div>
+          </article>
+          <sc-if value="{{ showSecondResearch }}" hint-placeholder-val="{{ true }}">
+          <article class="p2-card" style="background:#eef1ee;border:1px solid #dde3df;border-top:3px solid #7da984;border-radius:0 0 12px 12px;padding:20px 22px;">
+            <span style="font-family:ui-monospace,monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#7a8a82;font-weight:600;">Journal article</span>
+            <h3 style="font-family:'Source Serif 4',serif;font-size:19px;font-weight:600;line-height:1.32;margin:8px 0 10px;">Building resilience in children after community-wide trauma</h3>
+            <p style="font-size:12.5px;color:#7a847f;margin:0 0 11px;font-weight:500;">A. Barak &middot; Journal of Child Psychology &amp; Psychiatry &middot; 2023</p>
+            <p style="font-size:14px;color:#5c6561;line-height:1.5;margin:0 0 14px;">Longitudinal findings on the school- and family-level factors that predict which children recover well, and which need earlier support.</p>
+            <div style="display:flex;flex-wrap:wrap;gap:7px;align-items:center;">
+              <span style="font-size:11px;color:#9aa39e;">matched</span>
+              <span style="background:#dce8de;color:#3a5a42;border-radius:4px;padding:3px 10px;font-size:12px;font-weight:600;">children</span>
+              <span style="background:#dce8de;color:#3a5a42;border-radius:4px;padding:3px 10px;font-size:12px;font-weight:600;">resilience</span>
+            </div>
+          </article>
+          </sc-if>
+          <sc-if value="{{ showThirdResearch }}" hint-placeholder-val="{{ false }}">
+          <article class="p2-card" style="background:#eef1ee;border:1px solid #dde3df;border-top:3px solid #7da984;border-radius:0 0 12px 12px;padding:20px 22px;">
+            <span style="font-family:ui-monospace,monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#7a8a82;font-weight:600;">Journal article</span>
+            <h3 style="font-family:'Source Serif 4',serif;font-size:19px;font-weight:600;line-height:1.32;margin:8px 0 10px;">Prolonged grief and complicated bereavement after sudden, violent loss</h3>
+            <p style="font-size:12.5px;color:#7a847f;margin:0 0 11px;font-weight:500;">T. Shalev &middot; Journal of Affective Disorders &middot; 2024</p>
+            <p style="font-size:14px;color:#5c6561;line-height:1.5;margin:0 0 14px;">Distinguishing normative grief from prolonged grief disorder, and the brief screening approaches that help practitioners identify who needs specialist referral.</p>
+            <div style="display:flex;flex-wrap:wrap;gap:7px;align-items:center;">
+              <span style="font-size:11px;color:#9aa39e;">matched</span>
+              <span style="background:#dce8de;color:#3a5a42;border-radius:4px;padding:3px 10px;font-size:12px;font-weight:600;">grief</span>
+              <span style="background:#dce8de;color:#3a5a42;border-radius:4px;padding:3px 10px;font-size:12px;font-weight:600;">treatment</span>
+            </div>
+          </article>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+
+    <!-- OWID -->
+    <section style="margin-top:48px;">
+      <div style="margin-bottom:18px;">
+        <span style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#7a847f;">Data context</span>
+        <h2 style="font-size:21px;font-weight:600;margin:7px 0 4px;letter-spacing:-.01em;">Mental health in the wider picture</h2>
+        <p style="font-size:14px;color:#5c6561;margin:0;max-width:62ch;">Two views to set the populations you work with against the global picture &mdash; overall burden, and how depression prevalence compares across countries.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:22px;">
+
+        <!-- chart A -->
+        <div style="border:1px solid #e0e4e1;border-radius:14px;background:#fff;overflow:hidden;">
+          <div style="padding:16px 20px 12px;">
+            <h3 style="font-size:15px;font-weight:600;margin:0 0 2px;">Living with a mental or substance-use disorder</h3>
+            <p style="font-size:12.5px;color:#7a847f;margin:0;">Share of population, global picture.</p>
+          </div>
+          <div style="position:relative;border-top:1px solid #eef1ee;min-height:440px;">
+            <sc-if value="{{ owidALoading }}" hint-placeholder-val="{{ true }}">
+              <div style="position:absolute;inset:0;padding:20px;">
+                <div class="p2-skel" style="height:18px;width:50%;border-radius:5px;margin-bottom:18px;"></div>
+                <div class="p2-skel" style="height:340px;width:100%;border-radius:8px;"></div>
+                <p style="text-align:center;color:#9aa39e;font-size:12px;margin-top:14px;">Loading Our World in Data&hellip;</p>
+              </div>
+            </sc-if>
+            <sc-if value="{{ owidAFailed }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:center;justify-content:center;min-height:440px;text-align:center;padding:32px;">
+                <p style="font-size:14px;color:#5c6561;max-width:36ch;margin:0;">This chart is unavailable right now. The other views are unaffected.</p>
+              </div>
+            </sc-if>
+            <iframe src="https://ourworldindata.org/grapher/share-with-mental-and-substance-disorders" loading="lazy" onLoad="{{ onOwidALoad }}" onError="{{ onOwidAError }}" style="width:100%;height:440px;border:none;display:block;{{ owidAFrameVis }}"></iframe>
+          </div>
+          <p style="font-size:11.5px;color:#9aa39e;padding:10px 20px;margin:0;border-top:1px solid #eef1ee;">Source: Our World in Data &middot; Global Burden of Disease.</p>
+        </div>
+
+        <!-- chart B -->
+        <div style="border:1px solid #e0e4e1;border-radius:14px;background:#fff;overflow:hidden;">
+          <div style="padding:16px 20px 12px;">
+            <h3 style="font-size:15px;font-weight:600;margin:0 0 2px;">Depression prevalence, by country</h3>
+            <p style="font-size:12.5px;color:#7a847f;margin:0;">Where Israel sits in an international comparison.</p>
+          </div>
+          <div style="position:relative;border-top:1px solid #eef1ee;min-height:440px;">
+            <sc-if value="{{ owidBLoading }}" hint-placeholder-val="{{ true }}">
+              <div style="position:absolute;inset:0;padding:20px;">
+                <div class="p2-skel" style="height:18px;width:50%;border-radius:5px;margin-bottom:18px;"></div>
+                <div class="p2-skel" style="height:340px;width:100%;border-radius:8px;"></div>
+                <p style="text-align:center;color:#9aa39e;font-size:12px;margin-top:14px;">Loading Our World in Data&hellip;</p>
+              </div>
+            </sc-if>
+            <sc-if value="{{ owidBFailed }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:center;justify-content:center;min-height:440px;text-align:center;padding:32px;">
+                <p style="font-size:14px;color:#5c6561;max-width:36ch;margin:0;">This chart is unavailable right now. The other views are unaffected.</p>
+              </div>
+            </sc-if>
+            <iframe src="https://ourworldindata.org/grapher/depressive-disorders-prevalence-ihme" loading="lazy" onLoad="{{ onOwidBLoad }}" onError="{{ onOwidBError }}" style="width:100%;height:440px;border:none;display:block;{{ owidBFrameVis }}"></iframe>
+          </div>
+          <p style="font-size:11.5px;color:#9aa39e;padding:10px 20px;margin:0;border-top:1px solid #eef1ee;">Source: Our World in Data &middot; IHME GBD 2021.</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section style="margin-top:44px;display:flex;align-items:center;justify-content:space-between;gap:30px;background:#4b645f;border-radius:14px;padding:32px 38px;color:#fff;">
+      <div>
+        <h2 style="font-size:22px;font-weight:600;margin:0 0 6px;letter-spacing:-.01em;">Your complete personalized reading list</h2>
+        <p style="font-size:15px;color:#cdd9d5;margin:0;">Stories and research, organized around the tags you follow.</p>
+      </div>
+      <a href="#" style="flex-shrink:0;background:#fff;color:#4b645f;font-size:15px;font-weight:700;text-decoration:none;border-radius:8px;padding:13px 26px;">Open full list &rarr;</a>
+    </section>
+
+    <!-- ALSO EXPLORE -->
+    <section style="margin-top:42px;">
+      <p style="font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#9aa39e;margin:0 0 16px;">Also explore</p>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+        <a href="#" class="p2-card" style="display:block;background:#fff;border:1px solid #e0e4e1;border-radius:10px;padding:18px 20px;text-decoration:none;color:#232a28;">
+          <span style="font-size:15px;font-weight:600;display:block;margin-bottom:5px;">Interactive Map</span>
+          <span style="font-size:13px;color:#7a847f;line-height:1.45;">Crisis-line call records across Israeli cities, over time.</span>
+        </a>
+        <a href="#" class="p2-card" style="display:block;background:#fff;border:1px solid #e0e4e1;border-radius:10px;padding:18px 20px;text-decoration:none;color:#232a28;">
+          <span style="font-size:15px;font-weight:600;display:block;margin-bottom:5px;">Trends</span>
+          <span style="font-size:13px;color:#7a847f;line-height:1.45;">Search interest in trauma terms across Israel.</span>
+        </a>
+        <a href="#" class="p2-card" style="display:block;background:#fff;border:1px solid #e0e4e1;border-radius:10px;padding:18px 20px;text-decoration:none;color:#232a28;">
+          <span style="font-size:15px;font-weight:600;display:block;margin-bottom:5px;">Data Graphs</span>
+          <span style="font-size:13px;color:#7a847f;line-height:1.45;">Addictions, sleep, domestic violence, system load.</span>
+        </a>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;emotionalState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;professional&quot;,&quot;curious&quot;,&quot;grieving&quot;],&quot;default&quot;:&quot;professional&quot;,&quot;tsType&quot;:&quot;\&quot;professional\&quot; | \&quot;curious\&quot; | \&quot;grieving\&quot;&quot;},&quot;contentPreference&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;mixed&quot;,&quot;stories&quot;,&quot;research&quot;],&quot;default&quot;:&quot;mixed&quot;,&quot;tsType&quot;:&quot;\&quot;mixed\&quot; | \&quot;stories\&quot; | \&quot;research\&quot;&quot;}}">
+class Component extends DCLogic {
+  state = {
+    dir: 'ltr',
+    owidA: 'loading',
+    owidB: 'loading',
+    topicsOpen: false,
+    topics: ['PTSD', 'children', 'first responders', 'resilience', 'treatment'],
+    addVal: ''
+  };
+  HEADLINE = {
+    professional: 'As a social worker, you want both the human story and the evidence behind it.',
+    curious: 'A balanced look at PTSD \u2014 the stories and the evidence, side by side.',
+    grieving: 'This work is personal as well as professional. Here is the human side, and the evidence.'
+  };
+  PREF_LABEL = {
+    mixed: 'Showing you\u00a0: a balanced mix of stories and research',
+    stories: 'Showing you\u00a0: stories, with supporting research',
+    research: 'Showing you\u00a0: research, with human context'
+  };
+  removeTopic(t) { this.setState(s => ({ topics: s.topics.filter(x => x !== t) })); }
+  addTopic() {
+    const v = (this.state.addVal || '').trim();
+    if (!v) return;
+    this.setState(s => (s.topics.length >= 5 || s.topics.includes(v))
+      ? { addVal: '' }
+      : { topics: [...s.topics, v], addVal: '' });
+  }
+  renderVals() {
+    const topics = this.state.topics;
+    const mood = this.props.emotionalState || 'professional';
+    const pref = this.props.contentPreference || 'mixed';
+    return {
+      headline: this.HEADLINE[mood] || this.HEADLINE.professional,
+      prefLabel: this.PREF_LABEL[pref] || this.PREF_LABEL.mixed,
+      showSecondStory: pref !== 'research',
+      showSecondResearch: pref !== 'stories',
+      showThirdResearch: pref === 'research',
+      dir: this.state.dir,
+      langLabel: this.state.dir === 'ltr' ? '\u05e2\u05d1\u05e8\u05d9\u05ea' : 'English',
+      onToggleLang: () => this.setState(s => ({ dir: s.dir === 'ltr' ? 'rtl' : 'ltr' })),
+      topics,
+      topicCount: topics.length,
+      editTopics: topics.map(t => ({ label: t, onRemove: () => this.removeTopic(t) })),
+      topicsOpen: this.state.topicsOpen,
+      openTopics: () => this.setState({ topicsOpen: true }),
+      closeTopics: () => this.setState({ topicsOpen: false }),
+      canAdd: topics.length < 5,
+      atMax: topics.length >= 5,
+      addVal: this.state.addVal,
+      onAddChange: (e) => this.setState({ addVal: e.target.value }),
+      onAddKey: (e) => { if (e.key === 'Enter') { e.preventDefault(); this.addTopic(); } },
+      onAddTopic: () => this.addTopic(),
+      owidALoading: this.state.owidA === 'loading',
+      owidAFailed: this.state.owidA === 'failed',
+      owidAFrameVis: this.state.owidA === 'ready' ? '' : 'opacity:0;position:absolute;inset:0;',
+      onOwidALoad: () => this.setState({ owidA: 'ready' }),
+      onOwidAError: () => this.setState({ owidA: 'failed' }),
+      owidBLoading: this.state.owidB === 'loading',
+      owidBFailed: this.state.owidB === 'failed',
+      owidBFrameVis: this.state.owidB === 'ready' ? '' : 'opacity:0;position:absolute;inset:0;',
+      onOwidBLoad: () => this.setState({ owidB: 'ready' }),
+      onOwidBError: () => this.setState({ owidB: 'failed' })
+    };
+  }
+}
+</script>
+</body>
+</html>

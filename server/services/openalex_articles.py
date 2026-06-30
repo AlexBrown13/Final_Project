@@ -1,35 +1,10 @@
-import io
-import requests
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pymongo import UpdateOne
 from pyalex import Works
-from pypdf import PdfReader
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-import numpy as np
 
 from services.mongo import articles_collection
+from services.ranker import hybrid_rank
 from utils.logger import logger
-
-_PDF_TIMEOUT = 10       # seconds per request
-_PDF_MAX_PAGES = 5      # only extract first 5 pages
-_PDF_MAX_CHARS = 50_000 # cap stored text to ~50 KB
-
-
-def _fetch_pdf_content(pdf_url):
-    try:
-        pdf_url='https://www.psychiatrist.com/pdf-serve/effective-treatments-for-ptsd-practice-guidelines-from-the-international-society-for-traumatic-stress-studies-pdf/'
-        resp = requests.get(pdf_url, timeout=_PDF_TIMEOUT, stream=True)
-        resp.raise_for_status()
-        if "pdf" not in resp.headers.get("content-type", "").lower():
-            return None
-        reader = PdfReader(io.BytesIO(resp.content))
-        text = "\n".join(
-            page.extract_text() or "" for page in reader.pages[:_PDF_MAX_PAGES]
-        ).strip()
-        return text[:_PDF_MAX_CHARS] if text else None
-    except Exception as e:
-        logger.debug(f"PDF fetch failed ({pdf_url!r}): {e}")
-        return None
 
 _ISRAEL_TERMS = {"israel", "ישראל"}
 _PER_TAG_LIMIT = 20    # wide candidate net per tag
@@ -67,11 +42,10 @@ def _fetch(query_str, per_page):
 
 def _rerank(candidates, tags):
     """
-    Score all candidates by TF-IDF cosine similarity to the user's tags.
+    Score all candidates using BM25 + embedding cosine similarity.
     Returns candidates sorted best-first.
 
-    This is the candidate generation + reranking pattern:
-    OpenAlex casts a wide net → TF-IDF selects the most relevant subset.
+    OpenAlex casts a wide net → hybrid ranker selects the most relevant subset.
     Only the top _TOP_K survive into MongoDB.
     """
     if not candidates or not tags:
@@ -84,22 +58,15 @@ def _rerank(candidates, tags):
     query = " ".join(tags)
 
     try:
-        vectorizer = TfidfVectorizer(
-            stop_words="english",
-            ngram_range=(1, 2),
-            sublinear_tf=True,
-        )
-        corpus = docs + [query]
-        tfidf_matrix = vectorizer.fit_transform(corpus)
-        query_vec = tfidf_matrix[-1]
-        doc_matrix = tfidf_matrix[:-1]
-        scores = cosine_similarity(query_vec, doc_matrix).flatten()
+        scores = hybrid_rank(docs, query)
     except Exception as e:
-        logger.warning(f"TF-IDF reranking failed, keeping original order: {e}")
+        logger.warning(f"Hybrid reranking failed, keeping original order: {e}")
         return candidates
 
     ranked = sorted(zip(scores, candidates), key=lambda x: x[0], reverse=True)
-    return [c for _, c in ranked]
+    for score, doc in ranked:
+        doc['content_score'] = float(score)
+    return [doc for _, doc in ranked]
 
 
 def main(user_id, tags=None, search_query=None):
@@ -120,9 +87,21 @@ def main(user_id, tags=None, search_query=None):
     seen = set()
     candidates = []
 
-    for query_str, per_page in fetch_plan:
-        try:
-            works = _fetch(query_str, per_page)
+    # Run the OpenAlex queries concurrently — they are independent network calls,
+    # so fetching them in parallel collapses N sequential round-trips into ~1.
+    # Dedup + doc-building stay on this thread, so there are no shared-state races.
+    with ThreadPoolExecutor(max_workers=min(8, len(fetch_plan))) as ex:
+        future_to_query = {
+            ex.submit(_fetch, query_str, per_page): query_str
+            for query_str, per_page in fetch_plan
+        }
+        for fut in as_completed(future_to_query):
+            query_str = future_to_query[fut]
+            try:
+                works = fut.result()
+            except Exception as e:
+                logger.error(f"openalex query error ({query_str!r}): {e}")
+                continue
             for work in works:
                 work_id = work.get("id")
                 if not work_id or work_id in seen:
@@ -143,12 +122,8 @@ def main(user_id, tags=None, search_query=None):
                         a.get("author", {}).get("display_name")
                         for a in work.get("authorships", [])[:2]
                     ],
-                    "persona_query": query_str,
-                    "cited_by_count": work.get("cited_by_count", 0),
                 }
                 candidates.append(doc)
-        except Exception as e:
-            logger.error(f"openalex query error ({query_str!r}): {e}")
 
     if not candidates:
         logger.warning("No candidates fetched from OpenAlex")
@@ -163,15 +138,6 @@ def main(user_id, tags=None, search_query=None):
     logger.info(
         f"Fetched {len(candidates)} candidates → reranked → keeping top {len(top)}"
     )
-
-    # Phase 3 — PDF enrichment: only for top articles that have a pdf_url
-    for doc in top:
-        pdf_url = doc.get("pdf_url")
-        if pdf_url:
-            content = _fetch_pdf_content(pdf_url)
-            if content:
-                doc["pdf_content"] = content
-                logger.info(f"PDF extracted for: {doc['title'][:60]!r}")
 
     operations = [
         UpdateOne(
