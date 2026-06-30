@@ -4,7 +4,7 @@ from pymongo.errors import PyMongoError
 import bcrypt
 import re
 import uuid
-from services.mongo import users_collection, chat_collection
+from services.mongo import users_collection, chat_collection, articles_collection
 from jwt_blocklist import revoke_jti
 
 auth_bp = Blueprint("auth", __name__)
@@ -147,6 +147,25 @@ def login():
                     )
                 except Exception:
                     pass  # non-critical; persona still returned below
+
+                # Strategy B — claim the guest's articles for this account.
+                # Articles ingested while the user was a guest are stored under the
+                # quiz-session UUID. On this first login link, re-key them to the auth
+                # id so they are retrievable from any device. Done only here (first
+                # link) so a later login on a new device with a fresh quiz UUID never
+                # wipes the account's good article set.
+                if quiz_user_id != uid:
+                    try:
+                        # Clear any stale docs already under the account first, so the
+                        # re-key cannot collide with the unique {user_id, openalex_id}
+                        # index. The guest set is newest (just-completed quiz).
+                        articles_collection.delete_many({"user_id": uid})
+                        articles_collection.update_many(
+                            {"user_id": quiz_user_id},
+                            {"$set": {"user_id": uid}}
+                        )
+                    except Exception:
+                        pass  # non-critical; read path still falls back to quiz_user_id
 
     if session:
         score = session.get("score")

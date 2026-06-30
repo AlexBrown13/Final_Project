@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { getApiBase } from "../../config/api.js";
 import { AUTH_TOKEN_KEY, USER_ID_KEY } from "../../config/storageKeys.js";
 import styles from "./ArticleChatBubble.module.css";
@@ -13,14 +14,13 @@ export default function ArticleChatBubble() {
 
   const token = localStorage.getItem(AUTH_TOKEN_KEY);
   const quizUserId = localStorage.getItem(USER_ID_KEY);
+  const loggedIn = Boolean(token);
 
   useEffect(() => {
-    if (!token || !open) return;
+    if (!open || !loggedIn) return;
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     inputRef.current?.focus();
-  }, [messages, open, token]);
-
-  if (!token) return null;
+  }, [messages, open, loggedIn]);
 
   const send = async () => {
     const q = input.trim();
@@ -72,43 +72,59 @@ export default function ArticleChatBubble() {
             <button className={styles.close} onClick={() => setOpen(false)} aria-label="Close">✕</button>
           </div>
 
-          <div className={styles.messages}>
-            {messages.length === 0 && (
-              <p className={styles.hint}>Ask a question about your articles…</p>
-            )}
-            {messages.map((m, i) => (
-              <div key={i} className={`${styles.msg} ${m.role === "user" ? styles.msgUser : styles.msgAssistant}`}>
-                {m.content}
+          {loggedIn ? (
+            <>
+              <div className={styles.messages}>
+                {messages.length === 0 && (
+                  <p className={styles.hint}>Ask a question about your articles…</p>
+                )}
+                {messages.map((m, i) => (
+                  <div key={i} className={`${styles.msg} ${m.role === "user" ? styles.msgUser : styles.msgAssistant}`}>
+                    {m.content}
+                  </div>
+                ))}
+                {loading && (
+                  <div className={`${styles.msg} ${styles.msgAssistant} ${styles.typing}`}>
+                    <span /><span /><span />
+                  </div>
+                )}
+                <div ref={bottomRef} />
               </div>
-            ))}
-            {loading && (
-              <div className={`${styles.msg} ${styles.msgAssistant} ${styles.typing}`}>
-                <span /><span /><span />
-              </div>
-            )}
-            <div ref={bottomRef} />
-          </div>
 
-          <div className={styles.inputRow}>
-            <input
-              ref={inputRef}
-              type="text"
-              className={styles.input}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && send()}
-              placeholder="Ask about your articles…"
-              disabled={loading}
-              maxLength={500}
-            />
-            <button
-              className={styles.send}
-              onClick={send}
-              disabled={!input.trim() || loading}
-            >
-              Send
-            </button>
-          </div>
+              <div className={styles.inputRow}>
+                <input
+                  ref={inputRef}
+                  type="text"
+                  className={styles.input}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && send()}
+                  placeholder="Ask about your articles…"
+                  disabled={loading}
+                  maxLength={500}
+                />
+                <button
+                  className={styles.send}
+                  onClick={send}
+                  disabled={!input.trim() || loading}
+                >
+                  Send
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className={styles.messages}>
+              <p className={styles.hint}>Log in to chat with a personalized AI about your articles.</p>
+              <Link
+                to="/auth/login"
+                className={styles.send}
+                style={{ textDecoration: "none", textAlign: "center", alignSelf: "center" }}
+                onClick={() => setOpen(false)}
+              >
+                Log in
+              </Link>
+            </div>
+          )}
         </div>
       )}
     </>
