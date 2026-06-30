@@ -196,25 +196,6 @@ export async function getArticles(quizUserId) {
 }
 
 /**
- * GET /api/external/stories?topic= — Guardian stories (B-5; not yet built).
- * Graceful: never throws; returns [] on any error including 404 (B-5 absent today).
- */
-export async function getExternalStories(topic) {
-  try {
-    if (!topic) return [];
-    const base = getApiBase();
-    const res = await fetch(
-      `${base}/api/external/stories?topic=${encodeURIComponent(topic)}`
-    );
-    if (!res.ok) return [];           // 404 today (B-5 not built) → []
-    const data = await parseJsonSafe(res);
-    return Array.isArray(data) ? data : [];
-  } catch {
-    return [];                         // network error → []
-  }
-}
-
-/**
  * GET /api/calls-map-dates — returns the min/max dates.
  */
 export async function fetchCallsMapDates() {

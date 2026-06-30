@@ -69,12 +69,3 @@ try:
     token_blocklist_collection.create_index("jti", unique=True)
 except Exception as e:
     logger.warning(f"Failed to create token_blocklist indexes: {e}")
-
-guardian_cache_collection = db["guardian_cache"]
-
-try:
-    # Auto-expire cached Guardian results after 1 hour (Revamp.md PART 5)
-    guardian_cache_collection.create_index("fetched_at", expireAfterSeconds=3600)
-    guardian_cache_collection.create_index("topic", unique=True)
-except Exception as e:
-    logger.warning(f"Failed to create guardian_cache indexes: {e}")

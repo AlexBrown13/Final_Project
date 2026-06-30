@@ -17,7 +17,6 @@ from routes.graphs_route import graphs_bp
 from routes.trends_route import trends_bp
 from routes.articles_route import articles_bp
 from routes.ai_assistant_route import ai_assistant_bp
-from routes.external_content_route import external_content_bp
 
 from jwt_blocklist import is_jti_revoked
 from extensions import limiter
@@ -46,7 +45,6 @@ app.register_blueprint(graphs_bp, url_prefix="/graphs")
 app.register_blueprint(trends_bp, url_prefix="/api")
 app.register_blueprint(articles_bp, url_prefix="/api")
 app.register_blueprint(ai_assistant_bp, url_prefix='/api')
-app.register_blueprint(external_content_bp, url_prefix="/api")
 
 
 # Warm the embedding model in the background so the server starts accepting
