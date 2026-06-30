@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-export default function GuardianCard({ thumbnailUrl, headline, summary, date, url }) {
+export default function GuardianCard({ thumbnailUrl, headline, summary, date, url, source }) {
   const [imgFailed, setImgFailed] = useState(false)
 
   return (
@@ -20,7 +20,7 @@ export default function GuardianCard({ thumbnailUrl, headline, summary, date, ur
       <div className="p1-guardian-text">
         <div className="p1-guardian-source">
           <div className="p1-guardian-source-sq" aria-hidden="true" />
-          <span className="p1-guardian-source-name">The Guardian</span>
+          <span className="p1-guardian-source-name">{source || 'Story'}</span>
           {date && <span className="p1-guardian-source-date">{date}</span>}
         </div>
         <p className="p1-guardian-headline" dir="auto">{headline}</p>
@@ -31,7 +31,7 @@ export default function GuardianCard({ thumbnailUrl, headline, summary, date, ur
           target="_blank"
           rel="noopener noreferrer"
         >
-          Read at The Guardian →
+          Read story →
         </a>
       </div>
     </article>

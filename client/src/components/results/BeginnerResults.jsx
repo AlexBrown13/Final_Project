@@ -7,6 +7,8 @@ import { getHero, getSection } from './resultsCopy.js'
 import { getUiStrings } from '../../config/uiStrings.js'
 import { NATAL_CHARTS, NATAL_TEXT_BLOCKS, pick, getPrefCounts } from './natalData.js'
 import { NatalChartCard, NatalTextBlock } from './NatalCharts.jsx'
+import { POST_TRAUMA_INFO } from './postTraumaInfo.js'
+import { localizeStory } from './storiesData.js'
 
 const NATAL_CARD_STYLE = { background: '#fffdf9', border: '1px solid #ece4d6', borderRadius: 16, padding: '20px 22px' }
 const NATAL_TITLE_STYLE = { fontFamily: "'Newsreader', serif", fontWeight: 500, fontSize: 18, margin: '0 0 12px', color: '#3f3a32' }
@@ -16,6 +18,14 @@ const TEXT_STAT_STYLE = { fontFamily: "'Newsreader', serif", fontWeight: 600, fo
 const TEXT_LABEL_STYLE = { fontFamily: "'Newsreader', serif", fontSize: 18, fontWeight: 500, color: '#3f4639', margin: '8px 0 8px' }
 const TEXT_BODY_STYLE = { fontSize: 15, lineHeight: 1.6, color: '#6b6457', margin: 0 }
 const TEXT_SOURCE_STYLE = { fontFamily: 'ui-monospace, monospace', fontSize: 11, color: '#9b937f', margin: '12px 0 0' }
+const EDU_CARD_STYLE = { background: '#fffdf9', border: '1px solid #ece4d6', borderRadius: 16, padding: '22px 24px' }
+const EDU_LEAD_STYLE = { fontFamily: "'Newsreader', serif", fontSize: 18, fontWeight: 500, color: '#3f3a32', margin: '0 0 12px', lineHeight: 1.5 }
+const EDU_BODY_STYLE = { fontSize: 15, lineHeight: 1.6, color: '#6b6457', margin: '0 0 4px' }
+const EDU_GRID_STYLE = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginTop: 16 }
+const EDU_GROUP_STYLE = { background: '#f3efe6', border: '1px solid #e6ddcf', borderRadius: 12, padding: '14px 16px' }
+const EDU_GROUP_LABEL_STYLE = { fontFamily: "'Newsreader', serif", fontSize: 16, fontWeight: 600, color: '#7da984', margin: '0 0 8px' }
+const EDU_LIST_STYLE = { margin: 0, paddingInlineStart: 18, fontSize: 14, lineHeight: 1.55, color: '#6b6457' }
+const EDU_CLOSING_STYLE = { fontSize: 14.5, lineHeight: 1.6, color: '#6b6457', margin: '16px 0 0', fontStyle: 'italic' }
 
 function SkeletonShimmer({ height = 480 }) {
   return <div className="p1-skel" style={{ height }} />
@@ -40,6 +50,41 @@ function OwidFrame({ src, height = 480 }) {
           height,
           border: 'none',
           display: 'block',
+          ...(state === 'ready' ? {} : { opacity: 0, position: 'absolute', inset: 0 }),
+        }}
+      />
+    </div>
+  )
+}
+
+// Language-matched beginner video — swaps automatically when the locale toggles.
+const BEGINNER_VIDEO = {
+  he: 'https://www.youtube.com/embed/weGwVP8JETg',
+  en: 'https://www.youtube.com/embed/KptE6doAJrA',
+}
+
+function VideoFrame({ src, title, height = 360 }) {
+  const [state, setState] = useState('loading')
+  return (
+    <div className="p1-owid-frame-wrap" style={{ minHeight: height }}>
+      {state === 'loading' && <SkeletonShimmer height={height} />}
+      {state === 'failed' && (
+        <p className="p1-owid-fallback">Video temporarily unavailable.</p>
+      )}
+      <iframe
+        src={src}
+        title={title}
+        loading="lazy"
+        onLoad={() => setState('ready')}
+        onError={() => setState('failed')}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowFullScreen
+        style={{
+          width: '100%',
+          height,
+          border: 'none',
+          display: 'block',
+          borderRadius: 14,
           ...(state === 'ready' ? {} : { opacity: 0, position: 'absolute', inset: 0 }),
         }}
       />
@@ -198,6 +243,47 @@ export default function BeginnerResults({ profile, guardianStories = [], academi
 
         <hr className="p1-divider" />
 
+        {/* What is post-trauma — beginner-only psychoeducation (validate before informing) */}
+        <section className="p1-section">
+          <h2 className="p1-section-head">
+            {locale === 'he' ? POST_TRAUMA_INFO.title_he : POST_TRAUMA_INFO.title_en}
+          </h2>
+          <div style={EDU_CARD_STYLE}>
+            <p style={EDU_LEAD_STYLE}>
+              {locale === 'he' ? POST_TRAUMA_INFO.lead_he : POST_TRAUMA_INFO.lead_en}
+            </p>
+            <p style={EDU_BODY_STYLE}>
+              {locale === 'he' ? POST_TRAUMA_INFO.body_he : POST_TRAUMA_INFO.body_en}
+            </p>
+            <div style={EDU_GRID_STYLE}>
+              {POST_TRAUMA_INFO.groups.map((g, i) => (
+                <div key={i} style={EDU_GROUP_STYLE}>
+                  <p style={EDU_GROUP_LABEL_STYLE}>
+                    {locale === 'he' ? g.label_he : g.label_en}
+                  </p>
+                  <ul style={EDU_LIST_STYLE}>
+                    {(locale === 'he' ? g.items_he : g.items_en).map((it, j) => (
+                      <li key={j} style={{ marginBottom: 4 }}>{it}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+            <p style={EDU_CLOSING_STYLE}>
+              {locale === 'he' ? POST_TRAUMA_INFO.closing_he : POST_TRAUMA_INFO.closing_en}
+            </p>
+          </div>
+        </section>
+
+        {/* Language-matched video (swaps with the language toggle) */}
+        <section className="p1-section" style={{ marginTop: 40 }}>
+          <h2 className="p1-section-head">{locale === 'he' ? 'כדאי לצפות' : 'Worth watching'}</h2>
+          <VideoFrame
+            src={BEGINNER_VIDEO[locale] || BEGINNER_VIDEO.en}
+            title={locale === 'he' ? 'סרטון' : 'Video'}
+          />
+        </section>
+
         {/* Guardian stories */}
         {stories.length > 0 && (
           <section className="p1-section">
@@ -205,7 +291,7 @@ export default function BeginnerResults({ profile, guardianStories = [], academi
             <p className="p1-section-sub">{s.storiesSub}</p>
             <div className="p1-guardian-grid">
               {stories.map((story, i) => (
-                <GuardianCard key={i} {...story} />
+                <GuardianCard key={i} {...localizeStory(story, locale)} />
               ))}
             </div>
           </section>

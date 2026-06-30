@@ -13,7 +13,7 @@ export const SECTION = {
     en: {
       retake: 'Retake quiz', retakeAria: 'Retake the quiz', adjust: 'adjust your topics',
       storiesHead: 'Stories from people who understand',
-      storiesSub: 'Real journalism from The Guardian, chosen with care.',
+      storiesSub: 'Personal accounts of trauma and recovery, chosen with care.',
       owidHead: 'You are not alone in this',
       owidSub: 'Seeing how widely this is shared can make your own experience feel less isolating.',
       researchHead: 'What the research shows',
@@ -31,7 +31,7 @@ export const SECTION = {
     he: {
       retake: 'שאלון מחדש', retakeAria: 'מילוי השאלון מחדש', adjust: 'התאמת הנושאים',
       storiesHead: 'סיפורים מאנשים שמבינים',
-      storiesSub: 'עיתונאות אמיתית מ-The Guardian, שנבחרה בקפידה.',
+      storiesSub: 'סיפורים אישיים על טראומה והחלמה, שנבחרו בקפידה.',
       owidHead: 'אינכם לבד בזה',
       owidSub: 'לראות עד כמה זה משותף לרבים יכול להפחית את תחושת הבדידות.',
       researchHead: 'מה המחקר מראה',
@@ -51,7 +51,7 @@ export const SECTION = {
     en: {
       retake: 'Retake quiz', retakeAria: 'Retake the quiz',
       storiesHead: 'Human accounts',
-      storiesSub: 'Reporting from The Guardian on the people behind the data.',
+      storiesSub: 'First-person accounts of trauma and recovery — the people behind the data.',
       owidHead: 'The wider picture',
       owidSub: 'How trauma and mental health appear across populations.',
       researchHead: 'The evidence from Israel',
@@ -64,7 +64,7 @@ export const SECTION = {
     he: {
       retake: 'שאלון מחדש', retakeAria: 'מילוי השאלון מחדש',
       storiesHead: 'עדויות אנושיות',
-      storiesSub: 'כתבות מ-The Guardian על האנשים שמאחורי הנתונים.',
+      storiesSub: 'עדויות אישיות על טראומה והחלמה — האנשים שמאחורי הנתונים.',
       owidHead: 'התמונה הרחבה',
       owidSub: 'כיצד טראומה ובריאות הנפש מופיעות באוכלוסיות שונות.',
       researchHead: 'הממצאים מישראל',
@@ -79,7 +79,7 @@ export const SECTION = {
     en: {
       retake: 'Retake quiz', retakeAria: 'Retake the quiz',
       storiesHead: 'Field reporting',
-      storiesSub: 'Journalistic context from The Guardian.',
+      storiesSub: 'First-person accounts of trauma and recovery.',
       owidHead: 'Epidemiology · OWID',
       owidSub: 'Cross-country prevalence series.',
       researchHead: 'Israel cohort data',
@@ -92,7 +92,7 @@ export const SECTION = {
     he: {
       retake: 'שאלון מחדש', retakeAria: 'מילוי השאלון מחדש',
       storiesHead: 'כתבות שטח',
-      storiesSub: 'הקשר עיתונאי מ-The Guardian.',
+      storiesSub: 'עדויות אישיות על טראומה והחלמה.',
       owidHead: 'אפידמיולוגיה · OWID',
       owidSub: 'נתוני שכיחות בין-מדינתיים.',
       researchHead: 'נתוני מדגם ישראלי',

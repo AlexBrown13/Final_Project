@@ -14,7 +14,8 @@ import {
   AUTH_TOKEN_KEY,
 } from '../config/storageKeys.js'
 import { usePersona } from '../context/usePersona.js'
-import { fetchHealth, getResult, getArticles, getExternalStories } from '../utils/api.js'
+import { fetchHealth, getResult, getArticles } from '../utils/api.js'
+import { CURATED_STORIES } from '../components/results/storiesData.js'
 import { getApiBase } from '../config/api.js'
 import { scoreToPersona, normalizePersonaLabel, resolveRenderedPersona } from '../utils/persona.js'
 import styles from './ResultsPage.module.css'
@@ -225,13 +226,10 @@ export default function ResultsPage() {
         if (!cancelled) setArticlesLoading(false)
       }
 
-      if (mappedProfile.persona !== 'researcher' && mappedProfile.primaryTopic) {
-        try {
-          const s = await getExternalStories(mappedProfile.primaryTopic)
-          if (!cancelled) setStories(s.map((st) => ({ ...st, thumbnailUrl: st.thumbnail })))
-        } catch {
-          if (!cancelled) setStories([])
-        }
+      // Curated, hand-vetted stories — hard-coded, no fetch, no topic match.
+      // Researchers get none; the cards localize each story to the active language.
+      if (mappedProfile.persona !== 'researcher') {
+        if (!cancelled) setStories(CURATED_STORIES)
       }
     })()
     return () => { cancelled = true }

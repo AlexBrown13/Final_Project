@@ -1,5 +1,5 @@
 export default function GuardianCardVertical({ story }) {
-  const { thumbnailUrl, headline, summary, date, url } = story
+  const { thumbnailUrl, headline, summary, date, url, source } = story
 
   return (
     <article className="p2-card" style={{
@@ -27,7 +27,7 @@ export default function GuardianCardVertical({ story }) {
       )}
       <div style={{ padding: '18px 20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: '#052962' }}>The Guardian</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: '#052962' }}>{source || 'Story'}</span>
           <span style={{ color: '#c3ccc8' }}>&middot;</span>
           <span style={{ fontSize: 12, color: '#8a938f' }}>{date}</span>
         </div>
@@ -67,7 +67,7 @@ export default function GuardianCardVertical({ story }) {
           target="_blank"
           rel="noreferrer"
         >
-          Read at The Guardian &rarr;
+          Read story &rarr;
         </a>
       </div>
     </article>

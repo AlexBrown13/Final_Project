@@ -7,10 +7,20 @@ import { getHero, getSection } from './resultsCopy.js'
 import { getUiStrings } from '../../config/uiStrings.js'
 import { NATAL_CHARTS, pick, getPrefCounts } from './natalData.js'
 import { NatalChartCard } from './NatalCharts.jsx'
+import { POST_TRAUMA_GROWTH } from './postTraumaGrowth.js'
+import { localizeStory } from './storiesData.js'
 
 const N2_CARD_STYLE = { background: '#fff', border: '1px solid #e0e4e1', borderRadius: 12, padding: '18px 20px' }
 const N2_TITLE_STYLE = { fontFamily: "'Source Serif 4', serif", fontWeight: 600, fontSize: 16, margin: '0 0 12px', color: '#232a28' }
 const N2_SOURCE_STYLE = { fontFamily: 'ui-monospace, monospace', fontSize: 11, color: '#8a938f', margin: '12px 0 0' }
+const GROWTH_CARD_STYLE = { background: '#fff', border: '1px solid #e0e4e1', borderRadius: 14, padding: '22px 24px' }
+const GROWTH_LEAD_STYLE = { fontFamily: "'Source Serif 4', serif", fontSize: 17, fontWeight: 500, color: '#232a28', margin: '0 0 10px', lineHeight: 1.5 }
+const GROWTH_BODY_STYLE = { fontSize: 14.5, lineHeight: 1.6, color: '#5c6561', margin: '0 0 4px' }
+const GROWTH_GRID_STYLE = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14, marginTop: 16 }
+const GROWTH_ITEM_STYLE = { background: '#eef1ee', border: '1px solid #dde3df', borderRadius: 10, padding: '14px 16px' }
+const GROWTH_ITEM_LABEL_STYLE = { fontFamily: "'Source Serif 4', serif", fontSize: 15, fontWeight: 600, color: '#4b645f', margin: '0 0 6px' }
+const GROWTH_ITEM_TEXT_STYLE = { fontSize: 13.5, lineHeight: 1.5, color: '#5c6561', margin: 0 }
+const GROWTH_CLOSING_STYLE = { fontSize: 14, lineHeight: 1.6, color: '#5c6561', margin: '16px 0 0', fontStyle: 'italic' }
 
 const PREF_LABEL = {
   en: {
@@ -67,6 +77,43 @@ function OwidChart({ src, title, caption, attribution }) {
       <p style={{ fontSize: 11.5, color: '#9aa39e', padding: '10px 20px', margin: 0, borderTop: '1px solid #eef1ee' }}>
         {attribution}
       </p>
+    </div>
+  )
+}
+
+// Single video for the informed-learner page — same clip in both languages.
+const INFORMED_VIDEO = 'https://www.youtube.com/embed/iTefkqYQz8g'
+
+function VideoEmbed({ src, title }) {
+  const [state, setState] = useState('loading')
+  return (
+    <div style={{ position: 'relative', border: '1px solid #e0e4e1', borderRadius: 14, background: '#fff', overflow: 'hidden', minHeight: 440 }}>
+      {state === 'loading' && (
+        <div style={{ position: 'absolute', inset: 0, padding: 20 }}>
+          <div className="p2-skel" style={{ height: 18, width: '50%', borderRadius: 5, marginBottom: 18 }} />
+          <div className="p2-skel" style={{ height: 360, width: '100%', borderRadius: 8 }} />
+        </div>
+      )}
+      {state === 'failed' && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 440, textAlign: 'center', padding: 32 }}>
+          <p style={{ fontSize: 14, color: '#5c6561', maxWidth: '36ch', margin: 0 }}>
+            This video is unavailable right now. The other sections are unaffected.
+          </p>
+        </div>
+      )}
+      <iframe
+        src={src}
+        title={title}
+        loading="lazy"
+        onLoad={() => setState('ready')}
+        onError={() => setState('failed')}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowFullScreen
+        style={state === 'ready'
+          ? { width: '100%', height: 440, border: 'none', display: 'block' }
+          : { opacity: 0, position: 'absolute', inset: 0, width: '100%', height: 440, border: 'none' }
+        }
+      />
     </div>
   )
 }
@@ -395,7 +442,7 @@ export default function InformedResults({ profile, guardianStories = [], academi
             <div className="p2-feedcol" style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
               {stories.length > 0 ? (
                 stories.map((story, i) => (
-                  <GuardianCardVertical key={i} story={story} />
+                  <GuardianCardVertical key={i} story={localizeStory(story, locale)} />
                 ))
               ) : (
                 /* placeholder card when no stories yet */
@@ -462,6 +509,44 @@ export default function InformedResults({ profile, guardianStories = [], academi
             </div>
           </div>
         </div>
+
+        {/* POST-TRAUMATIC GROWTH — informed-learner psychoeducation */}
+        <section style={{ marginTop: 48 }}>
+          <h2 style={{ fontSize: 21, fontWeight: 600, margin: '7px 0 12px', letterSpacing: '-0.01em', color: '#232a28' }}>
+            {locale === 'he' ? POST_TRAUMA_GROWTH.title_he : POST_TRAUMA_GROWTH.title_en}
+          </h2>
+          <div style={GROWTH_CARD_STYLE}>
+            <p style={GROWTH_LEAD_STYLE}>
+              {locale === 'he' ? POST_TRAUMA_GROWTH.lead_he : POST_TRAUMA_GROWTH.lead_en}
+            </p>
+            <p style={GROWTH_BODY_STYLE}>
+              {locale === 'he' ? POST_TRAUMA_GROWTH.body_he : POST_TRAUMA_GROWTH.body_en}
+            </p>
+            <div style={GROWTH_GRID_STYLE}>
+              {POST_TRAUMA_GROWTH.domains.map((d, i) => (
+                <div key={i} style={GROWTH_ITEM_STYLE}>
+                  <p style={GROWTH_ITEM_LABEL_STYLE}>
+                    {locale === 'he' ? d.label_he : d.label_en}
+                  </p>
+                  <p style={GROWTH_ITEM_TEXT_STYLE}>
+                    {locale === 'he' ? d.text_he : d.text_en}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <p style={GROWTH_CLOSING_STYLE}>
+              {locale === 'he' ? POST_TRAUMA_GROWTH.closing_he : POST_TRAUMA_GROWTH.closing_en}
+            </p>
+          </div>
+        </section>
+
+        {/* VIDEO (single clip, shown in both languages) */}
+        <section style={{ marginTop: 48 }}>
+          <h2 style={{ fontSize: 21, fontWeight: 600, margin: '7px 0 12px', letterSpacing: '-0.01em', color: '#232a28' }}>
+            {locale === 'he' ? 'כדאי לצפות' : 'Worth watching'}
+          </h2>
+          <VideoEmbed src={INFORMED_VIDEO} title={locale === 'he' ? 'סרטון' : 'Video'} />
+        </section>
 
         {/* OWID SECTION (count-driven) */}
         {owidSrcs.length > 0 && (

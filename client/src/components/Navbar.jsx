@@ -64,8 +64,17 @@ export default function Navbar() {
   return (
     <header className={styles.nav}>
       <div className={styles.inner}>
-        <Link to="/" className={styles.brand}>
-          {s.navBrand}
+        <Link
+          to="/"
+          className={styles.brand}
+          style={{ display: "inline-flex", alignItems: "center", gap: 10 }}
+        >
+          <img
+            src="/Logo_New_GREEN.png"
+            alt='נט"ל — נפגעי טראומה על רקע לאומי'
+            style={{ height: 34, width: "auto", display: "block" }}
+          />
+          <span>{s.navBrand}</span>
         </Link>
         <nav className={styles.links} aria-label={s.navMain}>
           <div
