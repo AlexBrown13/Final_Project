@@ -1,33 +1,10 @@
-import io
-import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pymongo import UpdateOne
 from pyalex import Works
-from pypdf import PdfReader
 
 from services.mongo import articles_collection
 from services.ranker import hybrid_rank
 from utils.logger import logger
-
-_PDF_TIMEOUT = 10       # seconds per request
-_PDF_MAX_PAGES = 5      # only extract first 5 pages
-_PDF_MAX_CHARS = 50_000 # cap stored text to ~50 KB
-
-
-def _fetch_pdf_content(pdf_url):
-    try:
-        resp = requests.get(pdf_url, timeout=_PDF_TIMEOUT, stream=True)
-        resp.raise_for_status()
-        if "pdf" not in resp.headers.get("content-type", "").lower():
-            return None
-        reader = PdfReader(io.BytesIO(resp.content))
-        text = "\n".join(
-            page.extract_text() or "" for page in reader.pages[:_PDF_MAX_PAGES]
-        ).strip()
-        return text[:_PDF_MAX_CHARS] if text else None
-    except Exception as e:
-        logger.debug(f"PDF fetch failed ({pdf_url!r}): {e}")
-        return None
 
 _ISRAEL_TERMS = {"israel", "ישראל"}
 _PER_TAG_LIMIT = 20    # wide candidate net per tag
@@ -110,9 +87,21 @@ def main(user_id, tags=None, search_query=None):
     seen = set()
     candidates = []
 
-    for query_str, per_page in fetch_plan:
-        try:
-            works = _fetch(query_str, per_page)
+    # Run the OpenAlex queries concurrently — they are independent network calls,
+    # so fetching them in parallel collapses N sequential round-trips into ~1.
+    # Dedup + doc-building stay on this thread, so there are no shared-state races.
+    with ThreadPoolExecutor(max_workers=min(8, len(fetch_plan))) as ex:
+        future_to_query = {
+            ex.submit(_fetch, query_str, per_page): query_str
+            for query_str, per_page in fetch_plan
+        }
+        for fut in as_completed(future_to_query):
+            query_str = future_to_query[fut]
+            try:
+                works = fut.result()
+            except Exception as e:
+                logger.error(f"openalex query error ({query_str!r}): {e}")
+                continue
             for work in works:
                 work_id = work.get("id")
                 if not work_id or work_id in seen:
@@ -135,8 +124,6 @@ def main(user_id, tags=None, search_query=None):
                     ],
                 }
                 candidates.append(doc)
-        except Exception as e:
-            logger.error(f"openalex query error ({query_str!r}): {e}")
 
     if not candidates:
         logger.warning("No candidates fetched from OpenAlex")
@@ -151,18 +138,6 @@ def main(user_id, tags=None, search_query=None):
     logger.info(
         f"Fetched {len(candidates)} candidates → reranked → keeping top {len(top)}"
     )
-
-    # Phase 3 — PDF enrichment: fetch all PDFs concurrently
-    pdf_docs = [d for d in top if d.get("pdf_url")]
-    if pdf_docs:
-        with ThreadPoolExecutor(max_workers=8) as ex:
-            futures = {ex.submit(_fetch_pdf_content, d["pdf_url"]): d for d in pdf_docs}
-            for fut in as_completed(futures):
-                doc = futures[fut]
-                content = fut.result()
-                if content:
-                    doc["pdf_content"] = content
-                    logger.info(f"PDF extracted for: {doc['title'][:60]!r}")
 
     operations = [
         UpdateOne(

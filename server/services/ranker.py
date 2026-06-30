@@ -33,6 +33,15 @@ def _get_model():
     return _model
 
 
+def warm_model() -> None:
+    """Eagerly load the embedding model (e.g. at server startup, in a background
+    thread) so the first user's ingestion doesn't pay the ~30s cold-load cost."""
+    try:
+        _get_model()
+    except Exception as e:
+        logger.warning(f"Model warm-up failed (will retry lazily on first use): {e}")
+
+
 def _tokenize(text: str) -> list:
     return re.sub(r"[^\w\s]", " ", text.lower()).split()
 

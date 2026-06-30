@@ -1,4 +1,5 @@
 import os
+import threading
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -46,6 +47,16 @@ app.register_blueprint(trends_bp, url_prefix="/api")
 app.register_blueprint(articles_bp, url_prefix="/api")
 app.register_blueprint(ai_assistant_bp, url_prefix='/api')
 app.register_blueprint(external_content_bp, url_prefix="/api")
+
+
+# Warm the embedding model in the background so the server starts accepting
+# requests immediately and no single user eats the ~30s cold model load on the
+# first article ingestion after a restart.
+def _warm_embedding_model():
+    from services.ranker import warm_model
+    warm_model()
+
+threading.Thread(target=_warm_embedding_model, daemon=True).start()
 
 
 if __name__ == "__main__":
