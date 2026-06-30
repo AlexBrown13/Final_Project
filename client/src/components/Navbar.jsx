@@ -67,12 +67,12 @@ export default function Navbar() {
         <Link
           to="/"
           className={styles.brand}
-          style={{ display: "inline-flex", alignItems: "center", gap: 10 }}
+          style={{ display: "inline-flex", alignItems: "center", gap: 10, flexShrink: 0 }}
         >
           <img
             src="/Logo_New_GREEN.png"
             alt='נט"ל — נפגעי טראומה על רקע לאומי'
-            style={{ height: 52, width: "auto", display: "block" }}
+            style={{ height: 64, width: "auto", display: "block" }}
           />
           <span>{s.navBrand}</span>
         </Link>
