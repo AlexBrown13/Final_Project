@@ -72,7 +72,7 @@ export default function Navbar() {
           <img
             src="/Logo_New_GREEN.png"
             alt='נט"ל — נפגעי טראומה על רקע לאומי'
-            style={{ height: 34, width: "auto", display: "block" }}
+            style={{ height: 52, width: "auto", display: "block" }}
           />
           <span>{s.navBrand}</span>
         </Link>
