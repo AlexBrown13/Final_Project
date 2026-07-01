@@ -391,3 +391,30 @@ C-3a, C-3b, C-4, B-2a, B-3, B-4, B-5. Test gate held at `Ran 5 tests OK` through
 Build gate held (npm run build passes). No auth/access control logic was changed at any step.
 No trauma content or copy was modified at any step (C-3b changed string delimiters only,
 not text). No API contracts were broken without updating consumers.
+
+---
+
+## POST-REVAMP CHANGES — 2026-07-01 (branch `revamp`)
+
+Work done after "REVAMP COMPLETE". Full detail in `docs/ARCHITECTURE.md` §5, §12, §18, §26.
+Test gate held at `Ran 5 tests OK`; `npm run build` passed throughout.
+
+| Commit    | What it did |
+|-----------|-------------|
+| `883495e` | Strategy B — claim guest articles on first login (re-key quiz-UUID → auth id, delete-first to avoid unique-index collision). Article chat gated to logged-in users; guests see a "log in to chat" CTA in the bubble. |
+| `026ab05` | Article-load perf — removed dead PDF-extraction phase (`pdf_content` was write-only), parallelized OpenAlex per-tag queries, warm the SentenceTransformer model in a background thread at startup. |
+| `6424c7f` | Article chat — `PLATFORM_OVERVIEW` site-awareness block in the system prompt (point users to map/trends/graphs, no invented data) + `@limiter.limit("40 per hour")`. |
+| `f3c9dca` | Results page — curated hard-coded stories replace the Guardian API; beginner "What is post-trauma?" + informed "Post-traumatic growth" psychoeducation; per-persona videos (beginner language-matched, informed single, researcher none); NATAL logo in the global header. |
+| `14fc0c0` | Removed the now-dormant Guardian integration (route, blueprint, `guardian_cache` collection, `getExternalStories` helper). **This reverses B-5 above.** |
+| `d12b94f` | NATAL header logo larger (34→52px; later 64px + navbar wrapping fix). |
+
+**Guardian reversal note:** B-5 (`9bace53`) built the Guardian API integration; it was later
+removed (`14fc0c0`) in favour of curated, hand-vetted personal stories in `storiesData.js`.
+Reasons: the keyword search didn't reliably return *personal* stories, editorial-slant risk
+on a trauma platform, and safety/control. Curated matches the existing OWID/NATAL pattern.
+
+**Rejected story candidates** (not shipped): a self-healing "method" site (paid product +
+anti-clinical framing), a mindfulness expert interview (promotional, not a personal story),
+and a sexual-assault secondary-trauma testimony (valid + well-sourced but bleak/no recovery
+arc, heavy for a possibly-grieving beginner). The 4 shipped stories are all pro-recovery
+first-person accounts from Ynet/IDF/HaGesher.

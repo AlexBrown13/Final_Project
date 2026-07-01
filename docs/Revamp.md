@@ -246,6 +246,14 @@ Return `matched_tags` with each article in the API response. The client renders 
 
 ## PART 5 — GUARDIAN API INTEGRATION
 
+> **SUPERSEDED 2026-07-01:** This plan was built (step B-5) and then **removed**. Personal
+> stories are now curated and hard-coded in `client/src/components/results/storiesData.js`
+> (4 vetted bilingual first-person recovery stories from Ynet/IDF/HaGesher), not fetched from
+> the Guardian. Reasons: the keyword search didn't reliably return *personal* stories,
+> editorial-slant risk on a trauma platform, and safety/control (matching the existing
+> hard-coded OWID/NATAL pattern). See `docs/ARCHITECTURE.md` §18 + §26. The section below is
+> retained as the historical plan.
+
 ### Why Guardian
 The Guardian API is free (12 calls/second, 5000/day), returns full article content, covers Israel/trauma topics well, and writes accessibly for non-academic audiences. It's the right source for beginners and informed learners who want readable journalism rather than academic abstracts.
 

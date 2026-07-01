@@ -276,7 +276,7 @@ A floating chat bubble on the articles page lets users ask questions about their
 
 **How it works:**
 1. All of the user's stored articles (up to 15, abstracts truncated to 400 chars each) are placed in the **system message**, which is static across turns — sent once per API call, not repeated in the user turn.
-2. The AI's tone is calibrated to the user's persona: academic for researchers, simple and warm for beginners.
+2. Tone is calibrated by persona **and** `emotional_state` together (a grieving beginner and a curious beginner get different guidance), and the system prompt carries a static `PLATFORM_OVERVIEW` block so the assistant can point users to the map / trends / graph pages when relevant — without inventing data from them.
 3. The last 4 conversation turns are sent as properly structured `user`/`assistant` messages.
 4. The article list is cached server-side per user for 5 minutes — no DB round-trip on every chat message.
 5. `max_tokens` is set to 800, giving the model room to reference multiple articles in a single response.
@@ -284,6 +284,8 @@ A floating chat bubble on the articles page lets users ask questions about their
 **Persona lookup:** The server looks up the user's persona using the JWT identity first, then falls back to the `quiz_user_id` supplied in the request body (needed while quiz sessions are stored under a separate UUID).
 
 **Guard:** If the Groq API returns `choices = None` or empty content, the endpoint returns 503 with a clean message instead of crashing.
+
+**Access:** `/article-chat` is `@jwt_required` — logged-in users only. Guests still see the bubble on the articles page, but it shows a "log in to chat" CTA instead of the input (the persona/article context is user-scoped, so keeping guests out avoids exposing another user's profile via a supplied `quiz_user_id`). Rate limited to **40 requests/hour/IP** via `@limiter.limit`.
 
 ---
 
@@ -375,8 +377,12 @@ All animations use `cubic-bezier(0.22, 1, 0.36, 1)` (easeOutQuint). A `prefers-r
 ### Groq Client Singleton
 `client_groq()` previously instantiated a new Groq HTTP client (with its own connection pool) on every request. Now a module-level singleton: `_groq_client = Groq(api_key=...)`. All routes import and reuse the same instance.
 
-### Parallel PDF Fetching
-PDF extraction for up to 15 articles now runs concurrently via `ThreadPoolExecutor(max_workers=8)`. Worst-case time drops from ~150 s (sequential, 10 s timeout each) to ~10 s.
+### Faster Article Ingestion
+- **PDF extraction removed.** `pdf_content` was fetched + parsed for up to 15 articles but never read by any route, the chat, or the ranker — pure latency. Deleting it removes ~10–20 s per ingest. (Supersedes the earlier "Parallel PDF Fetching" note.)
+- **Parallel OpenAlex queries.** The per-tag queries in `openalex_articles.main()` now run concurrently via `ThreadPoolExecutor` instead of sequentially, collapsing N network round-trips into ~1. Dedup/doc-building stays single-threaded.
+
+### Embedding Model Warm-Up
+The `SentenceTransformer` model (~90 MB, ~30 s cold load) is loaded in a background daemon thread at app startup (`ranker.warm_model()`, kicked off from `app.py`), so the first user's ingestion doesn't pay the cold-load tax after a restart. Falls back to lazy load on first use if warm-up fails.
 
 ### MongoDB Indexes
 - `chat_collection`: `user_id` (unique), `completed`
@@ -554,7 +560,7 @@ A standalone script (run manually or on a cron schedule) that pulls Google Trend
 
 ## 18. Results Page
 
-**Files:** `client/src/pages/ResultsPage.jsx`, `client/src/components/results/BeginnerResults.jsx`, `InformedResults.jsx`, `ResearcherResults.jsx`, `client/src/components/results/resultsCopy.js`, `natalData.js`, `NatalCharts.jsx`, plus the card components (`GuardianCard.jsx`, `GuardianCardVertical.jsx`, `AcademicCard.jsx`, `AcademicCardTeal.jsx`, `ArticleRow.jsx`).
+**Files:** `client/src/pages/ResultsPage.jsx`, `client/src/components/results/BeginnerResults.jsx`, `InformedResults.jsx`, `ResearcherResults.jsx`, `client/src/components/results/resultsCopy.js`, `natalData.js`, `NatalCharts.jsx`, `storiesData.js` (curated stories + `localizeStory`), `postTraumaInfo.js` (beginner explainer), `postTraumaGrowth.js` (informed explainer), plus the card components (`GuardianCard.jsx`, `GuardianCardVertical.jsx`, `AcademicCard.jsx`, `AcademicCardTeal.jsx`, `ArticleRow.jsx`).
 
 `ResultsPage` is the landing page after quiz completion or login redirect. It resolves the score from three sources in priority order:
 1. React Router `location.state.score` — passed directly from the quiz on completion.
@@ -565,7 +571,23 @@ The resolved **persona** (from `persona_profile.persona`, falling back to score�
 
 **Bilingual copy** lives in `resultsCopy.js` (hero copy per persona × locale × `emotional_state`, plus section headings) and in the shared `config/uiStrings.js` table (nav/edit-tags/CTA/"also explore" chrome). Components read `useDirection()` for the active locale.
 
-**Preference-driven content:** `natalData.js` defines `PREF_COUNTS` (per `content_preference`: how many Guardian stories, OWID charts, NATAL research charts, and academic articles to show) plus the hardcoded NATAL Israel-cohort dataset (charts + prose stat blocks, sourced from Mor et al., 2026). `NatalCharts.jsx` renders those charts with the same inline-Recharts/SVG method as the graph pages, tinted per persona. ResultsPage fetches live articles (`getArticles`) and, for non-researcher personas, Guardian stories (`getExternalStories`); each component slices to the preference counts (no backfill).
+**Preference-driven content mix:** `natalData.js` defines `PREF_COUNTS` — how many of each content type to show per `content_preference` (same table for all personas; `pick()` slices the first N, no backfill, no wraparound):
+
+| `content_preference` | stories | OWID | NATAL charts | academic |
+|---|---|---|---|---|
+| `stories`  | 6 | 2 | 4 | 2 |
+| `mixed`    | 3 | 3 | 4 | 4 |
+| `research` | 2 | 2 | 6 | 4 |
+
+A **stories-based** preference favours personal stories with fewer academic papers; a **research-based** preference favours NATAL stat charts + academic papers with only 2 stories. The `stories` (a.k.a. `guardian`) count is **ignored for the researcher persona** — researchers never render stories (data-first view). Counts above 4 simply cap at the 4 curated stories available.
+
+**Personal stories** are curated and hard-coded in `storiesData.js` (4 vetted bilingual first-person recovery stories from Ynet / IDF / HaGesher) — no live fetch. Cards show the real source and localize to the active language via `localizeStory()`; a missing thumbnail falls back to a coloured stripe. (This replaced the old Guardian API fetch — see §26.)
+
+**Per-persona psychoeducation:** beginner shows a "What is post-trauma?" validating explainer (`postTraumaInfo.js`); informed learner shows a "Post-traumatic growth" conceptual explainer (`postTraumaGrowth.js`); researcher shows neither.
+
+**Videos:** beginner has a language-matched YouTube embed (swaps He/En on the locale toggle); informed learner has a single embed shown in both languages; researcher has none. Both use an OWID-style skeleton + graceful fallback.
+
+The hardcoded NATAL Israel-cohort dataset (charts + prose stat blocks, Mor et al., 2026) lives in `natalData.js`; `NatalCharts.jsx` renders it inline (Recharts/SVG), tinted per persona. ResultsPage fetches live articles (`getArticles`); stories, psychoeducation, and videos are all local (no network).
 
 **Retake flow:** The retake button calls `resetQuizSession()` (deletes the quiz session + clears cached transcript/score/persona) then hard-navigates to `/`.
 
@@ -652,3 +674,26 @@ Three React context providers wrap the entire tree: `PersonaProvider` (outermost
 **File:** `server/routes/keep_alive.py`
 
 `GET /health` returns `{"status": "ok"}`. Used by uptime monitors and deployment health checks to confirm the Flask server is accepting connections.
+
+---
+
+## 26. Post-Revamp Changes (2026-07)
+
+Changes made after the original revamp. Where these conflict with earlier sections, these are authoritative.
+
+### Guest article claim on login (Strategy B)
+Guest-ingested articles are stored under the quiz-session UUID (the `user_id` field is an opaque owner key, not a foreign key to an account). On the **first** login link in `auth_route.py` (session found via `quiz_user_id`, no prior `auth_user_id`), those articles are re-keyed to the auth id:
+`articles_collection.delete_many({"user_id": auth_id})` then `articles_collection.update_many({"user_id": quiz_uuid}, {"$set": {"user_id": auth_id}})`.
+Delete-first avoids the `{user_id, openalex_id}` unique-index collision; scoped to first-link only so a later login on a new device (fresh empty quiz UUID) can't wipe the account's set. Best-effort — the `GET /api/articles` read path still falls back to `quiz_user_id`.
+
+### Guardian integration removed
+The live Guardian API path was deleted end to end: route `external_content_route.py`, its blueprint import + registration, the `guardian_cache` Mongo collection + indexes, and the `getExternalStories()` client helper. Personal stories are now curated and hard-coded (see §18). The `GuardianCard*` components and the `guardian` count key are kept — they now carry the curated stories (naming only).
+
+### Article-load performance
+PDF extraction removed, OpenAlex queries parallelized, embedding model warmed at startup (see §12).
+
+### Article chat: login-gated, site-aware, rate-limited
+See §5 — `@jwt_required` (guests get a login CTA), `PLATFORM_OVERVIEW` site-awareness in the prompt, and a 40/hr/IP limit.
+
+### Results page: curated stories, psychoeducation, videos, NATAL logo
+See §18. Also: the NATAL logo (`client/public/Logo_New_GREEN.png`) sits in the global `Navbar` beside the wordmark.
