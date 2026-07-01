@@ -191,6 +191,14 @@ export default function ResultsPage() {
     ;(async () => {
       const mappedProfile = mapProfile(personaProfile, headline, score)
 
+      // Curated stories are hard-coded — set them up-front, BEFORE any await, so
+      // the stories section renders immediately and never waits on (or gets
+      // cancelled behind) the article ingest, which can be slow/failing when
+      // OpenAlex is down. Researchers get none.
+      if (!cancelled && mappedProfile.persona !== 'researcher') {
+        setStories(CURATED_STORIES)
+      }
+
       try {
         let quizUserId
         try { quizUserId = localStorage.getItem(USER_ID_KEY) } catch { quizUserId = null }
@@ -224,12 +232,6 @@ export default function ResultsPage() {
         if (!cancelled) setArticles([])
       } finally {
         if (!cancelled) setArticlesLoading(false)
-      }
-
-      // Curated, hand-vetted stories — hard-coded, no fetch, no topic match.
-      // Researchers get none; the cards localize each story to the active language.
-      if (mappedProfile.persona !== 'researcher') {
-        if (!cancelled) setStories(CURATED_STORIES)
       }
     })()
     return () => { cancelled = true }

@@ -1,10 +1,26 @@
+import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pymongo import UpdateOne
+import pyalex
 from pyalex import Works
 
 from services.mongo import articles_collection
 from services.ranker import hybrid_rank
 from utils.logger import logger
+
+# Use the OpenAlex "polite pool" (higher, more reliable rate limits) when an
+# email is set, and let pyalex retry transient 429/500/503 with backoff instead
+# of failing the whole ingest. Guarded so an older pyalex without these knobs
+# can't break import.
+try:
+    _oa_email = os.environ.get("OPENALEX_EMAIL")
+    if _oa_email:
+        pyalex.config.email = _oa_email
+    pyalex.config.max_retries = 3
+    pyalex.config.retry_backoff_factor = 0.5
+    pyalex.config.retry_http_codes = [429, 500, 503]
+except Exception as e:
+    logger.warning(f"pyalex retry/polite-pool config not applied: {e}")
 
 _ISRAEL_TERMS = {"israel", "ישראל"}
 _PER_TAG_LIMIT = 20    # wide candidate net per tag
@@ -90,7 +106,7 @@ def main(user_id, tags=None, search_query=None):
     # Run the OpenAlex queries concurrently — they are independent network calls,
     # so fetching them in parallel collapses N sequential round-trips into ~1.
     # Dedup + doc-building stay on this thread, so there are no shared-state races.
-    with ThreadPoolExecutor(max_workers=min(8, len(fetch_plan))) as ex:
+    with ThreadPoolExecutor(max_workers=min(3, len(fetch_plan))) as ex:
         future_to_query = {
             ex.submit(_fetch, query_str, per_page): query_str
             for query_str, per_page in fetch_plan

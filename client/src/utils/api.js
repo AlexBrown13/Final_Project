@@ -168,7 +168,11 @@ export async function resetQuizSession() {
     try { await deleteSession(userId, token); } catch { /* best-effort; clear local anyway */ }
   }
 
-  for (const key of [QUIZ_MESSAGES_KEY, QUIZ_META_KEY, SCORE_CACHE_KEY, PERSONA_CACHE_KEY]) {
+  // Clear USER_ID_KEY too so the quiz page mints a FRESH quiz UUID on reload.
+  // Otherwise, if the server-side delete above failed (best-effort), the old
+  // session is still "completed" under the same id and QuizPage's getResult()
+  // check bounces the user straight back to /results. A new id can't collide.
+  for (const key of [USER_ID_KEY, QUIZ_MESSAGES_KEY, QUIZ_META_KEY, SCORE_CACHE_KEY, PERSONA_CACHE_KEY]) {
     try { localStorage.removeItem(key); } catch { /* ignore */ }
   }
 }
