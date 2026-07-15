@@ -697,3 +697,53 @@ See §5 — `@jwt_required` (guests get a login CTA), `PLATFORM_OVERVIEW` site-a
 
 ### Results page: curated stories, psychoeducation, videos, NATAL logo
 See §18. Also: the NATAL logo (`client/public/Logo_New_GREEN.png`) sits in the global `Navbar` beside the wordmark.
+
+---
+
+## 27. Front-End Pages, Helpers & Infra Not Covered Above
+
+Sections 1–26 document the backend logic and pipelines thoroughly but skew away from the front-end UI files and a few support modules. This section fills those gaps so the doc is a complete map of the codebase.
+
+### Quiz UI — `client/src/pages/QuizPage.jsx`
+The page the user actually types the quiz into (mapped to `/` in §23). It is the front-end counterpart to `chat_route.py` and holds real logic, not just markup:
+
+- **Health-gated render:** on mount it calls `fetchHealth()`. While `health === null` it shows a "checking" state; on `health === false` it renders `<BackendDown>` instead of the quiz.
+- **StrictMode bootstrap lock:** a module-level `quizBootstrapLock` promise prevents React's double-mount (dev StrictMode) from firing two initial `postChat` calls.
+- **Transcript persistence:** messages and `{step, total_steps}` are mirrored to `localStorage` (`QUIZ_MESSAGES_KEY`, `QUIZ_META_KEY`) so a refresh mid-quiz resumes where you left off. On a `404`/stale session it clears them and re-bootstraps.
+- **User id:** `getOrCreateUserId()` generates and persists the `quiz_user_id` UUID (`crypto.randomUUID()`) — this is the device-local id §1 and §26 refer to.
+- **Message history is sent to the server, not stored server-side per turn:** `postChat(userId, text, nextMsgs, locale)` passes the full transcript so the server reconstructs context without a DB write each step.
+- **Banner state machine:** handles `crisis` (renders hotlines from `data.resources`), `rate_limit` (429), `too_long` (client + server enforced `MAX_CHARS = 1000`), and `generic` errors with a retry. Completion (`data.completed`) routes to `/results` via `goResults()`, caching the score to `localStorage`.
+
+### Quiz progress bar — `client/src/components/QuizProgress.jsx`
+Pure presentational component. Computes `pct = round((step+1)/total × 100)`, clamps to a valid range, renders an accessible `role="progressbar"` track with `aria-valuenow`.
+
+### Backend-down screen — `client/src/components/BackendDown.jsx`
+The fallback shown app-wide when `/health` fails. Bilingual (reads `getUiStrings(dir)`), offers an `onRetry` button that re-pings health. This is the graceful-degradation UX the backend §25 health check exists to drive.
+
+### Auth UI — `client/src/pages/Auth/Login.jsx`, `Register.jsx`
+Front-end counterpart to `auth_route.py` (§1). `Login` sends the device `quiz_user_id` from `localStorage` alongside credentials — this is the client half of the first-login session-link handshake. On success it stores the JWT (`AUTH_TOKEN_KEY`), and if the response carries a `score`, caches it and redirects straight to `/results` (skipping a re-fetch, since articles already exist); otherwise it lands on `/`. `pickErrors()` normalises the server's several error shapes (`errors[]`, `error`, `message`) into a display list.
+
+### Persona theme provider — `client/src/context/PersonaProvider.jsx`
+The file that actually applies §10's theming: it sets `data-persona` on `<html>` (which the CSS custom properties key off) and persists the persona to `localStorage` (`PERSONA_CACHE_KEY`) so the theme survives refresh. Normalises `"informed learner"` → `"informed-learner"` and defaults unknown values to `beginner`. Wrapped outermost in `App.jsx` (§23).
+
+### Pure persona helpers — `client/src/utils/persona.js`
+Unit-testable, side-effect-free persona resolution shared across the quiz/results flow: `scoreToPersona()` (3→researcher, 2→informed, else beginner), `normalizePersonaLabel()` (free-text label → canonical key, or `null` so callers can fall back to score rather than mis-defaulting to beginner), and `resolveRenderedPersona()` which lets a recognised `persona_profile` win but falls back to the numeric score.
+
+### Text-direction detection — `client/src/utils/detectLanguage.js`
+`detectTextDirection()` counts Hebrew (U+0590–05FF) vs Latin codepoints in a string and returns `rtl`/`ltr`. Used to set per-message bubble direction in the quiz so a Hebrew reply and an English reply align correctly regardless of the app-wide locale. Complements the app-level `DirectionProvider` (§22).
+
+### Trends API endpoint — `server/routes/trends_route.py`
+**Correction to §17:** `google_trends.py` is only the ingestion *script*. The endpoint that serves the data is this separate blueprint — `GET /trends` returns `{ data_trends, features }`, where `features` is every non-`date` key of the first row (tells the client which series to plot). `ExploreSearchPage.jsx` consumes it.
+
+### Rate-limiter extension — `server/extensions.py`
+Holds the shared `Flask-Limiter` instance (`key_func=get_remote_address`, `default_limits=["100 per hour"]`), bound to the app via `limiter.init_app(app)` in `app.py` (§12). Per-route limits (quiz 30/hr, chat 40/hr) layer on top of the 100/hr default.
+
+### Logger — `server/utils/logger.py`
+Module-level `logging.getLogger("app")` at INFO, dual-sink: a `StreamHandler` (console) and a `FileHandler` writing to `status.log` at the repo root. Guards against duplicate handlers on re-import.
+
+### Tests — `server/tests/test_chat_parsing.py`
+The project's one automated test module (`unittest`). Covers `format_conversation()` and `parse_persona_profile()` from `chat_route.py` — specifically the fragile LLM-output parsing: ```json``` fences, a string `interest_tags` coerced to a list, malformed JSON falling back to the safe default profile, and valid enum pass-through. Sets dummy Mongo env vars so the import doesn't require a live DB.
+
+### Client entry & config
+- **`client/src/main.jsx`** — React root; mounts `<App>` inside `BrowserRouter`.
+- **`client/src/config/api.js`** — resolves the API base URL (env-driven) used by `utils/api.js`.
